@@ -1,0 +1,11 @@
+rootProject.name = 'study-be'
+
+include(
+    'module-common',
+    'module-contract',
+    'module-blog',
+    'module-qna',
+    'module-profile',
+    'module-session-board',
+    'module-app'
+)

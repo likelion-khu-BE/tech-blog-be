@@ -1,0 +1,18 @@
+# 경희대 멋쟁이사자처럼 기술블로그 - 코드 소유권
+# GitHub 팀/사용자명은 실제 조직에 맞게 수정 필요
+
+# === 팀 모듈 (각 팀 소유) ===
+/module-blog/                     @likelion-khu-BE/blog-team
+/module-qna/                      @likelion-khu-BE/qna-team
+/module-profile/                  @likelion-khu-BE/profile-team
+/module-session-board/            @likelion-khu-BE/session-board-team
+
+# === 공유 모듈 (전체 팀 리뷰 필요) ===
+/module-contract/                 @likelion-khu-BE/blog-team @likelion-khu-BE/qna-team @likelion-khu-BE/profile-team @likelion-khu-BE/session-board-team
+
+# === 인프라 (관리자 소유) ===
+/module-common/                   @tom-kim
+/module-app/                      @tom-kim
+build.gradle                      @tom-kim
+settings.gradle                   @tom-kim
+/.github/                         @tom-kim
