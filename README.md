@@ -21,19 +21,6 @@ study-be/
 └── app/             조립 및 실행
 ```
 
-### 의존 방향
-
-```
-  blog   qna   profile   session-board
-    \     |      |       /
-     contract  common
-           \  /
-           app
-```
-
-- 팀 모듈은 `common`과 `contract`만 의존 가능
-- 팀 모듈끼리 직접 의존 → **컴파일 에러**
-
 ---
 
 ## 모듈 간 통신
@@ -43,12 +30,38 @@ study-be/
 ```
 contract/  → BlogPort 인터페이스 정의
 blog/      → BlogService가 BlogPort 구현
-profile/   → ProfileService에서 BlogPort 주입받아 사용
+profile/   → ProfileService에서 BlogPort 주입받아 사용 (소비자)
 ```
 
-**contract에 허용**: 인터페이스(Port), DTO, 이벤트, 공유 Enum
+### Port 규칙
 
-**contract에 금지**: Entity, Repository, 비즈니스 로직, 인프라 의존성(JPA 등)
+- contract의 모든 인터페이스는 **`*Port`로 끝나야** 한다 (네이밍 컨벤션, ArchUnit 강제)
+- **Port 구현체는 다른 모듈의 Port를 호출할 수 없다** (순환 의존 방지, ArchUnit 강제)
+- 여러 모듈의 데이터를 조합해야 하면 **소비자(Controller 등)가 각 Port를 주입받아 조합**한다
+
+```java
+// BlogService (Port 구현체) — 자기 repository만 사용
+@Override
+public int countByMember(Long memberId) {
+    return blogRepository.countByAuthorId(memberId);  // OK
+    // profilePort.getProfile(memberId);              // 컴파일은 되지만 ArchUnit 실패
+}
+
+// ProfileController (소비자) — 여러 Port를 조합
+public ContributionResponse getContribution(Long memberId) {
+    int blogCount = blogPort.countByMember(memberId);
+    int qnaCount = qnaPort.countByMember(memberId);
+    return new ContributionResponse(blogCount, qnaCount);  // 여기서 조합
+}
+```
+
+### contract에 허용하는 것
+
+인터페이스(Port), DTO, 이벤트, 공유 Enum
+
+### contract에 금지하는 것
+
+Entity, Repository, 비즈니스 로직, 인프라 의존성(JPA 등)
 
 > contract 변경 PR은 CODEOWNERS에 의해 **전체 팀 리뷰** 필요
 
@@ -56,12 +69,13 @@ profile/   → ProfileService에서 BlogPort 주입받아 사용
 
 ## 아키텍처 검증
 
-모듈 경계는 **2중으로 강제**된다.
+모듈 경계는 **3중으로 강제**된다.
 
 | 수준 | 방식 | 시점 |
 |---|---|---|
 | 1차 | Gradle 의존성 — 미선언 모듈 import 불가 | 컴파일 |
-| 2차 | ArchUnit 테스트 — 패키지 레벨 의존 규칙 | 테스트 (CI) |
+| 2차 | ArchUnit — 패키지 레벨 의존 규칙, Port 격리 규칙 | 테스트 (CI) |
+| 3차 | CODEOWNERS — contract 변경 시 전체 팀 리뷰 | PR |
 
 ---
 
