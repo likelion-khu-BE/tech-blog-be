@@ -2,11 +2,21 @@ package com.study;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+import com.tngtech.archunit.core.domain.Dependency;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaType;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -111,6 +121,65 @@ class ArchitectureTest {
           .resideInAnyPackage("..blog..", "..qna..", "..profile..", "..sessionboard..")
           .allowEmptyShould(ALLOW_EMPTY)
           .check(classes);
+    }
+  }
+
+  @Nested
+  @DisplayName("Port 규칙")
+  class PortTest {
+
+    @Test
+    @DisplayName("contract의 인터페이스는 Port로 끝나야 한다")
+    void contractInterfacesShouldEndWithPort() {
+      classes()
+          .that()
+          .resideInAPackage("..contract..")
+          .and()
+          .areInterfaces()
+          .should()
+          .haveSimpleNameEndingWith("Port")
+          .allowEmptyShould(ALLOW_EMPTY)
+          .check(classes);
+    }
+
+    @Test
+    @DisplayName("Port 구현체는 다른 모듈의 Port에 의존할 수 없다")
+    void portImplShouldNotDependOnOtherPorts() {
+      classes()
+          .that()
+          .implement(simpleNameEndingWith("Port"))
+          .should(notDependOnOtherPorts())
+          .allowEmptyShould(ALLOW_EMPTY)
+          .check(classes);
+    }
+
+    private ArchCondition<JavaClass> notDependOnOtherPorts() {
+      return new ArchCondition<>("not depend on other Port interfaces") {
+        @Override
+        public void check(JavaClass item, ConditionEvents events) {
+          Set<String> ownPorts =
+              item.getInterfaces().stream()
+                  .map(JavaType::toErasure)
+                  .filter(i -> i.getSimpleName().endsWith("Port"))
+                  .map(JavaClass::getFullName)
+                  .collect(Collectors.toSet());
+
+          item.getDirectDependenciesFromSelf().stream()
+              .map(Dependency::getTargetClass)
+              .filter(target -> target.getSimpleName().endsWith("Port"))
+              .filter(target -> target.getPackageName().contains("contract"))
+              .filter(target -> !ownPorts.contains(target.getFullName()))
+              .distinct()
+              .forEach(
+                  target ->
+                      events.add(
+                          SimpleConditionEvent.violated(
+                              item,
+                              String.format(
+                                  "%s이(가) 다른 모듈의 %s에 의존합니다",
+                                  item.getSimpleName(), target.getSimpleName()))));
+        }
+      };
     }
   }
 
