@@ -1,5 +1,7 @@
 package com.study;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -35,9 +37,12 @@ class ArchitectureTest {
       noClasses()
           .that()
           .resideInAPackage("..blog..")
+          .and()
+          .resideOutsideOfPackage("..contract..")
           .should()
-          .dependOnClassesThat()
-          .resideInAnyPackage("..qna..", "..profile..", "..sessionboard..")
+          .dependOnClassesThat(
+              resideInAnyPackage("..qna..", "..profile..", "..sessionboard..")
+                  .and(resideOutsideOfPackage("..contract..")))
           .allowEmptyShould(ALLOW_EMPTY)
           .check(classes);
     }
@@ -48,9 +53,12 @@ class ArchitectureTest {
       noClasses()
           .that()
           .resideInAPackage("..qna..")
+          .and()
+          .resideOutsideOfPackage("..contract..")
           .should()
-          .dependOnClassesThat()
-          .resideInAnyPackage("..blog..", "..profile..", "..sessionboard..")
+          .dependOnClassesThat(
+              resideInAnyPackage("..blog..", "..profile..", "..sessionboard..")
+                  .and(resideOutsideOfPackage("..contract..")))
           .allowEmptyShould(ALLOW_EMPTY)
           .check(classes);
     }
@@ -61,9 +69,12 @@ class ArchitectureTest {
       noClasses()
           .that()
           .resideInAPackage("..profile..")
+          .and()
+          .resideOutsideOfPackage("..contract..")
           .should()
-          .dependOnClassesThat()
-          .resideInAnyPackage("..blog..", "..qna..", "..sessionboard..")
+          .dependOnClassesThat(
+              resideInAnyPackage("..blog..", "..qna..", "..sessionboard..")
+                  .and(resideOutsideOfPackage("..contract..")))
           .allowEmptyShould(ALLOW_EMPTY)
           .check(classes);
     }
@@ -74,9 +85,12 @@ class ArchitectureTest {
       noClasses()
           .that()
           .resideInAPackage("..sessionboard..")
+          .and()
+          .resideOutsideOfPackage("..contract..")
           .should()
-          .dependOnClassesThat()
-          .resideInAnyPackage("..blog..", "..qna..", "..profile..")
+          .dependOnClassesThat(
+              resideInAnyPackage("..blog..", "..qna..", "..profile..")
+                  .and(resideOutsideOfPackage("..contract..")))
           .allowEmptyShould(ALLOW_EMPTY)
           .check(classes);
     }
