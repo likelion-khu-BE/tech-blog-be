@@ -109,7 +109,18 @@ sdk install java 21.0.7-tem
 
 ---
 
-## 브랜치 전략
+## 브랜치 & PR 규칙
 
 - `main` — 보호 브랜치, 직접 push 금지
-- PR + CODEOWNERS 리뷰 승인 + CI 통과 필수
+- PR 머지 조건:
+  - **코드 소유자 최소 1명 승인** 필요
+  - CI 테스트 통과
+  - 승인 후 코드 변경 시 승인 초기화 (dismiss stale reviews)
+
+### 코드 소유자
+
+모든 파일에 대해 다음 5명이 코드 소유자:
+
+`@cjang3285` `@xihxxn` `@xhae123` `@Suuunz` `@sunwoo1256`
+
+이 중 1명 이상이 승인해야 PR 머지 가능.
