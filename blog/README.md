@@ -108,6 +108,467 @@
 
 ---
 
+## API 명세 (사전 합의)
+
+> 기능 구현 전에 반드시 읽어주세요.  
+> 여기서 정한 필드 이름과 값을 기준으로 세 명이 동일하게 작성해야 합니다.
+
+---
+
+### 공통 데이터 구조
+
+세 명 모두 쓰는 데이터의 형태입니다. 필드 이름을 이것과 다르게 쓰면 나중에 합칠 때 깨집니다.
+
+#### 게시글 (Post)
+
+```json
+{
+  "id": 1,
+  "title": "Spring Boot 애플리케이션을 EC2에 자동 배포하기",
+  "content": "마크다운 본문 전체",
+  "preview": "본문 앞 100자 요약 (목록에서 사용)",
+  "board": "백엔드",
+  "category": "CI/CD",
+  "tags": ["Spring Boot", "AWS EC2"],
+  "generation": "13기",
+  "status": "published",
+  "author": {
+    "id": 1,
+    "name": "장찬욱"
+  },
+  "likeCount": 14,
+  "bookmarkCount": 7,
+  "commentCount": 3,
+  "isLiked": true,
+  "isBookmarked": false,
+  "createdAt": "2026-03-28"
+}
+```
+
+| 필드 | 가능한 값 |
+|------|-----------|
+| `board` | `"AI"` \| `"백엔드"` \| `"해커톤"` |
+| `category` | AI: `"LLM"` \| `"MLOps"` \| `"모델 서빙"` \| `"모델 학습"` / 백엔드: `"CI/CD"` \| `"DevOps"` \| `"Security"` / 해커톤: `"해커톤 후기"` |
+| `generation` | `"11기"` \| `"12기"` \| `"13기"` |
+| `status` | `"published"` \| `"draft"` |
+| `isLiked` | 현재 로그인 유저가 좋아요 눌렀으면 `true` |
+| `isBookmarked` | 현재 로그인 유저가 북마크했으면 `true` |
+| `content` | 목록 조회(`GET /api/posts`) 응답에는 포함되지 않음. 단건 조회(`GET /api/posts/:id`)에만 포함 |
+
+#### 회원 (Member)
+
+```json
+{
+  "id": 1,
+  "name": "장찬욱",
+  "email": "chanwook@khu.ac.kr",
+  "generation": "13기",
+  "role": "ADMIN",
+  "bio": "경희대 컴퓨터공학과 3학년.",
+  "github": "https://github.com/chanwook",
+  "blog": "https://chanwook.kr",
+  "linkedin": "https://linkedin.com/in/chanwook",
+  "postCount": 12,
+  "joinDate": "2026-03-03"
+}
+```
+
+| 필드 | 가능한 값 |
+|------|-----------|
+| `role` | `"ADMIN"` \| `"MEMBER"` \| `"PENDING"` |
+
+#### 댓글 (Comment)
+
+```json
+{
+  "id": 1,
+  "content": "댓글 내용",
+  "author": {
+    "id": 2,
+    "name": "노희윤"
+  },
+  "likeCount": 2,
+  "isLiked": false,
+  "parentId": null,
+  "replies": [],
+  "createdAt": "2026-03-29"
+}
+```
+
+| 필드 | 설명 |
+|------|------|
+| `parentId` | 일반 댓글이면 `null`, 대댓글이면 부모 댓글의 `id` |
+| `replies` | 이 댓글에 달린 대댓글 목록 |
+
+---
+
+### 인증 API
+
+#### 로그인
+
+```
+POST /api/auth/login
+```
+
+요청:
+```json
+{ "email": "chanwook@khu.ac.kr", "password": "비밀번호" }
+```
+
+응답:
+```json
+{
+  "token": "eyJhbGci...",
+  "user": {
+    "id": 1,
+    "name": "장찬욱",
+    "role": "ADMIN"
+  }
+}
+```
+
+> 받은 `token`은 `localStorage.setItem("token", ...)` 으로 저장합니다.  
+> 받은 `user`는 `localStorage.setItem("user", JSON.stringify(...))` 으로 저장합니다.  
+> **세 명 모두 키 이름을 `"token"`, `"user"` 로 통일합니다.**
+
+#### 회원가입
+
+```
+POST /api/auth/register
+```
+
+요청:
+```json
+{
+  "name": "장찬욱",
+  "email": "chanwook@khu.ac.kr",
+  "password": "비밀번호",
+  "generation": "13기"
+}
+```
+
+응답:
+```json
+{ "message": "가입 신청이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다." }
+```
+
+#### 이메일 중복 확인
+
+```
+GET /api/auth/check-email?email=chanwook@khu.ac.kr
+```
+
+응답:
+```json
+{ "available": true }
+```
+
+#### 로그아웃
+
+별도 API 없음. 클라이언트에서 아래 두 가지만 삭제하면 됩니다.
+
+```js
+localStorage.removeItem("token")
+localStorage.removeItem("user")
+```
+
+---
+
+### 공개 통계 API
+
+MainPage 히어로 섹션의 숫자 (멤버 수, 게시글 수, 활동 기수)에 사용합니다.  
+로그인 없이도 접근 가능합니다.
+
+```
+GET /api/stats
+```
+
+응답:
+```json
+{
+  "memberCount": 24,
+  "postCount": 47,
+  "activeGenerations": 3
+}
+```
+
+---
+
+### 게시글 API
+
+#### 게시글 목록 조회
+
+```
+GET /api/posts?board=백엔드&category=CI/CD&generation=13기&authorId=1&keyword=Spring&page=1
+```
+
+파라미터는 모두 선택 사항입니다. 없으면 전체 조회입니다.
+
+| 파라미터 | 설명 |
+|----------|------|
+| `board` | 대분류 필터 (`"AI"` \| `"백엔드"` \| `"해커톤"`) |
+| `category` | 소분류 필터 (`"LLM"`, `"CI/CD"` 등) |
+| `generation` | 기수 필터 (`"13기"` 등) |
+| `authorId` | 작성자 ID 필터 (이름이 아니라 **ID**) |
+| `keyword` | 제목 · 태그 검색어 |
+| `page` | 페이지 번호 (기본값 1) |
+
+응답:
+```json
+{
+  "posts": [ /* Post 목록 (content 필드 없음, preview만 포함) */ ],
+  "totalCount": 47,
+  "totalPages": 5,
+  "currentPage": 1
+}
+```
+
+#### 게시글 단건 조회
+
+```
+GET /api/posts/:id
+```
+
+응답: Post 전체 (위의 게시글 구조 그대로)
+
+#### 게시글 작성
+
+```
+POST /api/posts
+```
+
+요청:
+```json
+{
+  "title": "제목",
+  "content": "마크다운 본문",
+  "board": "백엔드",
+  "category": "CI/CD",
+  "tags": ["Spring Boot"],
+  "generation": "13기",
+  "status": "draft"
+}
+```
+
+응답: 생성된 Post 전체
+
+#### 게시글 수정
+
+```
+PUT /api/posts/:id
+```
+
+요청: 작성과 동일 (수정할 필드만 보내도 됨)  
+응답: 수정된 Post 전체
+
+#### 게시글 삭제
+
+```
+DELETE /api/posts/:id
+```
+
+응답:
+```json
+{ "message": "삭제되었습니다." }
+```
+
+#### 좋아요 토글
+
+```
+POST /api/posts/:id/like
+```
+
+응답:
+```json
+{ "isLiked": true, "likeCount": 15 }
+```
+
+#### 북마크 토글
+
+```
+POST /api/posts/:id/bookmark
+```
+
+응답:
+```json
+{ "isBookmarked": true, "bookmarkCount": 8 }
+```
+
+---
+
+### 댓글 API
+
+#### 댓글 목록 조회
+
+```
+GET /api/posts/:id/comments
+```
+
+응답:
+```json
+{ "comments": [ /* Comment 목록 */ ] }
+```
+
+#### 댓글 작성
+
+```
+POST /api/posts/:id/comments
+```
+
+요청:
+```json
+{
+  "content": "댓글 내용",
+  "parentId": null
+}
+```
+
+응답: 생성된 Comment 전체
+
+#### 댓글 좋아요 토글
+
+```
+POST /api/comments/:id/like
+```
+
+응답:
+```json
+{ "isLiked": true, "likeCount": 3 }
+```
+
+---
+
+### 회원 API
+
+#### 회원 목록 조회
+
+```
+GET /api/members?keyword=장찬욱
+```
+
+`keyword`는 선택 사항입니다. 이름 또는 이메일로 검색합니다 (어드민 회원 검색에 사용).
+
+응답:
+```json
+{ "members": [ /* Member 목록 */ ] }
+```
+
+#### 회원 프로필 조회
+
+```
+GET /api/members/:id
+```
+
+응답: Member 전체
+
+#### 특정 회원의 게시글 목록
+
+```
+GET /api/members/:id/posts?status=published
+```
+
+응답:
+```json
+{ "posts": [ /* Post 목록 */ ], "totalCount": 12 }
+```
+
+#### 내 북마크 목록
+
+```
+GET /api/members/:id/bookmarks
+```
+
+응답:
+```json
+{ "posts": [ /* 북마크한 Post 목록 */ ] }
+```
+
+---
+
+### 어드민 API
+
+#### 대시보드 통계
+
+```
+GET /api/admin/stats
+```
+
+응답:
+```json
+{
+  "memberCount": 24,
+  "pendingCount": 3,
+  "postCount": 47,
+  "monthlyPostCount": 12
+}
+```
+
+#### 게시글 전체 조회 (어드민 전용)
+
+일반 `GET /api/posts`와 다르게, 모든 회원의 draft 글까지 포함해서 조회합니다.
+
+```
+GET /api/admin/posts?status=draft&keyword=Spring&page=1
+```
+
+응답:
+```json
+{
+  "posts": [ /* Post 목록 (draft 포함) */ ],
+  "totalCount": 52,
+  "totalPages": 6,
+  "currentPage": 1
+}
+```
+
+#### 가입 승인 대기 목록
+
+```
+GET /api/admin/pending
+```
+
+응답:
+```json
+{ "members": [ /* PENDING 상태 Member 목록 */ ] }
+```
+
+#### 가입 승인
+
+```
+POST /api/admin/members/:id/approve
+```
+
+응답:
+```json
+{ "message": "승인되었습니다." }
+```
+
+#### 가입 거절
+
+```
+POST /api/admin/members/:id/reject
+```
+
+응답:
+```json
+{ "message": "거절되었습니다." }
+```
+
+#### 회원 Role 변경
+
+```
+PATCH /api/admin/members/:id/role
+```
+
+요청:
+```json
+{ "role": "ADMIN" }
+```
+
+응답: 변경된 Member 전체
+
+---
+
 ## 브랜치 전략
 
 `blog` 브랜치가 이 팀의 기준 브랜치입니다. 작업은 아래 규칙을 따릅니다.
@@ -168,35 +629,28 @@ npm run build    # 프로덕션 빌드
 
 ### 백엔드 (Spring Boot + Amazon RDS PostgreSQL)
 
-#### 1. `.env` 파일 생성
+DB 연결은 GitHub Secrets에 등록된 환경 변수를 Spring이 읽는 방식으로 동작합니다.
 
-프로젝트 **루트**에 `.env` 파일을 만들고 DB 접속 정보를 입력합니다.  
-(`.env`는 `.gitignore`에 포함되어 있어 레포에 올라가지 않습니다.)
-
-```bash
-# 프로젝트 루트에서
-cp .env.example .env
+**흐름**
+```
+GitHub Secrets (DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD)
+  └─ CI/CD 워크플로우에서 환경 변수로 주입
+       └─ app/src/main/resources/application.yml 에서 참조
 ```
 
-`.env` 파일을 열고 아래 값을 채웁니다:
+`application.yml`은 아래처럼 `${}` 플레이스홀더로 환경 변수를 읽습니다:
 
-```dotenv
-DB_HOST=<RDS 엔드포인트>      # ex) mydb.xxxx.ap-northeast-2.rds.amazonaws.com
-DB_PORT=5432
-DB_NAME=<데이터베이스 이름>
-DB_USERNAME=<DB 사용자명>
-DB_PASSWORD=<DB 비밀번호>
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 ```
 
-> RDS 접속 정보는 팀장(장찬욱)에게 문의하세요.
+따라서 새로운 DB 관련 설정을 `application.yml`에 추가할 때도 값을 하드코딩하지 않고 `${변수명}` 형태로 작성하고, 해당 변수를 GitHub Secrets에 등록 요청(팀장)하면 됩니다.
 
-#### 2. RDS 보안 그룹 확인
-
-AWS 콘솔에서 해당 RDS 인스턴스의 **보안 그룹 인바운드 규칙**에 본인 IP(또는 개발 서버 IP)가 허용되어 있어야 합니다.
-- 포트: `5432` (PostgreSQL)
-- 접속이 안 될 경우 팀장에게 IP 추가 요청
-
-#### 3. 애플리케이션 실행
+#### 1. 애플리케이션 실행
 
 ```bash
 # 프로젝트 루트에서
@@ -206,7 +660,7 @@ AWS 콘솔에서 해당 RDS 인스턴스의 **보안 그룹 인바운드 규칙*
 ./gradlew :blog:build
 ```
 
-#### 4. DB 스키마 관리
+#### 2. DB 스키마 관리
 
 `application.yml`의 `ddl-auto: update` 설정으로 엔티티 변경 시 스키마가 자동 반영됩니다.  
 단, **컬럼 삭제는 자동으로 반영되지 않으므로** 직접 쿼리가 필요합니다.
