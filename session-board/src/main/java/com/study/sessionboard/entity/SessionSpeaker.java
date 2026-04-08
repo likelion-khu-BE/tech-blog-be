@@ -31,17 +31,16 @@ public class SessionSpeaker {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @Column(name = "user_id", nullable = false)
+  private UUID userId;
 
   @Column
   private String role;
 
-  public static SessionSpeaker of(Session session, User user) {
+  public static SessionSpeaker of(Session session, UUID userId) {
     SessionSpeaker speaker = new SessionSpeaker();
     speaker.session = session;
-    speaker.user = user;
+    speaker.userId = userId;
     return speaker;
   }
 }

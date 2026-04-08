@@ -30,9 +30,8 @@ public class SessionNote {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  @Column(name = "author_id", nullable = false)
+  private UUID authorId;
 
   private String body;
 
@@ -44,10 +43,10 @@ public class SessionNote {
     createdAt = OffsetDateTime.now();
   }
 
-  public static SessionNote of(Session session, User author) {
+  public static SessionNote of(Session session, UUID authorId) {
     SessionNote note = new SessionNote();
     note.session = session;
-    note.author = author;
+    note.authorId = authorId;
     return note;
   }
 }

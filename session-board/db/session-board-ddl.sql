@@ -1,28 +1,14 @@
 -- ============================================================
 -- Event Session Board — PostgreSQL DDL
 -- ============================================================
+-- NOTE: 아래 테이블은 세션보드 팀이 소유하지 않습니다.
+--   "user"    → 프로필 팀 DDL에서 생성
+--   generation → 프로필 팀 DDL에서 생성
+-- FK 제약은 shared DB의 참조 무결성을 위해 유지합니다.
+-- notification → common 레이어에서 관리 (해당 DDL 별도 참고)
+-- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- ------------------------------------------------------------
--- USER
--- ------------------------------------------------------------
-CREATE TABLE "user" (
-                        id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                        name        TEXT        NOT NULL,
-                        initial     TEXT,
-                        avatar_style TEXT,
-                        created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- ------------------------------------------------------------
--- GENERATION
--- ------------------------------------------------------------
-CREATE TABLE generation (
-                            id         SERIAL      PRIMARY KEY,
-                            label      TEXT        NOT NULL,
-                            is_current BOOLEAN     NOT NULL DEFAULT false
-);
 
 -- ------------------------------------------------------------
 -- EVENT_POST
@@ -153,20 +139,6 @@ CREATE TABLE retro (
                        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ------------------------------------------------------------
--- NOTIFICATION
--- ------------------------------------------------------------
-CREATE TABLE notification (
-                              id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                              receiver_id UUID        NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-                              actor_id    UUID        NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-                              type        TEXT        NOT NULL,
-                              target_id   UUID,
-                              target_type TEXT,
-                              is_read     BOOLEAN     NOT NULL DEFAULT false,
-                              created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -194,6 +166,3 @@ CREATE INDEX idx_resource_session      ON resource(session_id);
 CREATE INDEX idx_resource_visibility   ON resource(visibility);
 
 CREATE INDEX idx_retro_session         ON retro(session_id);
-
-CREATE INDEX idx_notification_receiver ON notification(receiver_id);
-CREATE INDEX idx_notification_is_read  ON notification(receiver_id, is_read);

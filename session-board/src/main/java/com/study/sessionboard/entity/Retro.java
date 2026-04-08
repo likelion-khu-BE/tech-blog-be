@@ -30,9 +30,8 @@ public class Retro {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  @Column(name = "author_id", nullable = false)
+  private UUID authorId;
 
   /** 1 ~ 5 */
   private Integer rating;
@@ -47,10 +46,10 @@ public class Retro {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Retro of(Session session, User author) {
+  public static Retro of(Session session, UUID authorId) {
     Retro retro = new Retro();
     retro.session = session;
-    retro.author = author;
+    retro.authorId = authorId;
     return retro;
   }
 }

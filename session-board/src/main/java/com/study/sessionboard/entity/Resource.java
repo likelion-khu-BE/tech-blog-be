@@ -30,9 +30,8 @@ public class Resource {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "uploader_id", nullable = false)
-  private User uploader;
+  @Column(name = "uploader_id", nullable = false)
+  private UUID uploaderId;
 
   @Column(nullable = false)
   private String type;
@@ -57,10 +56,10 @@ public class Resource {
     uploadedAt = OffsetDateTime.now();
   }
 
-  public static Resource of(Session session, User uploader, String type, String name, String url) {
+  public static Resource of(Session session, UUID uploaderId, String type, String name, String url) {
     Resource resource = new Resource();
     resource.session = session;
-    resource.uploader = uploader;
+    resource.uploaderId = uploaderId;
     resource.type = type;
     resource.name = name;
     resource.url = url;
