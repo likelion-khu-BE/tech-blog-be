@@ -30,9 +30,8 @@ public class Comment {
   @JoinColumn(name = "post_id", nullable = false)
   private EventPost post;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  @Column(name = "author_id", nullable = false)
+  private UUID authorId;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "parent_id")
@@ -49,16 +48,16 @@ public class Comment {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Comment of(EventPost post, User author, String content) {
+  public static Comment of(EventPost post, UUID authorId, String content) {
     Comment comment = new Comment();
     comment.post = post;
-    comment.author = author;
+    comment.authorId = authorId;
     comment.content = content;
     return comment;
   }
 
-  public static Comment ofReply(EventPost post, User author, Comment parent, String content) {
-    Comment comment = of(post, author, content);
+  public static Comment ofReply(EventPost post, UUID authorId, Comment parent, String content) {
+    Comment comment = of(post, authorId, content);
     comment.parent = parent;
     return comment;
   }

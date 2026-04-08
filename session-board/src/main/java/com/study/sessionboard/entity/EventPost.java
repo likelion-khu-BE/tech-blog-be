@@ -4,12 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
@@ -28,13 +25,11 @@ public class EventPost {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  @Column(name = "author_id", nullable = false)
+  private UUID authorId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_id", nullable = false)
-  private Generation generation;
+  @Column(name = "generation_id", nullable = false)
+  private Integer generationId;
 
   @Column(nullable = false)
   private String type;
@@ -65,10 +60,10 @@ public class EventPost {
     createdAt = OffsetDateTime.now();
   }
 
-  public static EventPost of(User author, Generation generation, String type, String title) {
+  public static EventPost of(UUID authorId, Integer generationId, String type, String title) {
     EventPost post = new EventPost();
-    post.author = author;
-    post.generation = generation;
+    post.authorId = authorId;
+    post.generationId = generationId;
     post.type = type;
     post.title = title;
     return post;

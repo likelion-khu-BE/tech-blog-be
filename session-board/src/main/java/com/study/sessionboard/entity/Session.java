@@ -4,12 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -27,9 +24,8 @@ public class Session {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_id", nullable = false)
-  private Generation generation;
+  @Column(name = "generation_id", nullable = false)
+  private Integer generationId;
 
   @Column(name = "week_label")
   private String weekLabel;
@@ -44,9 +40,9 @@ public class Session {
   @Column(name = "started_at")
   private OffsetDateTime startedAt;
 
-  public static Session of(Generation generation, String title) {
+  public static Session of(Integer generationId, String title) {
     Session session = new Session();
-    session.generation = generation;
+    session.generationId = generationId;
     session.title = title;
     return session;
   }
