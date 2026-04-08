@@ -29,9 +29,8 @@ public class Like {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @Column(name = "user_id", nullable = false)
+  private UUID userId;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "post_id", nullable = false)
@@ -45,9 +44,9 @@ public class Like {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Like of(User user, EventPost post) {
+  public static Like of(UUID userId, EventPost post) {
     Like like = new Like();
-    like.user = user;
+    like.userId = userId;
     like.post = post;
     return like;
   }
