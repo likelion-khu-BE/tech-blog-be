@@ -10,6 +10,12 @@
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- pg_trgm: 한국어를 포함한 텍스트 컬럼의 부분 일치 검색(LIKE '%keyword%')을 위한 확장.
+-- PostgreSQL 기본 전문 검색(tsvector)은 한국어 형태소 분석을 지원하지 않으므로,
+-- 언어에 무관하게 문자 단위 n-gram으로 인덱싱하는 pg_trgm을 사용한다.
+-- 이 확장이 활성화되어야 아래 gin_trgm_ops 인덱스들이 동작한다.
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
 -- ------------------------------------------------------------
 -- EVENT_POST
 -- ------------------------------------------------------------
@@ -146,7 +152,11 @@ CREATE TABLE retro (
 CREATE INDEX idx_event_post_author     ON event_post(author_id);
 CREATE INDEX idx_event_post_generation ON event_post(generation_id);
 CREATE INDEX idx_event_post_status     ON event_post(status);
+-- tags 컬럼은 TEXT[] 배열이므로 GIN 인덱스로 배열 포함 연산(@>)을 지원한다.
 CREATE INDEX idx_event_post_tags       ON event_post USING GIN(tags);
+-- 게시글 제목/본문 텍스트 검색 (ILIKE '%keyword%') — pg_trgm gin_trgm_ops 사용
+CREATE INDEX idx_event_post_title      ON event_post USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_event_post_body       ON event_post USING GIN(body  gin_trgm_ops);
 
 CREATE INDEX idx_post_image_post       ON post_image(post_id);
 
@@ -159,10 +169,14 @@ CREATE INDEX idx_session_generation    ON session(generation_id);
 CREATE INDEX idx_session_status        ON session(status);
 
 CREATE INDEX idx_session_note_session  ON session_note(session_id);
+-- 세션 노트 본문 텍스트 검색 (ILIKE '%keyword%') — pg_trgm gin_trgm_ops 사용
+CREATE INDEX idx_session_note_body     ON session_note USING GIN(body gin_trgm_ops);
 
 CREATE INDEX idx_note_link_note        ON note_link(note_id);
 
 CREATE INDEX idx_resource_session      ON resource(session_id);
 CREATE INDEX idx_resource_visibility   ON resource(visibility);
+-- 자료 이름 텍스트 검색 (ILIKE '%keyword%') — pg_trgm gin_trgm_ops 사용
+CREATE INDEX idx_resource_name         ON resource USING GIN(name gin_trgm_ops);
 
 CREATE INDEX idx_retro_session         ON retro(session_id);
