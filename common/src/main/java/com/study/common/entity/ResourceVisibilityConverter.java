@@ -1,4 +1,4 @@
-package com.study.sessionboard.entity;
+package com.study.common.entity;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

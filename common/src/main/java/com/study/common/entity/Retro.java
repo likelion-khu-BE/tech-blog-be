@@ -1,4 +1,4 @@
-package com.study.sessionboard.entity;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -18,23 +17,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(
-    name = "\"like\"",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "post_id"}))
+@Table(name = "retro")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Like {
+public class Retro {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "user_id", nullable = false)
-  private UUID userId;
-
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "post_id", nullable = false)
-  private EventPost post;
+  @JoinColumn(name = "session_id", nullable = false)
+  private Session session;
+
+  @Column(name = "author_id", nullable = false)
+  private UUID authorId;
+
+  /** 1 ~ 5 */
+  private Integer rating;
+
+  private String body;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
@@ -44,10 +46,10 @@ public class Like {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Like of(UUID userId, EventPost post) {
-    Like like = new Like();
-    like.userId = userId;
-    like.post = post;
-    return like;
+  public static Retro of(Session session, UUID authorId) {
+    Retro retro = new Retro();
+    retro.session = session;
+    retro.authorId = authorId;
+    return retro;
   }
 }

@@ -1,4 +1,4 @@
-package com.study.sessionboard.entity;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,28 +17,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "comment")
+@Table(name = "session_note")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Comment {
+public class SessionNote {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "post_id", nullable = false)
-  private EventPost post;
+  @JoinColumn(name = "session_id", nullable = false)
+  private Session session;
 
   @Column(name = "author_id", nullable = false)
   private UUID authorId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "parent_id")
-  private Comment parent;
-
-  @Column(nullable = false)
-  private String content;
+  private String body;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
@@ -48,17 +43,10 @@ public class Comment {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Comment of(EventPost post, UUID authorId, String content) {
-    Comment comment = new Comment();
-    comment.post = post;
-    comment.authorId = authorId;
-    comment.content = content;
-    return comment;
-  }
-
-  public static Comment ofReply(EventPost post, UUID authorId, Comment parent, String content) {
-    Comment comment = of(post, authorId, content);
-    comment.parent = parent;
-    return comment;
+  public static SessionNote of(Session session, UUID authorId) {
+    SessionNote note = new SessionNote();
+    note.session = session;
+    note.authorId = authorId;
+    return note;
   }
 }
