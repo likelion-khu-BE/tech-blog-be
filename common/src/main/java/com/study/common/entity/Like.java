@@ -1,4 +1,4 @@
-package com.study.sessionboard.entity;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,8 +8,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,30 +19,35 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
-    name = "session_speaker",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"session_id", "user_id"}))
+    name = "\"like\"",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "post_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SessionSpeaker {
+public class Like {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "session_id", nullable = false)
-  private Session session;
-
   @Column(name = "user_id", nullable = false)
   private UUID userId;
 
-  @Column
-  private String role;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "post_id", nullable = false)
+  private EventPost post;
 
-  public static SessionSpeaker of(Session session, UUID userId) {
-    SessionSpeaker speaker = new SessionSpeaker();
-    speaker.session = session;
-    speaker.userId = userId;
-    return speaker;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private OffsetDateTime createdAt;
+
+  @PrePersist
+  void prePersist() {
+    createdAt = OffsetDateTime.now();
+  }
+
+  public static Like of(UUID userId, EventPost post) {
+    Like like = new Like();
+    like.userId = userId;
+    like.post = post;
+    return like;
   }
 }

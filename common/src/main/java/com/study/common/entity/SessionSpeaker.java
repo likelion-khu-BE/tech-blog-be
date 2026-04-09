@@ -1,4 +1,4 @@
-package com.study.sessionboard.entity;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,19 +8,20 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
+import jakarta.persistence.UniqueConstraint;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "retro")
+@Table(
+    name = "session_speaker",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"session_id", "user_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Retro {
+public class SessionSpeaker {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,26 +31,16 @@ public class Retro {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @Column(name = "author_id", nullable = false)
-  private UUID authorId;
+  @Column(name = "user_id", nullable = false)
+  private UUID userId;
 
-  /** 1 ~ 5 */
-  private Integer rating;
+  @Column
+  private String role;
 
-  private String body;
-
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private OffsetDateTime createdAt;
-
-  @PrePersist
-  void prePersist() {
-    createdAt = OffsetDateTime.now();
-  }
-
-  public static Retro of(Session session, UUID authorId) {
-    Retro retro = new Retro();
-    retro.session = session;
-    retro.authorId = authorId;
-    return retro;
+  public static SessionSpeaker of(Session session, UUID userId) {
+    SessionSpeaker speaker = new SessionSpeaker();
+    speaker.session = session;
+    speaker.userId = userId;
+    return speaker;
   }
 }

@@ -1,4 +1,4 @@
-package com.study.sessionboard.entity;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,27 +8,27 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "post_image")
+@Table(name = "note_link")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostImage {
+public class NoteLink {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "post_id", nullable = false)
-  private EventPost post;
+  @JoinColumn(name = "note_id", nullable = false)
+  private SessionNote note;
+
+  private String label;
 
   @Column(nullable = false)
   private String url;
@@ -36,18 +36,10 @@ public class PostImage {
   @Column(name = "\"order\"", nullable = false)
   private int order = 0;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private OffsetDateTime createdAt;
-
-  @PrePersist
-  void prePersist() {
-    createdAt = OffsetDateTime.now();
-  }
-
-  public static PostImage of(EventPost post, String url) {
-    PostImage image = new PostImage();
-    image.post = post;
-    image.url = url;
-    return image;
+  public static NoteLink of(SessionNote note, String url) {
+    NoteLink link = new NoteLink();
+    link.note = note;
+    link.url = url;
+    return link;
   }
 }
