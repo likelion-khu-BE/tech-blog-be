@@ -13,7 +13,7 @@
 - 로그인된 사용자 아바타 및 이름 표시
 - ADMIN일 때 어드민 메뉴 노출
 - 설정 링크 노출
-- 로그아웃 시 localStorage 제거 + 홈 리디렉트
+- 로그아웃 시 메모리의 access token 초기화 + refresh token 쿠키 삭제 + 홈 리디렉트
 
 #### AdminPage (`/admin`)
 - `GET /api/blog/admin/stats` → 대시보드 통계
@@ -134,10 +134,18 @@
 | board | VARCHAR(20) NOT NULL — AI, 백엔드, 해커톤 |
 | category | VARCHAR(20) NOT NULL — LLM, CI/CD 등 |
 | status | VARCHAR(20) NOT NULL — DRAFT, PUBLISHED |
-| tags | VARCHAR(255) — 콤마 구분 |
-| generation | VARCHAR(10) NOT NULL |
+| generation | VARCHAR(10) NOT NULL — 작성 시점 기수 비정규화 저장 |
+| repost_from_id | BIGINT NULL FK → posts.id — Repost 원본 (nullable) |
 | created_at | TIMESTAMP NOT NULL |
 | updated_at | TIMESTAMP NOT NULL |
+
+### post_tags
+
+| 컬럼 | 타입 / 설명 |
+|------|------------|
+| post_id | BIGINT FK → posts.id |
+| tag_name | VARCHAR(50) NOT NULL |
+| PK | (post_id, tag_name) |
 
 ### comments
 
@@ -205,6 +213,8 @@
 | Method | Endpoint | 설명 |
 |--------|----------|------|
 | GET | `/api/blog/members` | 회원 목록 (검색 포함) |
+
+> ⚠️ **미결 사항:** users 테이블에 `name`, `generation` 컬럼이 없음. 멤버 목록 응답에 표시 이름/기수가 필요하면 profile팀 별도 테이블 확인 필요. 현재는 `login_email` 기준으로만 조회 가능.
 
 ### 어드민
 
@@ -285,8 +295,8 @@ UPDATE refresh_token SET status='USED' WHERE id=? AND status='ACTIVE'
 
 | 버튼/액션 | React | API | Spring | 인증 |
 |----------|-------|-----|--------|------|
-| 페이지 진입 | localStorage 토큰 확인 | — | — | 공개 |
-| 로그아웃 | localStorage 제거 + 홈 이동 | — | — | MEMBER |
+| 페이지 진입 | 메모리 access token 존재 여부 확인 | — | — | 공개 |
+| 로그아웃 | 메모리 초기화 + refresh token 쿠키 삭제 + 홈 이동 | — | — | MEMBER |
 | 어드민 메뉴 | ADMIN일 때만 노출 | — | — | ADMIN |
 | 설정 링크 | SettingPage로 이동 | — | — | MEMBER |
 
