@@ -1,0 +1,18 @@
+apply plugin: 'org.springframework.boot'
+
+tasks.named('bootRun') {
+    workingDir = rootProject.projectDir
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':contract')
+    implementation project(':blog')
+    implementation project(':qna')
+    implementation project(':profile')
+    implementation project(':session-board')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.0'
+}

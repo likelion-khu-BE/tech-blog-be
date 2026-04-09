@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: study-be
+
+  # === 데이터베이스 연결 ===
+  # 접속 정보는 프로젝트 루트의 .env 파일에서 읽어옴 (spring-dotenv)
+  # .env 파일은 .gitignore에 포함되어 레포에 올라가지 않음
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+    # === 커넥션 풀 (HikariCP) ===
+    # DB 커넥션을 미리 만들어두고 재사용하는 설정
+    # RDS t4g.micro (vCPU 2, 메모리 1GB) 기준으로 튜닝
+    hikari:
+      maximum-pool-size: 10      # 최대 커넥션 수. vCPU 2개 기준 10개면 넉넉
+      minimum-idle: 10           # 최소 유지 커넥션 = 최대와 같게 → 고정 풀 (HikariCP 권장)
+      max-lifetime: 1800000      # 30분마다 커넥션을 새로 만듦 (오래된 커넥션 문제 방지)
+      keepalive-time: 30000      # 30초마다 커넥션이 살아있는지 헬스체크
+      connection-timeout: 3000   # 3초 안에 커넥션 못 잡으면 에러 (기본 30초는 너무 김)
+
+  # === JPA (Java Persistence API) ===
+  # Java 엔티티 클래스 ↔ DB 테이블 자동 매핑
+  jpa:
+    hibernate:
+      # 엔티티가 바뀌면 DB 스키마를 자동으로 맞춰줌 (개발용)
+      # 새 필드 추가 → 컬럼 자동 생성. 기존 데이터는 유지됨
+      # 주의: 필드 삭제해도 컬럼은 자동으로 안 지워짐
+      ddl-auto: update
+    # OSIV 끔 — Controller에서 지연 로딩 못 하게 막음
+    # 켜두면 편하지만 DB 커넥션을 뷰 렌더링까지 물고 있어서 성능 문제 생김
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true         # SQL을 보기 좋게 줄바꿈 (한 줄 쿼리 → 포맷팅)
+
+# === 로깅 ===
+logging:
+  level:
+    org.hibernate.SQL: debug     # Hibernate가 실행하는 SQL을 로그에 출력

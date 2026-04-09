@@ -1,13 +1,10 @@
 # KHU LikeLion Tech Blog - Backend
 
-경희대학교 멋쟁이사자처럼 기술블로그 백엔드 레포지토리입니다.
+경희대 멋쟁이사자처럼 기술블로그 백엔드
 
 > Frontend: https://khu-tech.blog
 
-## 기술 스택
-
-- Java 25, Spring Boot 3.5, Gradle
-- 멀티모듈 모놀리식 아키텍처
+**Java 21 · Spring Boot 3.5 · Gradle · 멀티모듈 모놀리식**
 
 ---
 
@@ -15,161 +12,128 @@
 
 ```
 study-be/
-├── module-common/          ← 공통 설정, 유틸리티
-├── module-contract/        ← 모듈 간 계약 (인터페이스, DTO, 이벤트)
-├── module-blog/            ← blog 팀
-├── module-qna/             ← qna 팀
-├── module-profile/         ← profile 팀
-├── module-session-board/   ← session-board 팀
-└── module-app/             ← 조립 및 실행
+├── common/          공통 설정, 유틸리티
+├── contract/        모듈 간 계약 (인터페이스, DTO, 이벤트)
+├── blog/            blog 팀
+├── qna/             qna 팀
+├── profile/         profile 팀
+├── session-board/   session-board 팀
+└── app/             조립 및 실행
 ```
-
-### 모듈 설명
-
-| 모듈 | 역할 | 소유 |
-|---|---|---|
-| `module-common` | 전체 모듈에서 사용하는 공통 코드 | 관리자 |
-| `module-contract` | 모듈 간 통신을 위한 인터페이스/DTO/이벤트 | 전체 팀 공동 |
-| `module-blog` | 아티클, 태그 등 블로그 기능 | blog 팀 |
-| `module-qna` | 질문/답변 기능 | qna 팀 |
-| `module-profile` | 멤버 프로필 기능 | profile 팀 |
-| `module-session-board` | 세션 게시판 기능 | session-board 팀 |
-| `module-app` | 모든 모듈을 조립하여 실행 가능한 애플리케이션으로 만듦 | 관리자 |
 
 ---
 
-## 협업 규칙
+## 모듈 간 통신
 
-### 1. 자기 모듈에서만 작업한다
-
-각 팀은 자신이 소유한 모듈 디렉토리에서만 개발합니다. 다른 팀의 모듈을 직접 수정하지 않습니다.
+다른 모듈의 기능이 필요하면 `contract`에 인터페이스(Port)를 정의하고, 해당 모듈이 구현한다.
 
 ```
-blog 팀    → module-blog/ 에서만 작업
-qna 팀     → module-qna/ 에서만 작업
-profile 팀 → module-profile/ 에서만 작업
-session-board 팀 → module-session-board/ 에서만 작업
+contract/  → BlogPort 인터페이스 정의
+blog/      → BlogService가 BlogPort 구현
+profile/   → ProfileService에서 BlogPort 주입받아 사용 (소비자)
 ```
 
-### 2. 다른 모듈을 직접 의존할 수 없다
+### Port 규칙
 
-각 팀 모듈의 `build.gradle`에는 `module-common`과 `module-contract`만 의존으로 선언되어 있습니다. 다른 팀 모듈의 클래스를 import하면 **컴파일이 실패**합니다.
+- contract의 모든 인터페이스는 **`*Port`로 끝나야** 한다 (네이밍 컨벤션, ArchUnit 강제)
+- **Port 구현체는 다른 모듈의 Port를 호출할 수 없다** (순환 의존 방지, ArchUnit 강제)
+- 여러 모듈의 데이터를 조합해야 하면 **소비자(Controller 등)가 각 Port를 주입받아 조합**한다
 
+```java
+// BlogService (Port 구현체) — 자기 repository만 사용
+@Override
+public int countByMember(Long memberId) {
+    return blogRepository.countByAuthorId(memberId);  // OK
+    // profilePort.getProfile(memberId);              // 컴파일은 되지만 ArchUnit 실패
+}
+
+// ProfileController (소비자) — 여러 Port를 조합
+public ContributionResponse getContribution(Long memberId) {
+    int blogCount = blogPort.countByMember(memberId);
+    int qnaCount = qnaPort.countByMember(memberId);
+    return new ContributionResponse(blogCount, qnaCount);  // 여기서 조합
+}
 ```
-허용: module-blog → module-contract, module-common
-금지: module-blog → module-qna (컴파일 에러)
-```
 
-**의존 방향 다이어그램:**
+### contract에 허용하는 것
 
-```
-  blog   qna   profile   session-board
-    \     |      |       /
-     contract  common
-           \  /
-           app (조립)
-```
+인터페이스(Port), DTO, 이벤트, 공유 Enum
 
-### 3. 모듈 간 통신은 contract를 통해서만
+### contract에 금지하는 것
 
-다른 모듈의 기능이 필요하면 `module-contract`에 인터페이스/DTO/이벤트를 정의하고, 구현은 해당 모듈 내부에서 합니다.
+Entity, Repository, 비즈니스 로직, 인프라 의존성(JPA 등)
 
-**contract에 들어가는 것:**
-- 인터페이스 (Port) — 모듈 간 호출 계약
-- DTO (Request/Response) — 모듈 간 데이터 전달 객체
-- 이벤트 — 모듈 간 비동기 알림
-- 공유 Enum
-
-**contract에 들어가면 안 되는 것:**
-- Entity (DB 매핑 객체)
-- Repository
-- 비즈니스 로직
-- 인프라 의존성 (JPA, Spring Data 등)
-
-### 4. contract 변경은 전체 팀 리뷰가 필요하다
-
-contract 모듈은 모든 팀에 영향을 줍니다. contract를 수정하는 PR은 CODEOWNERS에 의해 **모든 팀에 리뷰 요청**이 갑니다. 혼자 바꾸고 머지할 수 없습니다.
-
-### 5. 인프라 파일은 관리자만 수정한다
-
-다음 파일/디렉토리는 관리자 소유입니다. 수정이 필요하면 관리자에게 요청하세요.
-
-- `build.gradle` (루트)
-- `settings.gradle`
-- `module-common/`
-- `module-app/`
-- `.github/`
-
-특히 **각 모듈의 `build.gradle`에 새 의존성을 추가할 때는 반드시 관리자 확인**을 받으세요. 다른 팀 모듈을 의존에 몰래 추가하면 아키텍처가 무너집니다.
+> contract 변경 PR은 CODEOWNERS에 의해 **전체 팀 리뷰** 필요
 
 ---
 
 ## 아키텍처 검증
 
-모듈 경계는 두 가지 수준에서 강제됩니다.
+모듈 경계는 **3중으로 강제**된다.
 
-### Gradle 의존성 차단 (1차)
-
-`build.gradle`에 선언하지 않은 모듈은 import 자체가 불가능합니다. 컴파일 단계에서 차단됩니다.
-
-### ArchUnit 테스트 (2차)
-
-`module-app`의 `ArchitectureTest`가 패키지 레벨에서 의존성 규칙을 검증합니다. CI에서 `./gradlew test` 실행 시 위반이 있으면 빌드가 실패합니다.
-
-검증하는 규칙:
-- 각 팀 모듈 패키지는 다른 팀 모듈 패키지에 의존할 수 없다
-- contract 패키지는 팀 모듈 패키지에 의존할 수 없다
-- common 패키지는 팀 모듈, contract 패키지에 의존할 수 없다
+| 수준 | 방식 | 시점 |
+|---|---|---|
+| 1차 | Gradle 의존성 — 미선언 모듈 import 불가 | 컴파일 |
+| 2차 | ArchUnit — 패키지 레벨 의존 규칙, Port 격리 규칙 | 테스트 (CI) |
+| 3차 | CODEOWNERS — contract 변경 시 전체 팀 리뷰 | PR |
 
 ---
 
-## 개발 환경 설정
+## 협업 규칙
 
-### Java 25 설치
+1. **자기 모듈에서만 작업** — 다른 팀 모듈 직접 수정 금지
+2. **모듈 간 통신은 contract 경유** — 직접 참조 금지
+3. **의존성 추가 시 관리자 확인** — `build.gradle`에 임의로 팀 모듈 추가 금지
+4. **인프라 파일은 관리자 소유** — `common/`, `app/`, `build.gradle`, `settings.gradle`, `.github/`
+
+---
+
+## 개발 환경
 
 ```bash
-# SDKMAN 사용
-sdk install java 25.0.2-tem
-sdk use java 25.0.2-tem
-```
+# Java 21 설치 (SDKMAN)
+sdk install java 21.0.7-tem
 
-### 빌드 및 테스트
-
-```bash
 # 전체 빌드
 ./gradlew clean build
 
 # 특정 모듈만 빌드
-./gradlew :module-blog:build
+./gradlew :blog:build
 
-# 아키텍처 테스트만 실행
-./gradlew :module-app:test
+# 아키텍처 테스트만
+./gradlew :app:test
 
-# 애플리케이션 실행
-./gradlew :module-app:bootRun
+# 실행
+./gradlew :app:bootRun
 ```
 
 ---
 
-## 브랜치 전략
+## 브랜치 & PR 규칙
 
-- `main` — 보호된 브랜치. 직접 push 금지.
-- PR을 통해서만 머지하며, CODEOWNERS 리뷰 승인 필수.
-- CI 테스트 (빌드 + ArchUnit) 통과 필수.
+- `main` — 보호 브랜치, 직접 push 금지
+- PR 머지 조건:
+  - **코드 소유자 최소 1명 승인** 필요
+  - CI 테스트 통과
+  - 승인 후 코드 변경 시 승인 초기화 (dismiss stale reviews)
+
+### 코드 소유자
+
+모든 파일에 대해 다음 5명이 코드 소유자:
+
+`@cjang3285` `@xihxxn` `@xhae123` `@Suuunz` `@sunwoo1256`
+
+이 중 1명 이상이 승인해야 PR 머지 가능.
 
 ---
 
-## 패키지 컨벤션
+## 팀 구성
 
-각 팀 모듈의 기본 패키지:
+| 팀 | 헤드 | 팀원 |
+|---|---|---|
+| 블로그 | 장찬욱 | 노희윤, 김주연 |
+| Q&A | 윤선재 | 심아현, 김예빈 |
+| 프로필 | 안시현 | 박세인, 임근엽 |
+| 세션보드 | 신선우 | 박현아, 한예진 |
 
-```
-com.study.blog          ← module-blog
-com.study.qna           ← module-qna
-com.study.profile       ← module-profile
-com.study.sessionboard  ← module-session-board
-com.study.contract      ← module-contract
-com.study.common        ← module-common
-```
-
-모듈 내부 패키지 구조는 각 팀이 자율적으로 결정합니다.
+**관리자**: 김우진 (@xhae123)
