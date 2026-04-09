@@ -306,8 +306,8 @@ UPDATE refresh_token SET status='USED' WHERE id=? AND status='ACTIVE'
 |----------|-------|-----|--------|------|
 | 페이지 진입 | ADMIN 아니면 차단 | `GET /api/blog/admin/stats` | `AdminService.getStats()` | ADMIN |
 | 승인 대기 목록 | 자동 로드 | `GET /api/blog/admin/pending` | `AdminService.getPending()` | ADMIN |
-| 승인 버튼 | 행 상태 변경 | `POST /api/blog/admin/members/:id/approve` | `AdminService.approve()` | ADMIN |
-| 거절 버튼 | 행 제거 | `POST /api/blog/admin/members/:id/reject` | `AdminService.reject()` | ADMIN |
+| 승인 버튼 | 행 상태 변경 | `POST /api/blog/admin/members/:id/approve` | `AdminService.approve()` — user_status: PENDING → ACTIVE | ADMIN |
+| 거절 버튼 | 행 제거 | `POST /api/blog/admin/members/:id/reject` | `AdminService.reject()` — user_status: PENDING → REJECTED | ADMIN |
 | Role 변경 | 뱃지 변경 | `PATCH /api/blog/admin/members/:id/role` | `AdminService.changeRole()` | ADMIN |
 | 회원 검색 | 검색어 상태 | `GET /api/blog/members?keyword=` | `UserService.getMembers()` | ADMIN |
 | 게시글 목록 | 자동 로드 | `GET /api/blog/admin/posts` | `AdminService.getPosts()` | ADMIN |
