@@ -76,22 +76,59 @@
 
 ### users
 
+> profile팀 common/ 모듈에서 관리. DDL 기준 (parksein0223).
+
 | 컬럼 | 타입 / 설명 |
 |------|------------|
-| id | BIGINT PK |
-| email | VARCHAR(100) UNIQUE NOT NULL |
-| password | VARCHAR(255) NOT NULL |
-| name | VARCHAR(50) NOT NULL |
-| generation | VARCHAR(10) NOT NULL — "13기" 형태 |
-| role | VARCHAR(20) NOT NULL — PENDING, MEMBER, ADMIN |
-| created_at | TIMESTAMP NOT NULL |
+| id | UUID PK |
+| login_email | TEXT UNIQUE NOT NULL |
+| password_hash | TEXT NOT NULL — BCrypt |
+| role | user_role ENUM — MEMBER, ADMIN |
+| status | user_status ENUM — PENDING, ACTIVE, REJECTED, EXPIRED |
+| signup_requested_at | TIMESTAMPTZ NOT NULL DEFAULT NOW() |
+| approved_at | TIMESTAMPTZ NULL |
+| approved_by | UUID NULL FK → users.id |
+| expired_at | TIMESTAMPTZ NULL — 미승인 7일 후 만료 |
+| last_login_at | TIMESTAMPTZ NULL |
+| created_at | TIMESTAMPTZ NOT NULL |
+| updated_at | TIMESTAMPTZ NOT NULL |
+
+> **user_status 설명**
+> - PENDING: 가입 신청 후 관리자 승인 대기
+> - ACTIVE: 승인 완료 (로그인 가능)
+> - REJECTED: 관리자 반려
+> - EXPIRED: 가입 신청 후 7일 내 미승인으로 만료
+
+> **로그인 방식:** Local(email + password)만 사용. GitHub OAuth 미도입.
+
+### refresh_token
+
+> profile팀 common/ 모듈에서 관리.
+
+| 컬럼 | 타입 / 설명 |
+|------|------------|
+| id | BIGINT PK AUTO_INCREMENT |
+| user_id | UUID NOT NULL FK → users.id |
+| token_hash | VARCHAR(255) UNIQUE NOT NULL — 원문 저장 금지, hash만 저장 |
+| family_id | VARCHAR(36) NOT NULL — 같은 rotation 체인 식별 |
+| parent_token_id | BIGINT NULL FK → refresh_token.id |
+| status | VARCHAR(20) NOT NULL — ACTIVE, USED, REVOKED, EXPIRED |
+| issued_at | DATETIME NOT NULL |
+| expires_at | DATETIME NOT NULL |
+| used_at | DATETIME NULL |
+| revoked_at | DATETIME NULL |
+| replaced_by_token_id | BIGINT NULL |
+| user_agent | VARCHAR(255) NULL |
+| ip_address | VARCHAR(64) NULL |
+| created_at | DATETIME NOT NULL |
+| updated_at | DATETIME NOT NULL |
 
 ### posts
 
 | 컬럼 | 타입 / 설명 |
 |------|------------|
 | id | BIGINT PK |
-| user_id | BIGINT FK → users.id |
+| user_id | UUID FK → users.id |
 | title | VARCHAR(255) NOT NULL |
 | content | TEXT NOT NULL |
 | board | VARCHAR(20) NOT NULL — AI, 백엔드, 해커톤 |
@@ -108,7 +145,7 @@
 |------|------------|
 | id | BIGINT PK |
 | post_id | BIGINT FK → posts.id |
-| user_id | BIGINT FK → users.id |
+| user_id | UUID FK → users.id |
 | parent_id | BIGINT FK → comments.id — NULL=댓글, 있으면=대댓글 |
 | content | TEXT NOT NULL |
 | created_at | TIMESTAMP NOT NULL |
@@ -118,7 +155,7 @@
 | 컬럼 | 타입 / 설명 |
 |------|------------|
 | post_id | BIGINT FK → posts.id |
-| user_id | BIGINT FK → users.id |
+| user_id | UUID FK → users.id |
 | PK | (post_id, user_id) |
 
 ### post_bookmarks
@@ -126,7 +163,7 @@
 | 컬럼 | 타입 / 설명 |
 |------|------------|
 | post_id | BIGINT FK → posts.id |
-| user_id | BIGINT FK → users.id |
+| user_id | UUID FK → users.id |
 | PK | (post_id, user_id) |
 
 ### comment_likes
@@ -134,7 +171,7 @@
 | 컬럼 | 타입 / 설명 |
 |------|------------|
 | comment_id | BIGINT FK → comments.id |
-| user_id | BIGINT FK → users.id |
+| user_id | UUID FK → users.id |
 | PK | (comment_id, user_id) |
 
 ---
@@ -189,13 +226,54 @@
 
 | 항목 | 내용 |
 |------|------|
-| 인증 방식 | JWT access token (body) + refresh token (HttpOnly 쿠키) |
+| 인증 방식 | JWT access token (응답 body 반환 → 프론트 메모리 저장) + refresh token (HttpOnly 쿠키) |
+| JWT 라이브러리 | Spring Security 내장 JwtEncoder / JwtDecoder (HS256) |
 | 비밀번호 | BCrypt |
-| refresh token 저장 | DB (JPA) |
-| 인가 ROLE | ADMIN, MEMBER, PENDING |
+| refresh token 저장 | DB — 원문 저장 금지, hash만 저장 |
+| 인가 ROLE | ADMIN, MEMBER (PENDING은 user_status — 로그인 자체 불가) |
+| user_status | PENDING / ACTIVE / REJECTED / EXPIRED |
 | common/ 위치 | JWT유틸, @CurrentUser 리졸버, 인증예외, User/RefreshToken 엔티티 |
 | app/ 위치 | SecurityFilterChain, CORS, JwtAuthenticationFilter |
-| Rotation | 재사용 감지 시 해당 사용자 전체 토큰 무효화 |
+| Rotation | family_id 기반 — 재사용 감지 시 동일 family 전체 revoke |
+| 로그인 방식 | Local(email + password)만 사용. GitHub OAuth 미도입. |
+
+## 4-1. JWT 상세 설계
+
+### 토큰 Payload
+
+| 토큰 | 포함 클레임 | 제외 |
+|------|------------|------|
+| Access Token | sub(userId), role, iat, exp, jti | 비밀번호, 개인정보 |
+| Refresh Token | sub(userId), jti, exp | role (매 재발급 시 DB 조회) |
+
+- Access Token 만료: **15분**
+- alg=none 공격 대응: 허용 알고리즘 HS256 강제
+
+### Refresh Token Rotation 흐름
+
+```
+[정상]
+refresh 요청 → ACTIVE 검증 → 기존 토큰 USED 처리(atomic) → 새 토큰 발급
+
+[재사용 공격 감지]
+USED 토큰 재사용 → 동일 family_id 전체 REVOKE → 401 응답
+
+[Race Condition 대응]
+UPDATE refresh_token SET status='USED' WHERE id=? AND status='ACTIVE'
+→ 영향 row = 0이면 이미 사용된 토큰으로 판단
+```
+
+### Security Filter Chain 위치
+
+```
+① CORS 필터
+→ ② JwtAuthenticationFilter (UsernamePasswordAuthenticationFilter 앞)
+   → 토큰 없음/만료 → 401 (AuthenticationEntryPoint)
+→ ③ 권한 확인 → ROLE 불일치 → 403 (AccessDeniedHandler)
+→ ④ Controller
+
+인증 제외: /api/auth/signup, /api/auth/login, /api/auth/refresh
+```
 
 ---
 
@@ -286,12 +364,14 @@
 
 | 설계 항목 | 대응 이슈 | 근거 |
 |----------|----------|------|
-| access token → body | 이슈 1: localStorage XSS | 만료 시간이 짧아 탈취 피해 범위 제한. 수명이 짧은 토큰은 localStorage 트레이드오프 허용 가능. |
-| refresh token → HttpOnly 쿠키 | 이슈 1: 저장/전달 보안 | HttpOnly=JS접근 차단(XSS), Secure=HTTPS만 전송, SameSite=Strict=타 도메인 차단(CSRF). 수명이 길어 쿠키 필수. |
-| Rotation + 전체 무효화 | 이슈 2: refresh 탈취 대응 | 사용된 토큰 재사용 → DB에서 감지. 부분 무효화 시 공격자가 다른 토큰으로 계속 접근 가능하므로 전체 무효화. |
-| BCrypt | 이슈 1: 비밀번호 평문 금지 | 단방향 해시 + 자동 salt. 레인보우 테이블 공격 방어. |
-| ROLE: ADMIN/MEMBER/PENDING | 이슈 3: 401 vs 403 | 401=인증 없음(토큰 없음/만료), 403=인증됨 but 권한 없음. PENDING=가입 완료 but 승인 전. |
-| common/ vs app/ 분리 | 이슈 3: FilterChain 구성 | JWT유틸/엔티티는 common/에서 전 팀 공유. 필터 체인은 app/에만 등록. 각 팀이 중복 구현 불필요. |
+| access token → 메모리 저장 | XSS 대응 | localStorage는 XSS 시 JS로 접근 가능. 응답 body로 반환하되 프론트가 메모리(변수)에만 보관. 15분 만료로 탈취 피해 최소화. |
+| refresh token → HttpOnly 쿠키 | XSS/CSRF 대응 | HttpOnly=JS 접근 차단, Secure=HTTPS만 전송, SameSite=Strict=타 도메인 차단. 수명이 길어 쿠키 필수. |
+| refresh token → DB hash 저장 | 토큰 원문 탈취 대응 | DB에 hash만 저장. 원문 유출 시 재현 불가. |
+| Rotation + family_id 전체 revoke | refresh 탈취 대응 | USED 토큰 재사용 → atomic update로 race condition 방어. 동일 family_id 전체 revoke로 공격자 세션 전부 차단. |
+| BCrypt | 비밀번호 평문 금지 | 단방향 해시 + 자동 salt. 레인보우 테이블 공격 방어. |
+| ROLE: ADMIN/MEMBER (PENDING → status) | 401 vs 403 | 401=인증 없음, 403=인증됨 but 권한 부족. PENDING은 role이 아닌 status — 로그인 자체가 불가(401). |
+| Spring Security JwtEncoder/JwtDecoder | 라이브러리 선택 | Security와 자연스럽게 통합. HS256 강제로 alg=none 공격 차단. |
+| common/ vs app/ 분리 | FilterChain 구성 | JWT유틸/엔티티는 common/에서 전 팀 공유. 필터 체인은 app/에만 등록. |
 
 ---
 
@@ -347,7 +427,31 @@
 
 ---
 
-## 9. 기술 스택
+## 9. 백엔드 구현 결정 사항
+
+| # | 항목 | 결정 | 비고 |
+|---|------|------|------|
+| 1 | User 엔티티 위치 | blog 모듈에 임시 생성 | profile팀 common/ 완성 후 이전. id 타입은 UUID |
+| 2 | 개발 중 Mock 인증 | userId 하드코딩 (UUID 고정값) | Spring Security 붙이기 전 고정 UUID 사용 |
+| 3 | tags 저장 방식 | 별도 `post_tags` 테이블 | post_id + tag_name 컬럼 |
+| 4 | API 응답 포맷 | 공통 래퍼 사용 | `{ "data": ..., "message": ... }` |
+| 5 | Repost DB 컬럼 | `posts` 테이블에 추가 | `repost_from_id BIGINT FK → posts.id` (nullable) |
+| 6 | 패키지 구조 | 도메인 기반 | `post/`, `comment/`, `member/`, `admin/`, `common/` |
+
+### 도메인별 패키지 구조
+
+```
+blog/
+├── post/        # Post 엔티티, PostService, PostController, PostRepository
+├── comment/     # Comment 엔티티, CommentService, CommentController
+├── member/      # User 임시 엔티티, UserService, MemberController
+├── admin/       # AdminService, AdminController
+└── common/      # 공통 응답 래퍼(ApiResponse), 예외 처리
+```
+
+---
+
+## 10. 기술 스택
 
 | 구분 | 기술 |
 |------|------|
