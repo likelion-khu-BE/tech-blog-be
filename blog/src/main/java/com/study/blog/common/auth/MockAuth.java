@@ -1,0 +1,12 @@
+package com.study.blog.common.auth;
+
+import java.util.UUID;
+
+/** Spring Security 연동 전 임시로 사용하는 Mock 인증 유틸. */
+public final class MockAuth {
+
+  public static final UUID MOCK_USER_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+  private MockAuth() {}
+}
