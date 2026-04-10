@@ -25,10 +25,9 @@ spring:
   # Java 엔티티 클래스 ↔ DB 테이블 자동 매핑
   jpa:
     hibernate:
-      # 엔티티가 바뀌면 DB 스키마를 자동으로 맞춰줌 (개발용)
-      # 새 필드 추가 → 컬럼 자동 생성. 기존 데이터는 유지됨
-      # 주의: 필드 삭제해도 컬럼은 자동으로 안 지워짐
-      ddl-auto: update
+      # 스키마는 Flyway가 관리. Hibernate는 엔티티와 DB가 일치하는지 검증만 함
+      # 불일치 시 앱 시작 실패 → DDL 누락을 즉시 발견할 수 있음
+      ddl-auto: validate
     # OSIV 끔 — Controller에서 지연 로딩 못 하게 막음
     # 켜두면 편하지만 DB 커넥션을 뷰 렌더링까지 물고 있어서 성능 문제 생김
     open-in-view: false
