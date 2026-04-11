@@ -14,5 +14,11 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // Flyway: DB 스키마 버전 관리
+    // flyway-core: 핵심 마이그레이션 엔진
+    // flyway-database-postgresql: Flyway 10+ 에서 PostgreSQL 드라이버 분리 제공
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.0'
 }

@@ -35,6 +35,12 @@ spring:
       hibernate:
         format_sql: true         # SQL을 보기 좋게 줄바꿈 (한 줄 쿼리 → 포맷팅)
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration  # SQL 파일 위치
+    baseline-on-migrate: true          # 기존 DB가 있을 경우 필수!
+    baseline-version: 0                # 기준 버전
+
 # === 로깅 ===
 logging:
   level:
