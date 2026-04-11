@@ -10,6 +10,8 @@ import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "comment_likes")
@@ -22,6 +24,7 @@ public class CommentLike {
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("commentId")
   @JoinColumn(name = "comment_id")
+  @OnDelete(action = OnDeleteAction.CASCADE)
   private Comment comment;
 
   public CommentLike(Comment comment, UUID userId) {

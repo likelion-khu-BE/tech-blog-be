@@ -10,6 +10,8 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "post_tags")
@@ -23,6 +25,7 @@ public class PostTag {
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("postId")
   @JoinColumn(name = "post_id")
+  @OnDelete(action = OnDeleteAction.CASCADE)
   private Post post;
 
   public PostTag(Post post, String tagName) {

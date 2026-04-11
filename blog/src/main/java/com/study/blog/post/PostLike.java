@@ -10,6 +10,8 @@ import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "post_likes")
@@ -22,6 +24,7 @@ public class PostLike {
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("postId")
   @JoinColumn(name = "post_id")
+  @OnDelete(action = OnDeleteAction.CASCADE)
   private Post post;
 
   public PostLike(Post post, UUID userId) {
