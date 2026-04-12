@@ -13,6 +13,7 @@ dependencies {
     implementation project(':session-board')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // Spring Security — 필터 체인 auto-config, 세션 관리, CSRF 등
     // core는 common에서 api로 노출하고, starter는 app에서만 가져감 (책임 분리)
