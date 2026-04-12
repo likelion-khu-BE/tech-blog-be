@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -22,7 +23,12 @@ import lombok.NoArgsConstructor;
  * 저장한다 — 평문은 절대 이 객체에 들어오지 않는다.
  */
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    indexes = {
+      @Index(name = "idx_user_login_email", columnList = "login_email", unique = true),
+      @Index(name = "idx_user_status", columnList = "status")
+    })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
