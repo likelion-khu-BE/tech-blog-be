@@ -35,6 +35,14 @@ spring:
       hibernate:
         format_sql: true         # SQL을 보기 좋게 줄바꿈 (한 줄 쿼리 → 포맷팅)
 
+# === JWT 인증 ===
+# JWT_SECRET은 반드시 Base64 인코딩된 256bit 이상 키여야 한다
+# 생성: openssl rand -base64 32
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:900000}      # 15분 (ms). 짧을수록 탈취 피해 감소
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7일 (ms). rotation으로 보완
+
 # === 로깅 ===
 logging:
   level:

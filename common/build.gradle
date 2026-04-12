@@ -4,4 +4,15 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'me.paulschwarz:spring-dotenv:3.0.0'
+
+    // Spring Security core — @PreAuthorize, @AuthenticationPrincipal 등
+    // 팀 모듈에서 메서드 레벨 인가를 쓸 수 있도록 api로 노출
+    // auto-config(필터 체인 자동 등록)는 app 모듈에서만 가져감
+    api 'org.springframework.security:spring-security-core'
+
+    // JWT 토큰 생성/검증 — 자체 발급 + HS256에 적합한 사실상의 표준 라이브러리
+    // jjwt-api만 컴파일 의존, 구현체는 런타임 분리 (jjwt의 설계 철학)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 }
