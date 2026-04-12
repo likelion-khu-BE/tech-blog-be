@@ -91,7 +91,9 @@ public class CommentService {
     }
     comment.updateContent(req.getContent());
     long likeCount = commentLikeRepository.countByIdCommentId(commentId);
-    return CommentResponse.of(comment, likeCount, false);
+    boolean liked =
+        commentLikeRepository.findByIdCommentIdAndIdUserId(commentId, userId).isPresent();
+    return CommentResponse.of(comment, likeCount, liked);
   }
 
   @Transactional
