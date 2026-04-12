@@ -88,6 +88,10 @@ public class User {
     this.approvedBy = adminId;
   }
 
+  public void promoteToAdmin() {
+    this.role = UserRole.ADMIN;
+  }
+
   public void reject() {
     this.status = UserStatus.REJECTED;
   }

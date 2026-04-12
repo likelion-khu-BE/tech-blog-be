@@ -4,6 +4,11 @@ tasks.named('bootRun') {
     workingDir = rootProject.projectDir
 }
 
+// spring-dotenv가 프로젝트 루트의 .env를 읽으려면 working directory가 루트여야 한다
+tasks.named('test') {
+    workingDir = rootProject.projectDir
+}
+
 dependencies {
     implementation project(':common')
     implementation project(':contract')

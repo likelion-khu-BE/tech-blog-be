@@ -18,7 +18,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
    * <p>WHERE status='ACTIVE' 조건 덕분에 동시에 같은 토큰으로 refresh 요청이 오면 하나만 성공한다. 반환값이 0이면 이미
    * 사용된 토큰 → 재사용 공격으로 판단.
    */
-  @Modifying
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
       "UPDATE RefreshToken r SET r.status = com.study.common.entity.RefreshTokenStatus.USED"
           + " WHERE r.tokenHash = :tokenHash"
@@ -30,7 +30,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
    *
    * <p>재사용 감지 시 호출 — 공격자와 정상 사용자 토큰을 구분할 수 없으므로 family 전체를 폐기한다.
    */
-  @Modifying
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
       "UPDATE RefreshToken r SET r.status = com.study.common.entity.RefreshTokenStatus.REVOKED"
           + " WHERE r.familyId = :familyId"
@@ -38,7 +38,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
   int revokeFamily(@Param("familyId") UUID familyId);
 
   /** 해당 유저의 모든 ACTIVE 토큰을 REVOKED 처리. 전체 로그아웃 시 사용. */
-  @Modifying
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
       "UPDATE RefreshToken r SET r.status = com.study.common.entity.RefreshTokenStatus.REVOKED"
           + " WHERE r.userId = :userId"

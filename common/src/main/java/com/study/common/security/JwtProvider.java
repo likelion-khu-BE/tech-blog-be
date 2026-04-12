@@ -51,10 +51,16 @@ public class JwtProvider {
         .compact();
   }
 
-  /** refresh token 생성. familyId로 같은 세션의 토큰 체인을 추적한다. */
+  /**
+   * refresh token 생성. familyId로 같은 세션의 토큰 체인을 추적한다.
+   *
+   * <p>jti(JWT ID)를 랜덤 UUID로 설정하여 동일 시각에 생성되어도 토큰이 유니크하도록 보장한다. 이것이 없으면 같은
+   * 밀리초에 rotation이 일어날 때 동일한 토큰이 생성되어 DB unique 제약 위반이 발생한다.
+   */
   public String generateRefreshToken(Long userId, UUID familyId) {
     Date now = new Date();
     return Jwts.builder()
+        .id(UUID.randomUUID().toString())
         .subject(userId.toString())
         .claim("familyId", familyId.toString())
         .claim("type", "refresh")
