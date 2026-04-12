@@ -67,6 +67,9 @@ public class CommentService {
           commentRepository
               .findById(req.getParentId())
               .orElseThrow(() -> new BlogException(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
+      if (!parent.getPostId().equals(postId)) {
+        throw new BlogException(BlogErrorCode.PARENT_COMMENT_NOT_FOUND);
+      }
     }
 
     Comment comment =
