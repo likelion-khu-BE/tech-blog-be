@@ -11,7 +11,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,8 +28,8 @@ import lombok.NoArgsConstructor;
 public class User {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
   @Column(name = "login_email", nullable = false, unique = true)
   private String loginEmail;
@@ -54,7 +53,7 @@ public class User {
   private Instant approvedAt;
 
   @Column(name = "approved_by")
-  private UUID approvedBy;
+  private Long approvedBy;
 
   @Column(name = "expired_at")
   private Instant expiredAt;
@@ -83,7 +82,7 @@ public class User {
 
   // ── 도메인 행위 ──
 
-  public void approve(UUID adminId) {
+  public void approve(Long adminId) {
     this.status = UserStatus.ACTIVE;
     this.approvedAt = Instant.now();
     this.approvedBy = adminId;

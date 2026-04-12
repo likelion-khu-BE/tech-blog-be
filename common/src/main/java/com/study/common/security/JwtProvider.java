@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
  *
  * <p>HS256 대칭키 — 토큰 발급과 검증이 같은 서버에서 이루어지므로 비대칭키(RS256)는 불필요.
  *
- * <p>access token: sub=userId, role 클레임 포함 (매 요청마다 DB 조회 없이 인가 판단) refresh token: sub=userId,
- * familyId 클레임 포함 (rotation 추적용)
+ * <p>access token: sub=userId(Long), role 클레임 포함 (매 요청마다 DB 조회 없이 인가 판단) refresh token:
+ * sub=userId, familyId 클레임 포함 (rotation 추적용)
  */
 @Component
 public class JwtProvider {
@@ -39,7 +39,7 @@ public class JwtProvider {
   }
 
   /** access token 생성. role을 클레임에 넣어 매 요청마다 DB 조회 없이 인가를 처리한다. */
-  public String generateAccessToken(UUID userId, UserRole role) {
+  public String generateAccessToken(Long userId, UserRole role) {
     Date now = new Date();
     return Jwts.builder()
         .subject(userId.toString())
@@ -52,7 +52,7 @@ public class JwtProvider {
   }
 
   /** refresh token 생성. familyId로 같은 세션의 토큰 체인을 추적한다. */
-  public String generateRefreshToken(UUID userId, UUID familyId) {
+  public String generateRefreshToken(Long userId, UUID familyId) {
     Date now = new Date();
     return Jwts.builder()
         .subject(userId.toString())
@@ -73,8 +73,8 @@ public class JwtProvider {
     return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
   }
 
-  public UUID getUserId(String token) {
-    return UUID.fromString(parseToken(token).getSubject());
+  public Long getUserId(String token) {
+    return Long.valueOf(parseToken(token).getSubject());
   }
 
   public UserRole getRole(String token) {
@@ -101,7 +101,7 @@ public class JwtProvider {
       if (!"access".equals(claims.get("type", String.class))) {
         return Optional.empty();
       }
-      UUID userId = UUID.fromString(claims.getSubject());
+      Long userId = Long.valueOf(claims.getSubject());
       UserRole role = UserRole.valueOf(claims.get("role", String.class));
       return Optional.of(new AccessTokenInfo(userId, role));
     } catch (JwtException | IllegalArgumentException e) {

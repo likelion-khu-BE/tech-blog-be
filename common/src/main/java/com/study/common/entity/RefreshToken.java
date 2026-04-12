@@ -37,11 +37,11 @@ import lombok.NoArgsConstructor;
 public class RefreshToken {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
   @Column(name = "user_id", nullable = false)
-  private UUID userId;
+  private Long userId;
 
   /** SHA-256 해시. 원문 토큰이 이 필드에 할당되면 보안 사고다. */
   @Column(name = "token_hash", nullable = false, unique = true)
@@ -64,7 +64,7 @@ public class RefreshToken {
   // ── 팩토리 메서드 ──
 
   /** 새 refresh token 레코드 생성. tokenHash는 반드시 SHA-256 해시여야 한다. */
-  public static RefreshToken create(UUID userId, String tokenHash, UUID familyId, Instant expiresAt) {
+  public static RefreshToken create(Long userId, String tokenHash, UUID familyId, Instant expiresAt) {
     RefreshToken token = new RefreshToken();
     token.userId = userId;
     token.tokenHash = tokenHash;
