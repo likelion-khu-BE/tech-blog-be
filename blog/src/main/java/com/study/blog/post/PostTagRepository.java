@@ -1,5 +1,8 @@
 package com.study.blog.post;
 
+import com.study.common.entity.Post;
+import com.study.common.entity.PostTag;
+import com.study.common.entity.PostTagId;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 

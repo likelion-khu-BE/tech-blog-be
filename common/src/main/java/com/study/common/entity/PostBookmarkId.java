@@ -1,4 +1,4 @@
-package com.study.blog.comment;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -13,10 +13,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommentLikeId implements Serializable {
+public class PostBookmarkId implements Serializable {
 
-  @Column(name = "comment_id")
-  private Long commentId;
+  @Column(name = "post_id")
+  private Long postId;
 
   @Column(name = "user_id", columnDefinition = "uuid")
   private UUID userId;
@@ -24,12 +24,12 @@ public class CommentLikeId implements Serializable {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof CommentLikeId that)) return false;
-    return Objects.equals(commentId, that.commentId) && Objects.equals(userId, that.userId);
+    if (!(o instanceof PostBookmarkId that)) return false;
+    return Objects.equals(postId, that.postId) && Objects.equals(userId, that.userId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(commentId, userId);
+    return Objects.hash(postId, userId);
   }
 }

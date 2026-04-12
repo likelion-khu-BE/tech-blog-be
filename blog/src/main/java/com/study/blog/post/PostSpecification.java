@@ -1,5 +1,7 @@
 package com.study.blog.post;
 
+import com.study.common.entity.Post;
+import com.study.common.entity.PostStatus;
 import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 

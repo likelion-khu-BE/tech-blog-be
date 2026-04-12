@@ -1,7 +1,7 @@
 package com.study.blog.post.dto;
 
-import com.study.blog.post.Post;
-import com.study.blog.post.PostStatus;
+import com.study.common.entity.Post;
+import com.study.common.entity.PostStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;

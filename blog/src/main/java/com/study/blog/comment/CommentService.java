@@ -5,6 +5,8 @@ import com.study.blog.comment.dto.CommentResponse;
 import com.study.blog.comment.dto.CommentUpdateRequest;
 import com.study.blog.common.exception.BlogErrorCode;
 import com.study.blog.common.exception.BlogException;
+import com.study.common.entity.Comment;
+import com.study.common.entity.CommentLike;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -1,5 +1,7 @@
 package com.study.blog.post;
 
+import com.study.common.entity.PostLike;
+import com.study.common.entity.PostLikeId;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;

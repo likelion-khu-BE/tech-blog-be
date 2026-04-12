@@ -1,6 +1,6 @@
 package com.study.blog.post.dto;
 
-import com.study.blog.post.PostStatus;
+import com.study.common.entity.PostStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

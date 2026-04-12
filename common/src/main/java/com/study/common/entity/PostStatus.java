@@ -1,4 +1,4 @@
-package com.study.blog.post;
+package com.study.common.entity;
 
 public enum PostStatus {
   DRAFT,

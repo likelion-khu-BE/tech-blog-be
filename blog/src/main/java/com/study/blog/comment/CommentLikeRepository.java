@@ -1,5 +1,7 @@
 package com.study.blog.comment;
 
+import com.study.common.entity.CommentLike;
+import com.study.common.entity.CommentLikeId;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,4 +1,4 @@
-package com.study.blog.comment;
+package com.study.common.entity;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -7,28 +7,33 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import java.util.UUID;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "comment_likes")
+@Table(name = "post_tags")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CommentLike {
+public class PostTag {
 
   @EmbeddedId
-  private CommentLikeId id;
+  private PostTagId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @MapsId("commentId")
-  @JoinColumn(name = "comment_id")
+  @MapsId("postId")
+  @JoinColumn(name = "post_id")
   @OnDelete(action = OnDeleteAction.CASCADE)
-  private Comment comment;
+  private Post post;
 
-  public CommentLike(Comment comment, UUID userId) {
-    this.comment = comment;
-    this.id = new CommentLikeId(comment.getId(), userId);
+  public PostTag(Post post, String tagName) {
+    this.post = post;
+    this.id = new PostTagId(post.getId(), tagName);
+  }
+
+  public String getTagName() {
+    return id.getTagName();
   }
 }

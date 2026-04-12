@@ -1,4 +1,4 @@
-package com.study.blog.post;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostBookmarkId implements Serializable {
+public class PostLikeId implements Serializable {
 
   @Column(name = "post_id")
   private Long postId;
@@ -24,7 +24,7 @@ public class PostBookmarkId implements Serializable {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof PostBookmarkId that)) return false;
+    if (!(o instanceof PostLikeId that)) return false;
     return Objects.equals(postId, that.postId) && Objects.equals(userId, that.userId);
   }
 

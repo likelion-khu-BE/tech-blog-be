@@ -1,4 +1,4 @@
-package com.study.blog.post;
+package com.study.common.entity;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -14,21 +14,21 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "post_likes")
+@Table(name = "comment_likes")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostLike {
+public class CommentLike {
 
   @EmbeddedId
-  private PostLikeId id;
+  private CommentLikeId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @MapsId("postId")
-  @JoinColumn(name = "post_id")
+  @MapsId("commentId")
+  @JoinColumn(name = "comment_id")
   @OnDelete(action = OnDeleteAction.CASCADE)
-  private Post post;
+  private Comment comment;
 
-  public PostLike(Post post, UUID userId) {
-    this.post = post;
-    this.id = new PostLikeId(post.getId(), userId);
+  public CommentLike(Comment comment, UUID userId) {
+    this.comment = comment;
+    this.id = new CommentLikeId(comment.getId(), userId);
   }
 }

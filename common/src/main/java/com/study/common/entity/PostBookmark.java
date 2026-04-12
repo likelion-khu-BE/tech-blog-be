@@ -1,4 +1,4 @@
-package com.study.blog.post;
+package com.study.common.entity;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -7,20 +7,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "post_tags")
-@Getter
+@Table(name = "post_bookmarks")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostTag {
+public class PostBookmark {
 
   @EmbeddedId
-  private PostTagId id;
+  private PostBookmarkId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("postId")
@@ -28,12 +27,8 @@ public class PostTag {
   @OnDelete(action = OnDeleteAction.CASCADE)
   private Post post;
 
-  public PostTag(Post post, String tagName) {
+  public PostBookmark(Post post, UUID userId) {
     this.post = post;
-    this.id = new PostTagId(post.getId(), tagName);
-  }
-
-  public String getTagName() {
-    return id.getTagName();
+    this.id = new PostBookmarkId(post.getId(), userId);
   }
 }

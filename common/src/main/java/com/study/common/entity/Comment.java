@@ -1,4 +1,4 @@
-package com.study.blog.comment;
+package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

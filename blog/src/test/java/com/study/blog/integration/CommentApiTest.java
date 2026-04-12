@@ -8,13 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.blog.BlogTestApplication;
-import com.study.blog.comment.Comment;
-import com.study.blog.comment.CommentLike;
+import com.study.common.entity.Comment;
+import com.study.common.entity.CommentLike;
 import com.study.blog.comment.CommentLikeRepository;
 import com.study.blog.comment.CommentRepository;
-import com.study.blog.post.Post;
+import com.study.common.entity.Post;
 import com.study.blog.post.PostRepository;
-import com.study.blog.post.PostStatus;
+import com.study.common.entity.PostStatus;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
