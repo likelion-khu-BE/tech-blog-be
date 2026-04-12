@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
@@ -86,5 +87,25 @@ public class JwtProvider {
 
   public long getRefreshTokenExpiration() {
     return refreshTokenExpiration;
+  }
+
+  /**
+   * access token을 파싱하여 인증 정보를 반환한다.
+   *
+   * <p>jjwt 타입(Claims, JwtException)을 외부 모듈에 노출하지 않기 위해 Optional로 감싼다. 토큰이 유효하지 않거나
+   * access 타입이 아니면 empty를 반환.
+   */
+  public Optional<AccessTokenInfo> parseAccessToken(String token) {
+    try {
+      Claims claims = parseToken(token);
+      if (!"access".equals(claims.get("type", String.class))) {
+        return Optional.empty();
+      }
+      UUID userId = UUID.fromString(claims.getSubject());
+      UserRole role = UserRole.valueOf(claims.get("role", String.class));
+      return Optional.of(new AccessTokenInfo(userId, role));
+    } catch (JwtException | IllegalArgumentException e) {
+      return Optional.empty();
+    }
   }
 }
