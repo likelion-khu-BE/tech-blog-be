@@ -2,6 +2,7 @@ package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import org.hibernate.annotations.DynamicUpdate;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +24,7 @@ import lombok.NoArgsConstructor;
  * 저장한다 — 평문은 절대 이 객체에 들어오지 않는다.
  */
 @Entity
+@DynamicUpdate
 @Table(
     name = "users",
     indexes = {
