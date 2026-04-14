@@ -8,7 +8,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -29,16 +28,7 @@ import org.hibernate.annotations.SQLRestriction;
 @DynamicUpdate
 @SQLDelete(sql = "UPDATE answer SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
-@Table(
-    name = "answer",
-    indexes = {
-      @Index(name = "idx_answer_question", columnList = "question_id"),
-      @Index(name = "idx_answer_accepted", columnList = "question_id, accepted"),
-      @Index(
-          name = "idx_answer_question_accepted_vote",
-          columnList = "question_id, accepted, vote_count"),
-      @Index(name = "idx_answer_member", columnList = "member_id")
-    })
+@Table(name = "answer")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Answer {

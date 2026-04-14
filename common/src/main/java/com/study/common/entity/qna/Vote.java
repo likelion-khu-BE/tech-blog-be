@@ -9,12 +9,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,14 +21,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
 @DynamicUpdate
-@Table(
-    name = "vote",
-    uniqueConstraints = {
-      @UniqueConstraint(name = "uq_vote_answer_member", columnNames = {"answer_id", "member_id"})
-    },
-    indexes = {
-      @Index(name = "idx_vote_answer_type", columnList = "answer_id, type")
-    })
+@Table(name = "vote")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Vote {

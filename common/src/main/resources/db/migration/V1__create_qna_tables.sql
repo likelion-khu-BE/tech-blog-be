@@ -1,7 +1,20 @@
 -- QnA 모듈 테이블 생성 마이그레이션
--- member 테이블은 공통 users 테이블 공유 (별도 생성 없음)
+-- ddl-auto=validate: 이 파일이 DDL의 유일한 진실
+-- member 테이블은 별도 생성 없이 공통 users 테이블을 공유한다
 
-CREATE TABLE question
+-- 1. tag
+CREATE TABLE IF NOT EXISTS tag
+(
+    id         BIGINT      NOT NULL AUTO_INCREMENT,
+    name       VARCHAR(50) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_tag_name (name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- 2. question
+CREATE TABLE IF NOT EXISTS question
 (
     id           BIGINT       NOT NULL AUTO_INCREMENT,
     member_id    BIGINT       NOT NULL,
@@ -15,37 +28,38 @@ CREATE TABLE question
     updated_at   DATETIME(6)  NOT NULL,
     deleted_at   DATETIME(6)  NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_question_member FOREIGN KEY (member_id) REFERENCES users (id),
-    INDEX idx_question_member (member_id),
-    INDEX idx_question_status_created (status, created_at),
-    INDEX idx_question_generation_status_created (generation, status, created_at)
+    CONSTRAINT fk_question_member
+        FOREIGN KEY (member_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE tag
-(
-    id         BIGINT      NOT NULL AUTO_INCREMENT,
-    name       VARCHAR(50) NOT NULL,
-    created_at DATETIME(6) NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_tag_name (name)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
+CREATE INDEX idx_question_member
+    ON question (member_id);
+CREATE INDEX idx_question_status_created
+    ON question (status, created_at);
+CREATE INDEX idx_question_generation_status_created
+    ON question (generation, status, created_at);
 
-CREATE TABLE question_tag
+-- 3. question_tag
+CREATE TABLE IF NOT EXISTS question_tag
 (
     id          BIGINT NOT NULL AUTO_INCREMENT,
     question_id BIGINT NOT NULL,
     tag_id      BIGINT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_question_tag (question_id, tag_id),
-    INDEX idx_question_tag_tag (tag_id),
-    CONSTRAINT fk_question_tag_question FOREIGN KEY (question_id) REFERENCES question (id),
-    CONSTRAINT fk_question_tag_tag FOREIGN KEY (tag_id) REFERENCES tag (id)
+    CONSTRAINT fk_question_tag_question
+        FOREIGN KEY (question_id) REFERENCES question (id),
+    CONSTRAINT fk_question_tag_tag
+        FOREIGN KEY (tag_id) REFERENCES tag (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE answer
+CREATE INDEX idx_question_tag_tag
+    ON question_tag (tag_id);
+
+-- 4. answer
+CREATE TABLE IF NOT EXISTS answer
 (
     id            BIGINT      NOT NULL AUTO_INCREMENT,
     question_id   BIGINT      NOT NULL,
@@ -58,16 +72,24 @@ CREATE TABLE answer
     updated_at    DATETIME(6) NOT NULL,
     deleted_at    DATETIME(6) NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_answer_question FOREIGN KEY (question_id) REFERENCES question (id),
-    CONSTRAINT fk_answer_member FOREIGN KEY (member_id) REFERENCES users (id),
-    INDEX idx_answer_question (question_id),
-    INDEX idx_answer_accepted (question_id, accepted),
-    INDEX idx_answer_question_accepted_vote (question_id, accepted, vote_count),
-    INDEX idx_answer_member (member_id)
+    CONSTRAINT fk_answer_question
+        FOREIGN KEY (question_id) REFERENCES question (id),
+    CONSTRAINT fk_answer_member
+        FOREIGN KEY (member_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE vote
+CREATE INDEX idx_answer_question
+    ON answer (question_id);
+CREATE INDEX idx_answer_accepted
+    ON answer (question_id, accepted);
+CREATE INDEX idx_answer_question_accepted_vote
+    ON answer (question_id, accepted, vote_count);
+CREATE INDEX idx_answer_member
+    ON answer (member_id);
+
+-- 5. vote
+CREATE TABLE IF NOT EXISTS vote
 (
     id         BIGINT      NOT NULL AUTO_INCREMENT,
     answer_id  BIGINT      NOT NULL,
@@ -76,13 +98,18 @@ CREATE TABLE vote
     created_at DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_vote_answer_member (answer_id, member_id),
-    INDEX idx_vote_answer_type (answer_id, type),
-    CONSTRAINT fk_vote_answer FOREIGN KEY (answer_id) REFERENCES answer (id),
-    CONSTRAINT fk_vote_member FOREIGN KEY (member_id) REFERENCES users (id)
+    CONSTRAINT fk_vote_answer
+        FOREIGN KEY (answer_id) REFERENCES answer (id),
+    CONSTRAINT fk_vote_member
+        FOREIGN KEY (member_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE comment
+CREATE INDEX idx_vote_answer_type
+    ON vote (answer_id, type);
+
+-- 6. comment
+CREATE TABLE IF NOT EXISTS comment
 (
     id          BIGINT      NOT NULL AUTO_INCREMENT,
     member_id   BIGINT      NOT NULL,
@@ -94,11 +121,18 @@ CREATE TABLE comment
     updated_at  DATETIME(6) NOT NULL,
     deleted_at  DATETIME(6) NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_comment_member FOREIGN KEY (member_id) REFERENCES users (id),
-    CONSTRAINT fk_comment_question FOREIGN KEY (question_id) REFERENCES question (id),
-    CONSTRAINT fk_comment_answer FOREIGN KEY (answer_id) REFERENCES answer (id),
-    CONSTRAINT fk_comment_parent FOREIGN KEY (parent_id) REFERENCES comment (id),
-    INDEX idx_comment_question_parent (question_id, parent_id),
-    INDEX idx_comment_answer_parent (answer_id, parent_id)
+    CONSTRAINT fk_comment_member
+        FOREIGN KEY (member_id) REFERENCES users (id),
+    CONSTRAINT fk_comment_question
+        FOREIGN KEY (question_id) REFERENCES question (id),
+    CONSTRAINT fk_comment_answer
+        FOREIGN KEY (answer_id) REFERENCES answer (id),
+    CONSTRAINT fk_comment_parent
+        FOREIGN KEY (parent_id) REFERENCES comment (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+CREATE INDEX idx_comment_question_parent
+    ON comment (question_id, parent_id);
+CREATE INDEX idx_comment_answer_parent
+    ON comment (answer_id, parent_id);
