@@ -1,0 +1,9 @@
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: false
+  poem: false
+  collapse_walkthrough: true
+  path_filters:
+    - "!**/*.md"
+    - "!**/migration/**"
