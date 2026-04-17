@@ -51,7 +51,7 @@ CREATE TABLE member_tech_stack (
                                    member_id BIGINT REFERENCES member(id) ON DELETE CASCADE,
                                    tech_stack_id BIGINT REFERENCES tech_stack(id) ON DELETE CASCADE,
                                    proficiency INT,
-                                   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                                    CONSTRAINT uq_member_tech_stack UNIQUE (member_id, tech_stack_id)
 );
 
