@@ -105,9 +105,10 @@ public class TeamProfile {
   }
 
   /** 팀의 설명과 프로젝트 URL을 수정할 때 호출하는 메서드. */
-  public void update(String description, String projectUrl) {
+  public void update(String description, String projectUrl, String githubUrl) {
     this.description = description;
     this.projectUrl = projectUrl;
+    this.githubUrl = githubUrl;
   }
 
   /** DB에 INSERT하기 직전 JPA가 자동으로 createdAt, updatedAt을 현재 시각으로 초기화한다. */
