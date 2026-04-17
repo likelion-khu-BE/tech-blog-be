@@ -17,8 +17,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "team_tech_stack",
-    uniqueConstraints = @UniqueConstraint(name = "uq_team_tech_stack", columnNames = {"team_id", "tech_stack_id"})
-)
+    uniqueConstraints =
+        @UniqueConstraint(
+            name = "uq_team_tech_stack",
+            columnNames = {"team_id", "tech_stack_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TeamTechStack {

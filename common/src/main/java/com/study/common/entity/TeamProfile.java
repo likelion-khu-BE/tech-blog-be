@@ -103,16 +103,12 @@ public class TeamProfile {
 
     // 3. 중복을 제거(.distinct())하고 리스트에 추가
     newStacks.stream()
-            .distinct()
-            .forEach(stack -> this.techStacks.add(TeamTechStack.create(this, stack)));
+        .distinct()
+        .forEach(stack -> this.techStacks.add(TeamTechStack.create(this, stack)));
   }
 
   public static TeamProfile create(
-      Generation generation,
-      String name,
-      String description,
-      String projectUrl,
-      String githubUrl) {
+      Generation generation, String name, String description, String projectUrl, String githubUrl) {
     TeamProfile teamProfile = new TeamProfile();
     teamProfile.generation = generation;
     teamProfile.name = name;
@@ -123,11 +119,7 @@ public class TeamProfile {
   }
 
   public void update(
-      Generation generation,
-      String name,
-      String description,
-      String projectUrl,
-      String githubUrl) {
+      Generation generation, String name, String description, String projectUrl, String githubUrl) {
     this.generation = generation;
     this.name = name;
     this.description = description;
