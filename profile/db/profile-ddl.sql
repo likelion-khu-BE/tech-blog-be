@@ -1,9 +1,10 @@
 -- 1. ENUM 타입 설정 (DB 레벨의 예외 방지)
 CREATE TYPE session_type AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'etc');
 CREATE TYPE generation_role AS ENUM ('member', 'operating');
-CREATE TYPE tech_stack_category AS ENUM ('language', 'backend', 'frontend', 'ai', 'design', 'tool', 'infra', 'etc');
-CREATE TYPE activity_type AS ENUM ('blog_post', 'qna_answer', 'qna_accepted', 'session_talk', 'other');
+CREATE TYPE tech_stack_category AS ENUM ('language', 'framework', 'ai', 'design', 'tool', 'infra', 'etc');
+CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'qna_answer', 'qna_question', 'qna_accepted', 'other');
 CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'all');
+CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc')
 
 -- 2. 핵심 테이블 생성 (PK: BIGINT / Long)
 CREATE TABLE member (
@@ -51,6 +52,7 @@ CREATE TABLE member_tech_stack (
                                    tech_stack_id BIGINT REFERENCES tech_stack(id) ON DELETE CASCADE,
                                    proficiency INT,
                                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                   CONSTRAINT uq_member_tech_stack UNIQUE (member_id, tech_stack_id)
 );
 
 CREATE TABLE team_profile (
@@ -59,6 +61,7 @@ CREATE TABLE team_profile (
                               name TEXT NOT NULL,
                               description TEXT,
                               project_url TEXT,
+                              github_url TEXT,
                               created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                               updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -67,16 +70,28 @@ CREATE TABLE team_member (
                              id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                              team_id BIGINT REFERENCES team_profile(id) ON DELETE CASCADE,
                              member_id BIGINT REFERENCES member(id) ON DELETE CASCADE,
-                             role_in_team TEXT,
                              is_lead BOOLEAN NOT NULL DEFAULT FALSE,
                              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE team_member_role (
+                            id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                            team_member_id BIGINT REFERENCES team_member(id) ON DELETE CASCADE,
+                            role role_in_team NOT NULL
+);
+
+CREATE TABLE team_image (
+                            id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                            team_id BIGINT REFERENCES team_profile(id) ON DELETE CASCADE,
+                            image_url TEXT NOT NULL,
+                            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE activity (
                           id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                           member_id BIGINT REFERENCES member(id) ON DELETE CASCADE,
                           type activity_type NOT NULL,
-                          reference_id UUID, -- 외부 연동 ID는 UUID 유지 가능
+                          reference_id BIGINT,
                           reference_type TEXT,
                           score INT NOT NULL DEFAULT 0,
                           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
