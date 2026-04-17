@@ -4,7 +4,7 @@ CREATE TYPE generation_role AS ENUM ('member', 'operating');
 CREATE TYPE tech_stack_category AS ENUM ('language', 'framework', 'ai', 'design', 'tool', 'infra', 'etc');
 CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'qna_answer', 'qna_question', 'qna_accepted', 'other');
 CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'all');
-CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc')
+CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc');
 
 -- 2. 핵심 테이블 생성 (PK: BIGINT / Long)
 CREATE TABLE member (
