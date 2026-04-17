@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   lint-and-test:
-    if: github.actor != 'github-actions[bot]'
+    if: "!contains(github.event.head_commit.message, 'style: Spotless 자동 수정')"
     runs-on: ubuntu-latest
     env:
       DB_HOST: ${{ secrets.DB_HOST }}
@@ -53,17 +53,32 @@ jobs:
           fi
 
       - name: 빌드 + 테스트
-        run: ./gradlew compileJava test
+        id: build
+        run: ./gradlew compileJava test 2>&1 | tee /tmp/build-output.txt; exit ${PIPESTATUS[0]}
 
       - name: PR 코멘트
         if: always()
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
             const success = '${{ job.status }}' === 'success';
-            const body = success
-              ? '**CI 통과** — 빌드 및 테스트 성공'
-              : '**CI 실패** — 빌드 또는 테스트 결과를 확인해주세요';
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let body = '';
+            if (success) {
+              body = '**CI 통과** — 빌드 및 테스트 성공';
+            } else {
+              let details = '';
+              try {
+                const output = fs.readFileSync('/tmp/build-output.txt', 'utf8');
+                const errorLines = output.split('\n').filter(l =>
+                  l.includes('FAILED') || l.includes('> Task') || l.match(/error:/)
+                );
+                details = errorLines.slice(0, 15).join('\n').trim();
+              } catch(e) {}
+              body = `**CI 실패** — [전체 로그 보기](${runUrl})`;
+              if (details) body += `\n\n\`\`\`\n${details}\n\`\`\``;
+            }
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
