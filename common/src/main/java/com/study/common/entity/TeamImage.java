@@ -37,7 +37,7 @@ public class TeamImage {
   // 어떤 팀의 이미지인지 (team_id 외래키로 TeamProfile 테이블 참조)
   // ON DELETE CASCADE : 팀이 삭제되면 이미지 행도 자동으로 삭제된다.
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "team_id")
+  @JoinColumn(name = "team_id", nullable = false)
   private TeamProfile team;
 
   @Column(name = "image_url", nullable = false)

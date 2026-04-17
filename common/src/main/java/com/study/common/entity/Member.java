@@ -88,17 +88,36 @@ public class Member {
    * <p>new Member()를 직접 쓰는 대신 이 메서드를 통해야 한다. 필수값(name, email, sessionType)만 받고, 나머지는 나중에
    * updateProfile()로 채운다.
    */
-  public static Member create(String name, String email, SessionType sessionType) {
+  public static Member create(
+      String name,
+      String email,
+      SessionType sessionType,
+      String department,
+      String profileImageUrl,
+      String githubUrl,
+      String linksJson) {
     Member member = new Member();
     member.name = name;
     member.email = email;
     member.sessionType = sessionType;
+    member.department = department;
+    member.profileImageUrl = profileImageUrl;
+    member.githubUrl = githubUrl;
+    member.linksJson = linksJson;
     return member;
   }
 
-  /** 멤버의 프로필 정보를 수정할 때 호출하는 메서드. 학과, 프로필 이미지, GitHub URL, 추가 링크를 한 번에 업데이트한다. */
-  public void updateProfile(
-      String department, String profileImageUrl, String githubUrl, String linksJson) {
+  public void update(
+      String name,
+      String email,
+      SessionType sessionType,
+      String department,
+      String profileImageUrl,
+      String githubUrl,
+      String linksJson) {
+    this.name = name;
+    this.email = email;
+    this.sessionType = sessionType;
     this.department = department;
     this.profileImageUrl = profileImageUrl;
     this.githubUrl = githubUrl;

@@ -62,6 +62,11 @@ public class TechStack {
     return techStack;
   }
 
+  public void update(String name, TechStackCategory category) {
+    this.name = name;
+    this.category = category;
+  }
+
   /** DB 저장 직전에 JPA가 자동으로 현재 시각을 createdAt에 넣어준다. */
   @PrePersist
   void prePersist() {

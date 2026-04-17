@@ -39,7 +39,7 @@ public class TeamMemberRole {
   // 어떤 팀원인지 (team_member_id 외래키로 TeamMember 테이블 참조)
   // ON DELETE CASCADE : 팀원이 삭제되면 이 역할 행도 자동으로 삭제된다.
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "team_member_id")
+  @JoinColumn(name = "team_member_id", nullable = false)
   private TeamMember teamMember;
 
   @Enumerated(EnumType.STRING)

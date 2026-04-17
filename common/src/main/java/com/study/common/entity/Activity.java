@@ -41,7 +41,7 @@ public class Activity {
 
   // 어떤 멤버의 활동인지
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
   @Enumerated(EnumType.STRING)

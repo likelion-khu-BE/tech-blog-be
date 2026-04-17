@@ -39,12 +39,12 @@ public class TeamMember {
 
   // 어떤 팀인지 (team_id 외래키로 TeamProfile 테이블 참조)
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "team_id")
+  @JoinColumn(name = "team_id", nullable = false)
   private TeamProfile team;
 
   // 어떤 멤버인지 (member_id 외래키로 Member 테이블 참조)
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
   // 이 팀원이 맡은 역할 목록. TeamMemberRole 테이블에 별도 행으로 저장된다.

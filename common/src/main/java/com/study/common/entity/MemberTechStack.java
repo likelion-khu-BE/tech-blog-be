@@ -45,12 +45,12 @@ public class MemberTechStack {
 
   // 어떤 멤버인지 (member_id 외래키로 Member 테이블 참조)
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
   // 어떤 기술 스택인지 (tech_stack_id 외래키로 TechStack 테이블 참조)
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "tech_stack_id")
+  @JoinColumn(name = "tech_stack_id", nullable = false)
   private TechStack techStack;
 
   // 해당 기술의 숙련도 (예: 1~5 또는 1~10 — null이면 숙련도 미입력).

@@ -41,11 +41,11 @@ public class MemberGeneration {
 
   // @ManyToOne : 여러 MemberGeneration 행이 하나의 Member를 참조할 수 있다 (N:1 관계).
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "member_id")
+  @JoinColumn(name = "member_id", nullable = false)
   private Member member; // 참여한 멤버
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_id")
+  @JoinColumn(name = "generation_id", nullable = false)
   private Generation generation; // 참여한 기수
 
   @Enumerated(EnumType.STRING)

@@ -73,12 +73,17 @@ public class TeamProfile {
    * @param imageUrls 추가할 이미지 경로 리스트 (null이거나 비어있으면 아무것도 안 함)
    */
   public void updateImages(List<String> imageUrls) {
-    // 기존 이미지를 싹 지우고 새로 갈아끼우거나, 유지한 채 추가하는 로직 중 선택
+    // 1. 만약 프론트에서 null을 보냈다면? "수정 안 함"으로 간주하고 보호!
+    if (imageUrls == null) {
+      return;
+    }
+
+    // 2. null이 아닐 때만(빈 리스트 [] 포함) 기존 걸 지웁니다.
+    // 빈 리스트 []가 들어오면 clear()만 되고 루프를 안 돌아서 "전부 삭제"가 됩니다.
     this.images.clear();
-    if (imageUrls != null) {
-      for (String url : imageUrls) {
-        this.images.add(TeamImage.create(this, url));
-      }
+
+    for (String url : imageUrls) {
+      this.images.add(TeamImage.create(this, url));
     }
   }
 
@@ -88,24 +93,43 @@ public class TeamProfile {
 
   /** 팀의 사용 기술 스택을 업데이트하는 메서드 */
   public void updateTechStacks(List<TechStack> newStacks) {
-    this.techStacks.clear();
-    if (newStacks != null) {
-      for (TechStack stack : newStacks) {
-        this.techStacks.add(TeamTechStack.create(this, stack));
-      }
+    // 1. null이면 아무것도 하지 않고 기존 스택 유지 (방어 로직)
+    if (newStacks == null) {
+      return;
     }
+
+    // 2. 기존 스택 비우기
+    this.techStacks.clear();
+
+    // 3. 중복을 제거(.distinct())하고 리스트에 추가
+    newStacks.stream()
+            .distinct()
+            .forEach(stack -> this.techStacks.add(TeamTechStack.create(this, stack)));
   }
 
-  /** 새 팀을 만들 때 사용하는 정적 팩토리 메서드. 팀 이름과 소속 기수만 필수이고, 설명·URL은 update()로 나중에 채울 수 있다. */
-  public static TeamProfile create(Generation generation, String name) {
+  public static TeamProfile create(
+      Generation generation,
+      String name,
+      String description,
+      String projectUrl,
+      String githubUrl) {
     TeamProfile teamProfile = new TeamProfile();
     teamProfile.generation = generation;
     teamProfile.name = name;
+    teamProfile.description = description;
+    teamProfile.projectUrl = projectUrl;
+    teamProfile.githubUrl = githubUrl;
     return teamProfile;
   }
 
-  /** 팀의 설명과 프로젝트 URL을 수정할 때 호출하는 메서드. */
-  public void update(String description, String projectUrl, String githubUrl) {
+  public void update(
+      Generation generation,
+      String name,
+      String description,
+      String projectUrl,
+      String githubUrl) {
+    this.generation = generation;
+    this.name = name;
     this.description = description;
     this.projectUrl = projectUrl;
     this.githubUrl = githubUrl;

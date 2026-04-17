@@ -57,21 +57,32 @@ public class Generation {
   private Instant createdAt; // 기수 데이터 생성 시각
 
   /** 새 기수를 생성할 때 호출하는 정적 팩토리 메서드. 처음 만들 때는 isCurrent = false로 시작하고, 필요 시 markAsCurrent()로 변경한다. */
-  public static Generation create(String label, Integer number, LocalDate startDate) {
+  public static Generation create(
+      String label, Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
     Generation generation = new Generation();
     generation.label = label;
     generation.number = number;
     generation.startDate = startDate;
-    generation.isCurrent = false;
+    generation.endDate = endDate;
+    generation.isCurrent = isCurrent != null ? isCurrent : false;
     return generation;
   }
 
-  /** 이 기수를 '현재 활동 중인 기수'로 지정한다. 새 기수가 시작될 때 호출한다. */
+  public void update(
+      String label, Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
+    this.label = label;
+    this.number = number;
+    this.startDate = startDate;
+    this.endDate = endDate;
+    this.isCurrent = isCurrent != null ? isCurrent : false;
+  }
+
+  /** 이 기수를 '현재 활동 중인 기수'로 지정한다. */
   public void markAsCurrent() {
     this.isCurrent = true;
   }
 
-  /** 기수 활동을 종료할 때 호출한다. 종료일을 기록하고 isCurrent를 false로 바꾼다. */
+  /** 기수 활동을 종료할 때 호출한다. */
   public void close(LocalDate endDate) {
     this.endDate = endDate;
     this.isCurrent = false;
