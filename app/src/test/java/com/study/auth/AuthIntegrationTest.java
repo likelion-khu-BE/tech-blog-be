@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.auth.dto.LoginRequest;
 import com.study.auth.dto.SignupRequest;
 import com.study.common.entity.User;
-import com.study.common.entity.UserRole;
 import com.study.common.repository.RefreshTokenRepository;
 import com.study.common.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -30,8 +29,8 @@ import org.springframework.test.web.servlet.MvcResult;
 /**
  * 인증/인가 통합 테스트.
  *
- * <p>실제 DB(PostgreSQL)와 Spring Security 필터 체인을 포함한 전체 스택 테스트. 모든 테스트는 @Transactional로 롤백되어
- * 독립적으로 실행된다.
+ * <p>실제 DB(PostgreSQL)와 Spring Security 필터 체인을 포함한 전체 스택 테스트. 모든 테스트는 @Transactional로 롤백되어 독립적으로
+ * 실행된다.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -246,8 +245,7 @@ class AuthIntegrationTest {
     void access_withTamperedToken() throws Exception {
       mockMvc
           .perform(
-              get("/api/blog/hello")
-                  .header(HttpHeaders.AUTHORIZATION, "Bearer invalid.token.here"))
+              get("/api/blog/hello").header(HttpHeaders.AUTHORIZATION, "Bearer invalid.token.here"))
           .andExpect(status().isUnauthorized());
     }
   }
@@ -287,7 +285,8 @@ class AuthIntegrationTest {
       mockMvc
           .perform(post(REFRESH_URL).cookie(refreshCookie))
           .andExpect(status().isUnauthorized())
-          .andExpect(jsonPath("$.message").value("토큰이 재사용되었습니다. 보안을 위해 모든 세션이 만료되었습니다. 다시 로그인해주세요."));
+          .andExpect(
+              jsonPath("$.message").value("토큰이 재사용되었습니다. 보안을 위해 모든 세션이 만료되었습니다. 다시 로그인해주세요."));
     }
 
     @Test

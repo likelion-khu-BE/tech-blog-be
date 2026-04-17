@@ -7,11 +7,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 /**
  * 현재 인증된 사용자 정보를 꺼내는 static 유틸리티.
  *
- * <p>컨트롤러에서는 {@code @CurrentUser CustomUserDetails user}로 주입받을 수 있지만, 서비스/리포지토리 등 컨트롤러
- * 바깥에서 현재 유저가 필요할 때 이 클래스를 쓴다.
+ * <p>컨트롤러에서는 {@code @CurrentUser CustomUserDetails user}로 주입받을 수 있지만, 서비스/리포지토리 등 컨트롤러 바깥에서 현재 유저가
+ * 필요할 때 이 클래스를 쓴다.
  *
- * <p>내부적으로 SecurityContextHolder의 ThreadLocal에서 Authentication을 꺼낸다 — 같은 요청 스레드 내에서만 유효하고,
- * 요청이 끝나면 자동 정리된다.
+ * <p>내부적으로 SecurityContextHolder의 ThreadLocal에서 Authentication을 꺼낸다 — 같은 요청 스레드 내에서만 유효하고, 요청이 끝나면
+ * 자동 정리된다.
  *
  * <p>사용법:
  *

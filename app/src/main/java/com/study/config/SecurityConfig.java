@@ -106,8 +106,6 @@ public class SecurityConfig {
     response.setStatus(status);
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
-    objectMapper.writeValue(
-        response.getWriter(),
-        Map.of("status", status, "message", message));
+    objectMapper.writeValue(response.getWriter(), Map.of("status", status, "message", message));
   }
 }

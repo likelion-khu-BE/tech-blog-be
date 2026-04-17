@@ -15,8 +15,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
   /**
    * 토큰을 USED로 전환 (atomic).
    *
-   * <p>WHERE status='ACTIVE' 조건 덕분에 동시에 같은 토큰으로 refresh 요청이 오면 하나만 성공한다. 반환값이 0이면 이미
-   * 사용된 토큰 → 재사용 공격으로 판단.
+   * <p>WHERE status='ACTIVE' 조건 덕분에 동시에 같은 토큰으로 refresh 요청이 오면 하나만 성공한다. 반환값이 0이면 이미 사용된 토큰 → 재사용
+   * 공격으로 판단.
    */
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(

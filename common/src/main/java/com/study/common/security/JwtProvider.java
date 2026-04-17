@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
  *
  * <p>HS256 대칭키 — 토큰 발급과 검증이 같은 서버에서 이루어지므로 비대칭키(RS256)는 불필요.
  *
- * <p>access token: sub=userId(Long), role 클레임 포함 (매 요청마다 DB 조회 없이 인가 판단) refresh token:
- * sub=userId, familyId 클레임 포함 (rotation 추적용)
+ * <p>access token: sub=userId(Long), role 클레임 포함 (매 요청마다 DB 조회 없이 인가 판단) refresh token: sub=userId,
+ * familyId 클레임 포함 (rotation 추적용)
  */
 @Component
 public class JwtProvider {
@@ -54,8 +54,8 @@ public class JwtProvider {
   /**
    * refresh token 생성. familyId로 같은 세션의 토큰 체인을 추적한다.
    *
-   * <p>jti(JWT ID)를 랜덤 UUID로 설정하여 동일 시각에 생성되어도 토큰이 유니크하도록 보장한다. 이것이 없으면 같은
-   * 밀리초에 rotation이 일어날 때 동일한 토큰이 생성되어 DB unique 제약 위반이 발생한다.
+   * <p>jti(JWT ID)를 랜덤 UUID로 설정하여 동일 시각에 생성되어도 토큰이 유니크하도록 보장한다. 이것이 없으면 같은 밀리초에 rotation이 일어날 때 동일한
+   * 토큰이 생성되어 DB unique 제약 위반이 발생한다.
    */
   public String generateRefreshToken(Long userId, UUID familyId) {
     Date now = new Date();
@@ -98,8 +98,8 @@ public class JwtProvider {
   /**
    * access token을 파싱하여 인증 정보를 반환한다.
    *
-   * <p>jjwt 타입(Claims, JwtException)을 외부 모듈에 노출하지 않기 위해 Optional로 감싼다. 토큰이 유효하지 않거나
-   * access 타입이 아니면 empty를 반환.
+   * <p>jjwt 타입(Claims, JwtException)을 외부 모듈에 노출하지 않기 위해 Optional로 감싼다. 토큰이 유효하지 않거나 access 타입이 아니면
+   * empty를 반환.
    */
   public Optional<AccessTokenInfo> parseAccessToken(String token) {
     try {
