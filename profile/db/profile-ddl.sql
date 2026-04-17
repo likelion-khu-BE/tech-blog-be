@@ -80,6 +80,13 @@ CREATE TABLE team_member_role (
                             role role_in_team NOT NULL
 );
 
+CREATE TABLE team_tech_stack (
+                                 id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                                 team_id BIGINT REFERENCES team_profile(id) ON DELETE CASCADE,
+                                 tech_stack_id BIGINT REFERENCES tech_stack(id) ON DELETE CASCADE,
+                                 CONSTRAINT uq_team_tech_stack UNIQUE (team_id, tech_stack_id)
+);
+
 CREATE TABLE team_image (
                             id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                             team_id BIGINT REFERENCES team_profile(id) ON DELETE CASCADE,
