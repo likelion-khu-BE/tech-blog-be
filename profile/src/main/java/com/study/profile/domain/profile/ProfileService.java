@@ -1,4 +1,4 @@
-package com.study.profile.service;
+package com.study.profile.domain.profile;
 
 import com.study.contract.blog.BlogPort;
 import org.springframework.stereotype.Service;
