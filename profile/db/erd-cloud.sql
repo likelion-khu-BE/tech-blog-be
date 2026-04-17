@@ -27,12 +27,12 @@ CREATE TABLE generation
     PRIMARY KEY (id)
 );
 
--- 3. 멤버-기수 연결 테이블 (어떤 멤버가 몇 기수인지)
+-- 3. 멤버-기수 연결 테이블
 CREATE TABLE member_generation
 (
     id            BIGINT   NOT NULL AUTO_INCREMENT,
-    member_id     BIGINT,
-    generation_id BIGINT,
+    member_id     BIGINT   NOT NULL,
+    generation_id BIGINT   NOT NULL,
     role_in_gen   ENUM ('member','operating') NOT NULL DEFAULT 'member',
     joined_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -54,8 +54,8 @@ CREATE TABLE tech_stack
 CREATE TABLE member_tech_stack
 (
     id            BIGINT   NOT NULL AUTO_INCREMENT,
-    member_id     BIGINT,
-    tech_stack_id BIGINT,
+    member_id     BIGINT   NOT NULL,
+    tech_stack_id BIGINT   NOT NULL,
     proficiency   INT,
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -79,25 +79,24 @@ CREATE TABLE team_profile
     FOREIGN KEY (generation_id) REFERENCES generation (id) ON DELETE SET NULL
 );
 
--- 7. 팀별 사용 기술 스택 (팀 프로필 하단 표시용)
+-- 7. 팀별 사용 기술 스택
 CREATE TABLE team_tech_stack
 (
-    id            BIGINT   NOT NULL AUTO_INCREMENT,
-    team_id       BIGINT,
-    tech_stack_id BIGINT,
-    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id            BIGINT NOT NULL AUTO_INCREMENT,
+    team_id       BIGINT NOT NULL,
+    tech_stack_id BIGINT NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_team_tech_stack (team_id, tech_stack_id),
     FOREIGN KEY (team_id) REFERENCES team_profile (id) ON DELETE CASCADE,
     FOREIGN KEY (tech_stack_id) REFERENCES tech_stack (id) ON DELETE CASCADE
 );
 
--- 8. 팀-멤버 연결 테이블 (누가 어느 팀인지)
+-- 8. 팀-멤버 연결 테이블
 CREATE TABLE team_member
 (
     id         BIGINT   NOT NULL AUTO_INCREMENT,
-    team_id    BIGINT,
-    member_id  BIGINT,
+    team_id    BIGINT   NOT NULL,
+    member_id  BIGINT   NOT NULL,
     is_lead    BOOLEAN  NOT NULL DEFAULT FALSE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -109,7 +108,7 @@ CREATE TABLE team_member
 CREATE TABLE team_member_role
 (
     id             BIGINT NOT NULL AUTO_INCREMENT,
-    team_member_id BIGINT,
+    team_member_id BIGINT NOT NULL,
     role           ENUM ('backend','frontend','design','ai','pm','infra','etc') NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (team_member_id) REFERENCES team_member (id) ON DELETE CASCADE
@@ -119,7 +118,7 @@ CREATE TABLE team_member_role
 CREATE TABLE team_image
 (
     id         BIGINT   NOT NULL AUTO_INCREMENT,
-    team_id    BIGINT,
+    team_id    BIGINT   NOT NULL,
     image_url  TEXT     NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -130,7 +129,7 @@ CREATE TABLE team_image
 CREATE TABLE activity
 (
     id             BIGINT   NOT NULL AUTO_INCREMENT,
-    member_id      BIGINT,
+    member_id      BIGINT   NOT NULL,
     type           ENUM ('blog_post','blog_comment','qna_answer','qna_question','qna_accepted','other') NOT NULL,
     reference_id   BIGINT,
     reference_type VARCHAR(255),
