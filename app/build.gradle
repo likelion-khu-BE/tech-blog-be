@@ -1,0 +1,29 @@
+apply plugin: 'org.springframework.boot'
+
+tasks.named('bootRun') {
+    workingDir = rootProject.projectDir
+}
+
+// spring-dotenv가 프로젝트 루트의 .env를 읽으려면 working directory가 루트여야 한다
+tasks.named('test') {
+    workingDir = rootProject.projectDir
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':contract')
+    implementation project(':blog')
+    implementation project(':qna')
+    implementation project(':profile')
+    implementation project(':session-board')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Spring Security — 필터 체인 auto-config, 세션 관리, CSRF 등
+    // core는 common에서 api로 노출하고, starter는 app에서만 가져감 (책임 분리)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.0'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
