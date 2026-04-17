@@ -1,4 +1,3 @@
 package com.study.profile.domain.activity;
 
-public class ActivityDto {
-}
+public class ActivityDto {}

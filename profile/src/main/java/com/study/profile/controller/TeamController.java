@@ -1,4 +1,3 @@
 package com.study.profile.controller;
 
-public class TeamController {
-}
+public class TeamController {}

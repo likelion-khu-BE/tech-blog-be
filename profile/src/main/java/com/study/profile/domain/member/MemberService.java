@@ -1,4 +1,3 @@
 package com.study.profile.domain.member;
 
-public class MemberService {
-}
+public class MemberService {}

@@ -18,14 +18,13 @@ import lombok.NoArgsConstructor;
 /**
  * 기술 스택 엔티티.
  *
- * 서비스에서 사용 가능한 기술 스택의 '목록(카탈로그)' 역할을 한다.
- * 멤버가 자신의 기술 스택을 등록할 때 이 목록에서 골라서 연결한다 (→ MemberTechStack 참고).
+ * <p>서비스에서 사용 가능한 기술 스택의 '목록(카탈로그)' 역할을 한다. 멤버가 자신의 기술 스택을 등록할 때 이 목록에서 골라서 연결한다 (→ MemberTechStack
+ * 참고).
  *
- * 예) id=1, name="Java",   category=language
- *     id=2, name="Spring", category=backend
- *     id=3, name="React",  category=frontend
+ * <p>예) id=1, name="Java", category=language id=2, name="Spring", category=backend id=3,
+ * name="React", category=frontend
  *
- * [DB 테이블: tech_stack]
+ * <p>[DB 테이블: tech_stack]
  */
 @Entity
 @Table(
@@ -41,21 +40,20 @@ public class TechStack {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id")
-  private Long id;    // DB가 자동으로 부여하는 고유 번호
+  private Long id; // DB가 자동으로 부여하는 고유 번호
 
   @Column(name = "name", nullable = false, unique = true)
-  private String name;            // 기술 스택 이름 (예: "Java", "React") — 중복 불가
+  private String name; // 기술 스택 이름 (예: "Java", "React") — 중복 불가
 
   @Enumerated(EnumType.STRING)
   @Column(name = "category", nullable = false)
-  private TechStackCategory category;  // 분류 (language/framework/ai/design/tool/infra/etc)
+  private TechStackCategory category; // 분류 (language/framework/ai/design/tool/infra/etc)
 
   @Column(name = "created_at", nullable = false, updatable = false)
-  private Instant createdAt;      // 등록 시각
+  private Instant createdAt; // 등록 시각
 
   /**
-   * 새 기술 스택을 목록에 추가할 때 사용하는 정적 팩토리 메서드.
-   * (예: TechStack.create("Kotlin", TechStackCategory.language))
+   * 새 기술 스택을 목록에 추가할 때 사용하는 정적 팩토리 메서드. (예: TechStack.create("Kotlin", TechStackCategory.language))
    */
   public static TechStack create(String name, TechStackCategory category) {
     TechStack techStack = new TechStack();

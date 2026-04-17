@@ -1,4 +1,3 @@
 package com.study.profile.controller;
 
-public class MemberController {
-}
+public class MemberController {}

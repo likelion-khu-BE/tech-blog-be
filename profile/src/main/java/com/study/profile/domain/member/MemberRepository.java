@@ -1,4 +1,3 @@
 package com.study.profile.domain.member;
 
-public interface MemberRepository {
-}
+public interface MemberRepository {}

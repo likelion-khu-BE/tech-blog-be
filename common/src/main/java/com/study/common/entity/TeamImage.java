@@ -18,11 +18,10 @@ import lombok.NoArgsConstructor;
 /**
  * 팀 이미지 엔티티.
  *
- * 팀 프로필에 첨부된 이미지 URL을 저장한다.
- * 한 팀(TeamProfile)에 이미지가 0개 ~ 여러 개 있을 수 있으므로 별도 테이블로 분리했다.
- * 이미지를 추가/교체할 때는 TeamProfile.updateImages()를 통해 관리한다.
+ * <p>팀 프로필에 첨부된 이미지 URL을 저장한다. 한 팀(TeamProfile)에 이미지가 0개 ~ 여러 개 있을 수 있으므로 별도 테이블로 분리했다. 이미지를 추가/교체할
+ * 때는 TeamProfile.updateImages()를 통해 관리한다.
  *
- * [DB 테이블: team_image]
+ * <p>[DB 테이블: team_image]
  */
 @Entity
 @Table(name = "team_image")
@@ -33,7 +32,7 @@ public class TeamImage {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id")
-  private Long id;  // DB가 자동으로 부여하는 고유 번호
+  private Long id; // DB가 자동으로 부여하는 고유 번호
 
   // 어떤 팀의 이미지인지 (team_id 외래키로 TeamProfile 테이블 참조)
   // ON DELETE CASCADE : 팀이 삭제되면 이미지 행도 자동으로 삭제된다.
@@ -42,15 +41,12 @@ public class TeamImage {
   private TeamProfile team;
 
   @Column(name = "image_url", nullable = false)
-  private String imageUrl;  // 이미지 URL (S3, CDN 등 외부 저장소 경로)
+  private String imageUrl; // 이미지 URL (S3, CDN 등 외부 저장소 경로)
 
   @Column(name = "created_at", nullable = false, updatable = false)
-  private Instant createdAt;  // 이미지 등록 시각
+  private Instant createdAt; // 이미지 등록 시각
 
-  /**
-   * 팀에 이미지를 등록할 때 사용하는 정적 팩토리 메서드.
-   * TeamProfile.updateImages() 내부에서 URL 수만큼 반복 호출된다.
-   */
+  /** 팀에 이미지를 등록할 때 사용하는 정적 팩토리 메서드. TeamProfile.updateImages() 내부에서 URL 수만큼 반복 호출된다. */
   public static TeamImage create(TeamProfile team, String imageUrl) {
     TeamImage image = new TeamImage();
     image.team = team;
