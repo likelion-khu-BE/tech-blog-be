@@ -25,7 +25,7 @@
 
 ## ◆ Teams
 
-<table width="100%">
+<table>
 <tr>
 <td width="50%" valign="top">
 <br/>
