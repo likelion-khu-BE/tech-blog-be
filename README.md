@@ -26,86 +26,123 @@
 ## ◆ Teams
 
 <table>
+
 <tr>
-<td width="50%" valign="top">
-<br/>
-<div align="center">
-
-### Blog
-
-<sub>기술 블로그 — 글쓰기, 주제별 게시판, 기수 필터, 키워드 검색</sub>
+<td width="280" align="center" valign="middle">
 
 <br/>
 
 <a href="https://github.com/cjang3285"><img src="https://github.com/cjang3285.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/hyroh5"><img src="https://github.com/hyroh5.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/papuagigi"><img src="https://github.com/papuagigi.png" width="56" style="border-radius:50%"/></a>
 
-<sub><a href="https://github.com/cjang3285"><b>장찬욱</b></a> · <a href="https://github.com/hyroh5">노희윤</a> · <a href="https://github.com/papuagigi">김주연</a></sub>
-
-</div>
 <br/>
+
 </td>
-<td width="50%" valign="top">
-<br/>
-<div align="center">
+<td valign="middle">
 
-### Q&A
+&nbsp;
 
-<sub>지식 공유 플랫폼 — 태그 분류, 답변 투표·채택, 기수별 질문 아카이브</sub>
+### &nbsp;Blog
+
+&nbsp;<sub> 기술 블로그 — 글쓰기, 주제별 게시판, 기수 필터, 키워드 검색</sub>
+
+&nbsp;<sub><a href="https://github.com/cjang3285"><b>장찬욱</b></a> &nbsp;·&nbsp; <a href="https://github.com/hyroh5">노희윤</a> &nbsp;·&nbsp; <a href="https://github.com/papuagigi">김주연</a></sub>
+
+&nbsp;
+
+</td>
+</tr>
+
+<tr>
+<td width="280" align="center" valign="middle">
 
 <br/>
 
 <a href="https://github.com/Suuunz"><img src="https://github.com/Suuunz.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/ahyeon24"><img src="https://github.com/ahyeon24.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/ebinee"><img src="https://github.com/ebinee.png" width="56" style="border-radius:50%"/></a>
 
-<sub><a href="https://github.com/Suuunz"><b>윤선재</b></a> · <a href="https://github.com/ahyeon24">심아현</a> · <a href="https://github.com/ebinee">김예빈</a></sub>
-
-</div>
 <br/>
+
+</td>
+<td valign="middle">
+
+&nbsp;
+
+### &nbsp;Q&A
+
+&nbsp;<sub>지식 공유 플랫폼 — 태그 분류, 답변 투표·채택, 기수별 질문 아카이브</sub>
+
+&nbsp;<sub><a href="https://github.com/Suuunz"><b>윤선재</b></a> &nbsp;·&nbsp; <a href="https://github.com/ahyeon24">심아현</a> &nbsp;·&nbsp; <a href="https://github.com/ebinee">김예빈</a></sub>
+
+&nbsp;
+
 </td>
 </tr>
+
 <tr>
-<td width="50%" valign="top">
-<br/>
-<div align="center">
-
-### Profile
-
-<sub>멤버 프로필 서비스 — 기술 스택 검색, 활동 기여도 집계, 기수별 대시보드</sub>
+<td width="280" align="center" valign="middle">
 
 <br/>
 
 <a href="https://github.com/xihxxn"><img src="https://github.com/xihxxn.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/parksein0223"><img src="https://github.com/parksein0223.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/lbeul372"><img src="https://github.com/lbeul372.png" width="56" style="border-radius:50%"/></a>
 
-<sub><a href="https://github.com/xihxxn"><b>안시현</b></a> · <a href="https://github.com/parksein0223">박세인</a> · <a href="https://github.com/lbeul372">임근엽</a></sub>
-
-</div>
 <br/>
+
 </td>
-<td width="50%" valign="top">
-<br/>
-<div align="center">
+<td valign="middle">
 
-### Session Board
+&nbsp;
 
-<sub>세션·행사 관리 서비스 — 일정 등록, 자료 아카이브, 회고 작성, 활동 통계</sub>
+### &nbsp;Profile
+
+&nbsp;<sub>멤버 프로필 서비스 — 기술 스택 검색, 활동 기여도 집계, 기수 대시보드</sub>
+
+&nbsp;<sub><a href="https://github.com/xihxxn"><b>안시현</b></a> &nbsp;·&nbsp; <a href="https://github.com/parksein0223">박세인</a> &nbsp;·&nbsp; <a href="https://github.com/lbeul372">임근엽</a></sub>
+
+&nbsp;
+
+</td>
+</tr>
+
+<tr>
+<td width="280" align="center" valign="middle">
 
 <br/>
 
 <a href="https://github.com/sunwoo1256"><img src="https://github.com/sunwoo1256.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/qoxkal"><img src="https://github.com/qoxkal.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
 <a href="https://github.com/Yejin111"><img src="https://github.com/Yejin111.png" width="56" style="border-radius:50%"/></a>
 
-<sub><a href="https://github.com/sunwoo1256"><b>신선우</b></a> · <a href="https://github.com/qoxkal">박현아</a> · <a href="https://github.com/Yejin111">한예진</a></sub>
-
-</div>
 <br/>
+
+</td>
+<td valign="middle">
+
+&nbsp;
+
+### &nbsp;Session Board
+
+&nbsp;<sub>세션·행사 관리 서비스 — 일정 등록, 자료 아카이브, 회고 작성, 활동 통계</sub>
+
+&nbsp;<sub><a href="https://github.com/sunwoo1256"><b>신선우</b></a> &nbsp;·&nbsp; <a href="https://github.com/qoxkal">박현아</a> &nbsp;·&nbsp; <a href="https://github.com/Yejin111">한예진</a></sub>
+
+&nbsp;
+
 </td>
 </tr>
+
 </table>
 
 <br/>
