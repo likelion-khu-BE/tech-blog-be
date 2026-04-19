@@ -32,15 +32,13 @@
 <tr>
 <td width="280" align="center" valign="middle">
 
-<br/>
-
+<div align="center"><br/>
 <a href="https://github.com/cjang3285"><img src="https://github.com/cjang3285.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/hyroh5"><img src="https://github.com/hyroh5.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/papuagigi"><img src="https://github.com/papuagigi.png" width="56" style="border-radius:50%"/></a>
-
-<br/>
+<br/></div>
 
 </td>
 <td valign="middle">
@@ -61,15 +59,13 @@
 <tr>
 <td width="280" align="center" valign="middle">
 
-<br/>
-
+<div align="center"><br/>
 <a href="https://github.com/Suuunz"><img src="https://github.com/Suuunz.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/ahyeon24"><img src="https://github.com/ahyeon24.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/ebinee"><img src="https://github.com/ebinee.png" width="56" style="border-radius:50%"/></a>
-
-<br/>
+<br/></div>
 
 </td>
 <td valign="middle">
@@ -90,15 +86,13 @@
 <tr>
 <td width="280" align="center" valign="middle">
 
-<br/>
-
+<div align="center"><br/>
 <a href="https://github.com/xihxxn"><img src="https://github.com/xihxxn.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/parksein0223"><img src="https://github.com/parksein0223.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/lbeul372"><img src="https://github.com/lbeul372.png" width="56" style="border-radius:50%"/></a>
-
-<br/>
+<br/></div>
 
 </td>
 <td valign="middle">
@@ -119,15 +113,13 @@
 <tr>
 <td width="280" align="center" valign="middle">
 
-<br/>
-
+<div align="center"><br/>
 <a href="https://github.com/sunwoo1256"><img src="https://github.com/sunwoo1256.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/qoxkal"><img src="https://github.com/qoxkal.png" width="56" style="border-radius:50%"/></a>
 &nbsp;
 <a href="https://github.com/Yejin111"><img src="https://github.com/Yejin111.png" width="56" style="border-radius:50%"/></a>
-
-<br/>
+<br/></div>
 
 </td>
 <td valign="middle">
