@@ -23,15 +23,6 @@
 
 </div>
 
-## ◆ Tech Stack
-
-|     **Backend**          |   Java 21 · Spring Boot 3.5 · Spring Security · JWT                                                     |
-| :----------- | :------------------------------------------------------- |
-| **Database** | **PostgreSQL · Hibernate · Flyway · QueryDSL**               |
-| **Infra**    | **Docker · AWS · GitHub Actions · k6**           |
-
-<br/>
-
 ## ◆ Teams
 
 <table>
