@@ -10,7 +10,7 @@ permissions:
 jobs:
   spotless-apply:
     # bot이 방금 푸시한 커밋이면 스킵 (무한 루프 방지)
-    if: ${{ github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, 'style: Spotless 자동 수정') }}
+    if: "github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, 'style: Spotless 자동 수정')"
     runs-on: ubuntu-latest
     steps:
       - name: 소스코드 체크아웃
