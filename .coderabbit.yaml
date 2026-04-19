@@ -6,15 +6,7 @@ reviews:
   poem: false
   collapse_walkthrough: true
   auto_review:
-    enabled: true
-    drafts: false
-    base_branches:
-      - main
-      - dev
-      - session-board
-      - profile
-      - blog
-      - qna
+    enabled: false
   path_filters:
     - "!**/*.md"
     - "!**/migration/**"
