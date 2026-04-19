@@ -146,7 +146,8 @@ public class AuthService {
 
     saveRefreshToken(userId, newRawRefreshToken, familyId);
 
-    return new RefreshResult(newAccessToken, newRawRefreshToken, jwtProvider.getRefreshTokenExpiration());
+    return new RefreshResult(
+        newAccessToken, newRawRefreshToken, jwtProvider.getRefreshTokenExpiration());
   }
 
   /** 로그아웃 — 해당 토큰의 family 전체 revoke. */
@@ -191,6 +192,5 @@ public class AuthService {
   public record LoginResult(LoginResponse response, String rawRefreshToken, long refreshMaxAgeMs) {}
 
   /** 토큰 갱신 결과. */
-  public record RefreshResult(
-      String accessToken, String rawRefreshToken, long refreshMaxAgeMs) {}
+  public record RefreshResult(String accessToken, String rawRefreshToken, long refreshMaxAgeMs) {}
 }

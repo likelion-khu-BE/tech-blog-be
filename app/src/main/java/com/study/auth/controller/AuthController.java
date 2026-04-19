@@ -42,8 +42,8 @@ public class AuthController {
   /**
    * refresh token 쿠키 경로.
    *
-   * <p>/api/auth로 설정 — 브라우저가 /api/auth/refresh와 /api/auth/logout에만 쿠키를 전송한다. 일반 API
-   * 호출(/api/blogs 등)에는 쿠키가 포함되지 않아 불필요한 노출을 방지.
+   * <p>/api/auth로 설정 — 브라우저가 /api/auth/refresh와 /api/auth/logout에만 쿠키를 전송한다. 일반 API 호출(/api/blogs
+   * 등)에는 쿠키가 포함되지 않아 불필요한 노출을 방지.
    */
   private static final String COOKIE_PATH = "/api/auth";
 
@@ -59,7 +59,8 @@ public class AuthController {
   public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
     AuthService.LoginResult result = authService.login(request.email(), request.password());
 
-    ResponseCookie cookie = buildRefreshTokenCookie(result.rawRefreshToken(), result.refreshMaxAgeMs());
+    ResponseCookie cookie =
+        buildRefreshTokenCookie(result.rawRefreshToken(), result.refreshMaxAgeMs());
 
     return ResponseEntity.ok()
         .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -72,7 +73,8 @@ public class AuthController {
 
     AuthService.RefreshResult result = authService.refresh(refreshToken);
 
-    ResponseCookie cookie = buildRefreshTokenCookie(result.rawRefreshToken(), result.refreshMaxAgeMs());
+    ResponseCookie cookie =
+        buildRefreshTokenCookie(result.rawRefreshToken(), result.refreshMaxAgeMs());
 
     return ResponseEntity.ok()
         .header(HttpHeaders.SET_COOKIE, cookie.toString())

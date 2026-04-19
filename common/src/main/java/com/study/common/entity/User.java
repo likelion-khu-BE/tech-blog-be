@@ -2,7 +2,6 @@ package com.study.common.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import org.hibernate.annotations.DynamicUpdate;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -16,12 +15,13 @@ import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 /**
  * 사용자 엔티티.
  *
- * <p>가입 시 PENDING 상태로 생성되며, 관리자 승인 후 ACTIVE가 되어야 로그인 가능. passwordHash는 BCrypt로 인코딩된 값만
- * 저장한다 — 평문은 절대 이 객체에 들어오지 않는다.
+ * <p>가입 시 PENDING 상태로 생성되며, 관리자 승인 후 ACTIVE가 되어야 로그인 가능. passwordHash는 BCrypt로 인코딩된 값만 저장한다 — 평문은
+ * 절대 이 객체에 들어오지 않는다.
  */
 @Entity
 @DynamicUpdate

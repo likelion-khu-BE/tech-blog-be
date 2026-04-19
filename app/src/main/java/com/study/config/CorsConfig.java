@@ -10,8 +10,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * CORS 설정.
  *
- * <p>allowCredentials=true가 핵심 — refresh token이 HttpOnly 쿠키로 전달되므로 credentials를 허용해야 쿠키가 전송된다.
- * 이 옵션을 쓰면 allowedOrigins에 "*"를 쓸 수 없어서 명시적 origin 지정이 필수.
+ * <p>allowCredentials=true가 핵심 — refresh token이 HttpOnly 쿠키로 전달되므로 credentials를 허용해야 쿠키가 전송된다. 이
+ * 옵션을 쓰면 allowedOrigins에 "*"를 쓸 수 없어서 명시적 origin 지정이 필수.
  */
 @Configuration
 public class CorsConfig {

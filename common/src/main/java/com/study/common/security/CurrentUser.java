@@ -11,8 +11,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
  *
  * <p>사용법: {@code public ResponseEntity<?> foo(@CurrentUser CustomUserDetails user)}
  *
- * <p>내부적으로 {@link AuthenticationPrincipal}을 위임한다. 팀 모듈에서 Spring Security 어노테이션을 직접 쓰지 않아도
- * 되도록 감싸는 역할.
+ * <p>내부적으로 {@link AuthenticationPrincipal}을 위임한다. 팀 모듈에서 Spring Security 어노테이션을 직접 쓰지 않아도 되도록 감싸는
+ * 역할.
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

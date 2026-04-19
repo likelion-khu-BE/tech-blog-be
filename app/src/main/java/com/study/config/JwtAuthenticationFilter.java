@@ -19,12 +19,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /**
  * 매 요청마다 Authorization 헤더의 Bearer 토큰을 검증하는 필터.
  *
- * <p>UsernamePasswordAuthenticationFilter 앞에 등록한다 — 폼 로그인 인증 전에 JWT 인증을 먼저 시도하기 위함. 토큰이
- * 유효하면 SecurityContext에 인증 정보를 설정하고, 유효하지 않으면 (만료, 변조 등) 아무것도 설정하지 않아
- * AuthenticationEntryPoint가 401을 반환하게 된다.
+ * <p>UsernamePasswordAuthenticationFilter 앞에 등록한다 — 폼 로그인 인증 전에 JWT 인증을 먼저 시도하기 위함. 토큰이 유효하면
+ * SecurityContext에 인증 정보를 설정하고, 유효하지 않으면 (만료, 변조 등) 아무것도 설정하지 않아 AuthenticationEntryPoint가 401을
+ * 반환하게 된다.
  *
- * <p>jjwt 라이브러리 타입은 이 클래스에 노출되지 않는다 — JwtProvider.parseAccessToken()이 Optional로 감싸서 반환하므로
- * app 모듈은 jjwt에 의존하지 않는다 (의존성 역전).
+ * <p>jjwt 라이브러리 타입은 이 클래스에 노출되지 않는다 — JwtProvider.parseAccessToken()이 Optional로 감싸서 반환하므로 app 모듈은
+ * jjwt에 의존하지 않는다 (의존성 역전).
  */
 @Component
 @RequiredArgsConstructor
