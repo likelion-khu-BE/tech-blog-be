@@ -10,7 +10,7 @@ permissions:
 jobs:
   spotless-apply:
     # bot이 방금 푸시한 커밋이면 스킵 (무한 루프 방지)
-    if: "github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, 'style: Spotless 자동 수정')"
+    if: "github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '코드 포맷 자동 정리')"
     runs-on: ubuntu-latest
     steps:
       - name: 소스코드 체크아웃
@@ -38,6 +38,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "수정사항 없음"
           else
-            git commit -m "style: Spotless 자동 수정"
+            git commit -m "style: 코드 포맷 자동 정리 — Google Java Format"
             git push
           fi
