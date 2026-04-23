@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,16 +30,17 @@ public class SessionSpeaker {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @Column(name = "user_id", nullable = false)
-  private UUID userId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
   @Column
   private String role;
 
-  public static SessionSpeaker of(Session session, UUID userId) {
+  public static SessionSpeaker of(Session session, User user) {
     SessionSpeaker speaker = new SessionSpeaker();
     speaker.session = session;
-    speaker.userId = userId;
+    speaker.user = user;
     return speaker;
   }
 }

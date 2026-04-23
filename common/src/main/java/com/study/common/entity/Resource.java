@@ -11,7 +11,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,8 +29,9 @@ public class Resource {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @Column(name = "uploader_id", nullable = false)
-  private UUID uploaderId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "uploader_id", nullable = false)
+  private User uploader;
 
   @Column(nullable = false)
   private String type;
@@ -56,10 +56,10 @@ public class Resource {
     uploadedAt = OffsetDateTime.now();
   }
 
-  public static Resource of(Session session, UUID uploaderId, String type, String name, String url) {
+  public static Resource of(Session session, User uploader, String type, String name, String url) {
     Resource resource = new Resource();
     resource.session = session;
-    resource.uploaderId = uploaderId;
+    resource.uploader = uploader;
     resource.type = type;
     resource.name = name;
     resource.url = url;

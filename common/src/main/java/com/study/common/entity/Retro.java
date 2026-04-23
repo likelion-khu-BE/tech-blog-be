@@ -11,7 +11,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,8 +29,9 @@ public class Retro {
   @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
-  @Column(name = "author_id", nullable = false)
-  private UUID authorId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "author_id", nullable = false)
+  private User author;
 
   /** 1 ~ 5 */
   private Integer rating;
@@ -46,10 +46,10 @@ public class Retro {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Retro of(Session session, UUID authorId) {
+  public static Retro of(Session session, User author) {
     Retro retro = new Retro();
     retro.session = session;
-    retro.authorId = authorId;
+    retro.author = author;
     return retro;
   }
 }
