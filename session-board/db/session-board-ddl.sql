@@ -8,13 +8,25 @@
 -- notification → common 레이어에서 관리 (해당 DDL 별도 참고)
 -- ============================================================
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
 -- pg_trgm: 한국어를 포함한 텍스트 컬럼의 부분 일치 검색(LIKE '%keyword%')을 위한 확장.
 -- PostgreSQL 기본 전문 검색(tsvector)은 한국어 형태소 분석을 지원하지 않으므로,
 -- 언어에 무관하게 문자 단위 n-gram으로 인덱싱하는 pg_trgm을 사용한다.
 -- 이 확장이 활성화되어야 아래 gin_trgm_ops 인덱스들이 동작한다.
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+
+--임시 generation Table----
+-- 이건 프로필 팀의 것이라 꼭 빼야함!! --
+-- 테스트 용도로 잠시 넣어둔 것임 --
+CREATE TABLE generation (
+                            id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                            label      TEXT NOT NULL,
+                            number     INT NOT NULL UNIQUE,
+                            start_date DATE NOT NULL,
+                            end_date   DATE,
+                            is_current BOOLEAN NOT NULL DEFAULT FALSE,
+                            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- ------------------------------------------------------------
 -- EVENT_POST
@@ -22,9 +34,9 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE TYPE post_status AS ENUM ('draft', 'published', 'hidden');
 
 CREATE TABLE event_post (
-                            id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                            author_id     UUID        NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-                            generation_id INT         NOT NULL REFERENCES generation(id) ON DELETE RESTRICT,
+                            id            BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                            author_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                            generation_id BIGINT      NOT NULL REFERENCES generation(id) ON DELETE RESTRICT,
                             type          TEXT        NOT NULL,
                             title         TEXT        NOT NULL,
                             body          TEXT,
@@ -39,8 +51,8 @@ CREATE TABLE event_post (
 -- POST_IMAGE
 -- ------------------------------------------------------------
 CREATE TABLE post_image (
-                            id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                            post_id    UUID        NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
+                            id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                            post_id    BIGINT      NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
                             url        TEXT        NOT NULL,
                             "order"    INT         NOT NULL DEFAULT 0,
                             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -50,9 +62,9 @@ CREATE TABLE post_image (
 -- LIKE
 -- ------------------------------------------------------------
 CREATE TABLE "like" (
-                        id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                        user_id    UUID        NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-                        post_id    UUID        NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
+                        id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                        user_id    BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        post_id    BIGINT      NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
                         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                         UNIQUE (user_id, post_id)
 );
@@ -61,10 +73,10 @@ CREATE TABLE "like" (
 -- COMMENT
 -- ------------------------------------------------------------
 CREATE TABLE comment (
-                         id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                         post_id    UUID        NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
-                         author_id  UUID        NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-                         parent_id  UUID        REFERENCES comment(id) ON DELETE CASCADE,
+                         id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                         post_id    BIGINT      NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
+                         author_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                         parent_id  BIGINT      REFERENCES comment(id) ON DELETE CASCADE,
                          content    TEXT        NOT NULL,
                          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -75,10 +87,10 @@ CREATE TABLE comment (
 CREATE TYPE session_status AS ENUM ('scheduled', 'ongoing', 'done');
 
 CREATE TABLE session (
-                         id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-                         generation_id INT           NOT NULL REFERENCES generation(id) ON DELETE RESTRICT,
+                         id            BIGINT         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                         generation_id BIGINT         NOT NULL REFERENCES generation(id) ON DELETE RESTRICT,
                          week_label    TEXT,
-                         title         TEXT          NOT NULL,
+                         title         TEXT           NOT NULL,
                          status        session_status NOT NULL DEFAULT 'scheduled',
                          started_at    TIMESTAMPTZ
 );
@@ -87,9 +99,9 @@ CREATE TABLE session (
 -- SESSION_SPEAKER
 -- ------------------------------------------------------------
 CREATE TABLE session_speaker (
-                                 id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                 session_id UUID NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                                 user_id    UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+                                 id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                                 session_id BIGINT NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+                                 user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                                  role       TEXT,
                                  UNIQUE (session_id, user_id)
 );
@@ -98,9 +110,9 @@ CREATE TABLE session_speaker (
 -- SESSION_NOTE
 -- ------------------------------------------------------------
 CREATE TABLE session_note (
-                              id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                              session_id UUID        NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                              author_id  UUID        NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+                              id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                              session_id BIGINT      NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+                              author_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                               body       TEXT,
                               created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -109,8 +121,8 @@ CREATE TABLE session_note (
 -- NOTE_LINK
 -- ------------------------------------------------------------
 CREATE TABLE note_link (
-                           id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                           note_id UUID NOT NULL REFERENCES session_note(id) ON DELETE CASCADE,
+                           id      BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                           note_id BIGINT NOT NULL REFERENCES session_note(id) ON DELETE CASCADE,
                            label   TEXT,
                            url     TEXT NOT NULL,
                            "order" INT  NOT NULL DEFAULT 0
@@ -122,9 +134,9 @@ CREATE TABLE note_link (
 CREATE TYPE resource_visibility AS ENUM ('public', 'member', 'private');
 
 CREATE TABLE resource (
-                          id          UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-                          session_id  UUID                NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                          uploader_id UUID                NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+                          id          BIGINT              GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                          session_id  BIGINT              NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+                          uploader_id BIGINT              NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                           type        TEXT                NOT NULL,
                           name        TEXT                NOT NULL,
                           url         TEXT                NOT NULL,
@@ -137,9 +149,9 @@ CREATE TABLE resource (
 -- RETRO
 -- ------------------------------------------------------------
 CREATE TABLE retro (
-                       id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-                       session_id UUID        NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                       author_id  UUID        NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+                       id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                       session_id BIGINT      NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+                       author_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                        rating     INT         CHECK (rating BETWEEN 1 AND 5),
                        body       TEXT,
                        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
