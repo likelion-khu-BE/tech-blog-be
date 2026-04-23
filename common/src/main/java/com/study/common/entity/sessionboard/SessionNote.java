@@ -1,5 +1,6 @@
-package com.study.common.entity;
+package com.study.common.entity.sessionboard;
 
+import com.study.common.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,24 +17,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "post_image")
+@Table(name = "session_note")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostImage {
+public class SessionNote {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "post_id", nullable = false)
-  private EventPost post;
+  @JoinColumn(name = "session_id", nullable = false)
+  private Session session;
 
-  @Column(nullable = false)
-  private String url;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "author_id", nullable = false)
+  private User author;
 
-  @Column(name = "\"order\"", nullable = false)
-  private int order = 0;
+  private String body;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
@@ -43,10 +44,10 @@ public class PostImage {
     createdAt = OffsetDateTime.now();
   }
 
-  public static PostImage of(EventPost post, String url) {
-    PostImage image = new PostImage();
-    image.post = post;
-    image.url = url;
-    return image;
+  public static SessionNote of(Session session, User author) {
+    SessionNote note = new SessionNote();
+    note.session = session;
+    note.author = author;
+    return note;
   }
 }

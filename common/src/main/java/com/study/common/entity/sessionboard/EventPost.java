@@ -1,5 +1,6 @@
-package com.study.common.entity;
+package com.study.common.entity.sessionboard;
 
+import com.study.common.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

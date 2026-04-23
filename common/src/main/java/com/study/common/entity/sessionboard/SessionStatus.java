@@ -1,4 +1,4 @@
-package com.study.common.entity;
+package com.study.common.entity.sessionboard;
 
 public enum SessionStatus {
   scheduled,
