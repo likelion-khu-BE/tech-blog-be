@@ -23,8 +23,8 @@ import lombok.NoArgsConstructor;
 public class SessionNote {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "session_id", nullable = false)
