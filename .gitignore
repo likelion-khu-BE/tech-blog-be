@@ -37,7 +37,9 @@ out/
 .vscode/
 
 ### Claude Code ###
-.claude/
+# 기본은 .env처럼 로컬 전용. 팀 공유 스킬만 예외로 커밋한다.
+/.claude/*
+!/.claude/skills/
 
 ### Environment ###
 .env
