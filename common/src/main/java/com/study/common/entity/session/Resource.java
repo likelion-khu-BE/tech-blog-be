@@ -1,6 +1,6 @@
 package com.study.common.entity.session;
 
-import com.study.common.entity.User;
+import com.study.common.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,7 +32,7 @@ public class Resource {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "uploader_id", nullable = false)
-  private User uploader;
+  private Member uploader;
 
   @Column(nullable = false)
   private String type;
@@ -57,7 +57,7 @@ public class Resource {
     uploadedAt = OffsetDateTime.now();
   }
 
-  public static Resource of(Session session, User uploader, String type, String name, String url) {
+  public static Resource of(Session session, Member uploader, String type, String name, String url) {
     Resource resource = new Resource();
     resource.session = session;
     resource.uploader = uploader;

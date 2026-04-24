@@ -1,6 +1,6 @@
 package com.study.common.entity.session;
 
-import com.study.common.entity.User;
+import com.study.common.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,7 +32,7 @@ public class SessionNote {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  private Member author;
 
   private String body;
 
@@ -44,7 +44,7 @@ public class SessionNote {
     createdAt = OffsetDateTime.now();
   }
 
-  public static SessionNote of(Session session, User author) {
+  public static SessionNote of(Session session, Member author) {
     SessionNote note = new SessionNote();
     note.session = session;
     note.author = author;

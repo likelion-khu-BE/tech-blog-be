@@ -1,6 +1,6 @@
 package com.study.common.entity.session;
 
-import com.study.common.entity.User;
+import com.study.common.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,7 +32,7 @@ public class Retro {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  private Member author;
 
   /** 1 ~ 5 */
   private Integer rating;
@@ -47,7 +47,7 @@ public class Retro {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Retro of(Session session, User author) {
+  public static Retro of(Session session, Member author) {
     Retro retro = new Retro();
     retro.session = session;
     retro.author = author;
