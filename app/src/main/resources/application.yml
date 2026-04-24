@@ -25,16 +25,23 @@ spring:
   # Java 엔티티 클래스 ↔ DB 테이블 자동 매핑
   jpa:
     hibernate:
-      # 엔티티가 바뀌면 DB 스키마를 자동으로 맞춰줌 (개발용)
-      # 새 필드 추가 → 컬럼 자동 생성. 기존 데이터는 유지됨
-      # 주의: 필드 삭제해도 컬럼은 자동으로 안 지워짐
-      ddl-auto: update
+      # 스키마는 Flyway가 관리. Hibernate는 엔티티와 DB가 일치하는지 검증만 함
+      # 불일치 시 앱 시작 실패 → DDL 누락을 즉시 발견할 수 있음
+      ddl-auto: validate
     # OSIV 끔 — Controller에서 지연 로딩 못 하게 막음
     # 켜두면 편하지만 DB 커넥션을 뷰 렌더링까지 물고 있어서 성능 문제 생김
     open-in-view: false
     properties:
       hibernate:
         format_sql: true         # SQL을 보기 좋게 줄바꿈 (한 줄 쿼리 → 포맷팅)
+
+# === JWT 인증 ===
+# JWT_SECRET은 반드시 Base64 인코딩된 256bit 이상 키여야 한다
+# 생성: openssl rand -base64 32
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:900000}      # 15분 (ms). 짧을수록 탈취 피해 감소
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7일 (ms). rotation으로 보완
 
 # === 로깅 ===
 logging:

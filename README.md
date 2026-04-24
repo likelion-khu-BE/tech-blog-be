@@ -1,139 +1,148 @@
-# KHU LikeLion Tech Blog - Backend
+<div align="center">
 
-경희대 멋쟁이사자처럼 기술블로그 백엔드
+<br/>
 
-> Frontend: https://khu-tech.blog
+<h1>KHU LikeLion Tech Blog</h1>
 
-**Java 21 · Spring Boot 3.5 · Gradle · 멀티모듈 모놀리식**
+<p><sub>경희대 멋쟁이사자처럼의 기술 블로그 · Q&A · 프로필 · 세션 관리 플랫폼</sub></p>
 
----
+<p>
+  <a href="https://khu-tech.blog"><kbd> &nbsp;&nbsp;&nbsp; <strong>Website ↗</strong> &nbsp;&nbsp;&nbsp; </kbd></a>
+</p>
 
-## 모듈 구조
+<br/>
 
-```
-study-be/
-├── common/          공통 설정, 유틸리티
-├── contract/        모듈 간 계약 (인터페이스, DTO, 이벤트)
-├── blog/            blog 팀
-├── qna/             qna 팀
-├── profile/         profile 팀
-├── session-board/   session-board 팀
-└── app/             조립 및 실행
-```
+<p>
+  <img src="https://img.shields.io/badge/Java-21-000000?style=flat-square&logo=openjdk&logoColor=white&labelColor=000000"/>
+  <img src="https://img.shields.io/badge/Spring_Boot-3.5-000000?style=flat-square&logo=springboot&logoColor=white&labelColor=000000"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-17-000000?style=flat-square&logo=postgresql&logoColor=white&labelColor=000000"/>
+  <img src="https://img.shields.io/badge/AWS-deployed-000000?style=flat-square&logo=amazonwebservices&logoColor=white&labelColor=000000"/>
+</p>
 
----
+<br/>
 
-## 모듈 간 통신
+</div>
 
-다른 모듈의 기능이 필요하면 `contract`에 인터페이스(Port)를 정의하고, 해당 모듈이 구현한다.
+## ◆ Teams
 
-```
-contract/  → BlogPort 인터페이스 정의
-blog/      → BlogService가 BlogPort 구현
-profile/   → ProfileService에서 BlogPort 주입받아 사용 (소비자)
-```
+<div align="center">
 
-### Port 규칙
+<table>
 
-- contract의 모든 인터페이스는 **`*Port`로 끝나야** 한다 (네이밍 컨벤션, ArchUnit 강제)
-- **Port 구현체는 다른 모듈의 Port를 호출할 수 없다** (순환 의존 방지, ArchUnit 강제)
-- 여러 모듈의 데이터를 조합해야 하면 **소비자(Controller 등)가 각 Port를 주입받아 조합**한다
+<tr>
+<td width="280" align="center" valign="middle">
 
-```java
-// BlogService (Port 구현체) — 자기 repository만 사용
-@Override
-public int countByMember(Long memberId) {
-    return blogRepository.countByAuthorId(memberId);  // OK
-    // profilePort.getProfile(memberId);              // 컴파일은 되지만 ArchUnit 실패
-}
+<div align="center"><br/>
+<a href="https://github.com/cjang3285"><img src="https://github.com/cjang3285.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/hyroh5"><img src="https://github.com/hyroh5.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/papuagigi"><img src="https://github.com/papuagigi.png" width="56" style="border-radius:50%"/></a>
+<br/></div>
 
-// ProfileController (소비자) — 여러 Port를 조합
-public ContributionResponse getContribution(Long memberId) {
-    int blogCount = blogPort.countByMember(memberId);
-    int qnaCount = qnaPort.countByMember(memberId);
-    return new ContributionResponse(blogCount, qnaCount);  // 여기서 조합
-}
-```
+</td>
+<td valign="middle">
 
-### contract에 허용하는 것
+&nbsp;
 
-인터페이스(Port), DTO, 이벤트, 공유 Enum
+### &nbsp;Blog
 
-### contract에 금지하는 것
+&nbsp;<sub> 기술 블로그 — 글쓰기, 주제별 게시판, 기수 필터, 키워드 검색</sub>
 
-Entity, Repository, 비즈니스 로직, 인프라 의존성(JPA 등)
+&nbsp;<sub><a href="https://github.com/cjang3285"><b>장찬욱</b></a> &nbsp;·&nbsp; <a href="https://github.com/hyroh5">노희윤</a> &nbsp;·&nbsp; <a href="https://github.com/papuagigi">김주연</a></sub>
 
-> contract 변경 PR은 CODEOWNERS에 의해 **전체 팀 리뷰** 필요
+&nbsp;
 
----
+</td>
+</tr>
 
-## 아키텍처 검증
+<tr>
+<td width="280" align="center" valign="middle">
 
-모듈 경계는 **3중으로 강제**된다.
+<div align="center"><br/>
+<a href="https://github.com/Suuunz"><img src="https://github.com/Suuunz.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/ahyeon24"><img src="https://github.com/ahyeon24.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/ebinee"><img src="https://github.com/ebinee.png" width="56" style="border-radius:50%"/></a>
+<br/></div>
 
-| 수준 | 방식 | 시점 |
-|---|---|---|
-| 1차 | Gradle 의존성 — 미선언 모듈 import 불가 | 컴파일 |
-| 2차 | ArchUnit — 패키지 레벨 의존 규칙, Port 격리 규칙 | 테스트 (CI) |
-| 3차 | CODEOWNERS — contract 변경 시 전체 팀 리뷰 | PR |
+</td>
+<td valign="middle">
 
----
+&nbsp;
 
-## 협업 규칙
+### &nbsp;Q&A
 
-1. **자기 모듈에서만 작업** — 다른 팀 모듈 직접 수정 금지
-2. **모듈 간 통신은 contract 경유** — 직접 참조 금지
-3. **의존성 추가 시 관리자 확인** — `build.gradle`에 임의로 팀 모듈 추가 금지
-4. **인프라 파일은 관리자 소유** — `common/`, `app/`, `build.gradle`, `settings.gradle`, `.github/`
+&nbsp;<sub>지식 공유 플랫폼 — 태그 분류, 답변 투표·채택, 기수별 질문 아카이브</sub>
 
----
+&nbsp;<sub><a href="https://github.com/Suuunz"><b>윤선재</b></a> &nbsp;·&nbsp; <a href="https://github.com/ahyeon24">심아현</a> &nbsp;·&nbsp; <a href="https://github.com/ebinee">김예빈</a></sub>
 
-## 개발 환경
+&nbsp;
 
-```bash
-# Java 21 설치 (SDKMAN)
-sdk install java 21.0.7-tem
+</td>
+</tr>
 
-# 전체 빌드
-./gradlew clean build
+<tr>
+<td width="280" align="center" valign="middle">
 
-# 특정 모듈만 빌드
-./gradlew :blog:build
+<div align="center"><br/>
+<a href="https://github.com/xihxxn"><img src="https://github.com/xihxxn.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/parksein0223"><img src="https://github.com/parksein0223.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/lbeul372"><img src="https://github.com/lbeul372.png" width="56" style="border-radius:50%"/></a>
+<br/></div>
 
-# 아키텍처 테스트만
-./gradlew :app:test
+</td>
+<td valign="middle">
 
-# 실행
-./gradlew :app:bootRun
-```
+&nbsp;
 
----
+### &nbsp;Profile
 
-## 브랜치 & PR 규칙
+&nbsp;<sub>멤버 프로필 서비스 — 기술 스택 검색, 활동 기여도 집계, 기수 대시보드</sub>
 
-- `main` — 보호 브랜치, 직접 push 금지
-- PR 머지 조건:
-  - **코드 소유자 최소 1명 승인** 필요
-  - CI 테스트 통과
-  - 승인 후 코드 변경 시 승인 초기화 (dismiss stale reviews)
+&nbsp;<sub><a href="https://github.com/xihxxn"><b>안시현</b></a> &nbsp;·&nbsp; <a href="https://github.com/parksein0223">박세인</a> &nbsp;·&nbsp; <a href="https://github.com/lbeul372">임근엽</a></sub>
 
-### 코드 소유자
+&nbsp;
 
-모든 파일에 대해 다음 5명이 코드 소유자:
+</td>
+</tr>
 
-`@cjang3285` `@xihxxn` `@xhae123` `@Suuunz` `@sunwoo1256`
+<tr>
+<td width="280" align="center" valign="middle">
 
-이 중 1명 이상이 승인해야 PR 머지 가능.
+<div align="center"><br/>
+<a href="https://github.com/sunwoo1256"><img src="https://github.com/sunwoo1256.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/qoxkal"><img src="https://github.com/qoxkal.png" width="56" style="border-radius:50%"/></a>
+&nbsp;
+<a href="https://github.com/Yejin111"><img src="https://github.com/Yejin111.png" width="56" style="border-radius:50%"/></a>
+<br/></div>
 
----
+</td>
+<td valign="middle">
 
-## 팀 구성
+&nbsp;
 
-| 팀 | 헤드 | 팀원 |
-|---|---|---|
-| 블로그 | 장찬욱 | 노희윤, 김주연 |
-| Q&A | 윤선재 | 심아현, 김예빈 |
-| 프로필 | 안시현 | 박세인, 임근엽 |
-| 세션보드 | 신선우 | 박현아, 한예진 |
+### &nbsp;Session Board
 
-**관리자**: 김우진 (@xhae123)
+&nbsp;<sub>세션·행사 관리 서비스 — 일정 등록, 자료 아카이브, 회고 작성, 활동 통계</sub>
+
+&nbsp;<sub><a href="https://github.com/sunwoo1256"><b>신선우</b></a> &nbsp;·&nbsp; <a href="https://github.com/qoxkal">박현아</a> &nbsp;·&nbsp; <a href="https://github.com/Yejin111">한예진</a></sub>
+
+&nbsp;
+
+</td>
+</tr>
+
+</table>
+
+</div>
+
+<br/>
+
+<div align="center">
+<sub>© 2026 KHU LikeLion · <a href="https://khu-tech.blog">khu-tech.blog</a></sub>
+</div>
