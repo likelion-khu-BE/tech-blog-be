@@ -11,7 +11,10 @@ import com.study.blog.post.PostTagRepository;
 import com.study.common.entity.Post;
 import com.study.common.entity.PostStatus;
 import com.study.common.entity.PostTag;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -40,17 +43,28 @@ public class AdminService {
 
   public AdminStatsResponse getStats() {
     long totalPosts = postRepository.count();
-    long publishedPosts = postRepository.count(
-        (root, query, cb) -> cb.equal(root.get("status"), PostStatus.PUBLISHED));
+    long publishedPosts =
+        postRepository.count(
+            (root, query, cb) -> cb.equal(root.get("status"), PostStatus.PUBLISHED));
     long draftPosts = totalPosts - publishedPosts;
     long totalComments = commentRepository.count();
     return AdminStatsResponse.of(totalPosts, publishedPosts, draftPosts, totalComments);
   }
 
   public Page<AdminPostResponse> getAllPosts(int page, int size) {
-    return postRepository
-        .findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()))
-        .map(this::toAdminPost);
+    Page<Post> posts =
+        postRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()));
+
+    List<Long> postIds = posts.stream().map(Post::getId).toList();
+    Map<Long, List<String>> tagsByPostId = batchTagsByPostId(postIds);
+    Map<Long, Long> likeCountByPostId = batchLikeCountByPostId(postIds);
+
+    return posts.map(
+        post ->
+            AdminPostResponse.of(
+                post,
+                tagsByPostId.getOrDefault(post.getId(), List.of()),
+                likeCountByPostId.getOrDefault(post.getId(), 0L)));
   }
 
   @Transactional
@@ -72,10 +86,16 @@ public class AdminService {
     postRepository.delete(post);
   }
 
-  private AdminPostResponse toAdminPost(Post post) {
-    List<String> tags =
-        postTagRepository.findByPost(post).stream().map(PostTag::getTagName).toList();
-    long likeCount = postLikeRepository.countByIdPostId(post.getId());
-    return AdminPostResponse.of(post, tags, likeCount);
+  private Map<Long, List<String>> batchTagsByPostId(Collection<Long> postIds) {
+    return postTagRepository.findByIdPostIdIn(postIds).stream()
+        .collect(
+            Collectors.groupingBy(
+                t -> t.getId().getPostId(),
+                Collectors.mapping(PostTag::getTagName, Collectors.toList())));
+  }
+
+  private Map<Long, Long> batchLikeCountByPostId(Collection<Long> postIds) {
+    return postLikeRepository.findByIdPostIdIn(postIds).stream()
+        .collect(Collectors.groupingBy(l -> l.getId().getPostId(), Collectors.counting()));
   }
 }

@@ -8,5 +8,7 @@ public final class MockAuth {
   public static final UUID MOCK_USER_ID =
       UUID.fromString("00000000-0000-0000-0000-000000000001");
 
+  public static final String ADMIN_TOKEN = "dev-admin-token-2026";
+
   private MockAuth() {}
 }

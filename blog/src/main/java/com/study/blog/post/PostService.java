@@ -11,8 +11,12 @@ import com.study.common.entity.PostBookmark;
 import com.study.common.entity.PostLike;
 import com.study.common.entity.PostStatus;
 import com.study.common.entity.PostTag;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -56,9 +60,19 @@ public class PostService {
             .and(PostSpecification.withAuthor(authorId))
             .and(PostSpecification.withKeyword(keyword));
 
-    return postRepository
-        .findAll(spec, PageRequest.of(page, size, Sort.by("createdAt").descending()))
-        .map(post -> toSummary(post));
+    Page<Post> posts =
+        postRepository.findAll(spec, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+
+    List<Long> postIds = posts.stream().map(Post::getId).toList();
+    Map<Long, List<String>> tagsByPostId = batchTagsByPostId(postIds);
+    Map<Long, Long> likeCountByPostId = batchLikeCountByPostId(postIds);
+
+    return posts.map(
+        post ->
+            PostSummaryResponse.of(
+                post,
+                tagsByPostId.getOrDefault(post.getId(), List.of()),
+                likeCountByPostId.getOrDefault(post.getId(), 0L)));
   }
 
   public PostResponse getPost(Long postId, UUID requesterId) {
@@ -127,7 +141,11 @@ public class PostService {
             })
         .orElseGet(
             () -> {
-              postLikeRepository.save(new PostLike(post, userId));
+              try {
+                postLikeRepository.saveAndFlush(new PostLike(post, userId));
+              } catch (DataIntegrityViolationException ignored) {
+                // concurrent insert — already liked
+              }
               return true;
             });
   }
@@ -144,7 +162,11 @@ public class PostService {
             })
         .orElseGet(
             () -> {
-              postBookmarkRepository.save(new PostBookmark(post, userId));
+              try {
+                postBookmarkRepository.saveAndFlush(new PostBookmark(post, userId));
+              } catch (DataIntegrityViolationException ignored) {
+                // concurrent insert — already bookmarked
+              }
               return true;
             });
   }
@@ -163,25 +185,32 @@ public class PostService {
         .forEach(postTagRepository::save);
   }
 
-  private List<String> getTagNames(Post post) {
-    return postTagRepository.findByPost(post).stream().map(PostTag::getTagName).toList();
-  }
-
-  private PostSummaryResponse toSummary(Post post) {
-    long likeCount = postLikeRepository.countByIdPostId(post.getId());
-    return PostSummaryResponse.of(post, getTagNames(post), likeCount);
-  }
-
   private PostResponse toResponse(Post post, UUID requesterId) {
-    List<String> tags = getTagNames(post);
+    List<String> tags =
+        postTagRepository.findByPost(post).stream().map(PostTag::getTagName).toList();
     long likeCount = postLikeRepository.countByIdPostId(post.getId());
     long bookmarkCount = postBookmarkRepository.countByIdPostId(post.getId());
     boolean liked =
-        postLikeRepository.findByIdPostIdAndIdUserId(post.getId(), requesterId).isPresent();
+        requesterId != null
+            && postLikeRepository.findByIdPostIdAndIdUserId(post.getId(), requesterId).isPresent();
     boolean bookmarked =
-        postBookmarkRepository
-            .findByIdPostIdAndIdUserId(post.getId(), requesterId)
-            .isPresent();
+        requesterId != null
+            && postBookmarkRepository
+                .findByIdPostIdAndIdUserId(post.getId(), requesterId)
+                .isPresent();
     return PostResponse.of(post, tags, likeCount, bookmarkCount, liked, bookmarked);
+  }
+
+  private Map<Long, List<String>> batchTagsByPostId(Collection<Long> postIds) {
+    return postTagRepository.findByIdPostIdIn(postIds).stream()
+        .collect(
+            Collectors.groupingBy(
+                t -> t.getId().getPostId(),
+                Collectors.mapping(PostTag::getTagName, Collectors.toList())));
+  }
+
+  private Map<Long, Long> batchLikeCountByPostId(Collection<Long> postIds) {
+    return postLikeRepository.findByIdPostIdIn(postIds).stream()
+        .collect(Collectors.groupingBy(l -> l.getId().getPostId(), Collectors.counting()));
   }
 }

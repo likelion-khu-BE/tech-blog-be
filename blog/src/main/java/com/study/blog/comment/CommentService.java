@@ -8,10 +8,13 @@ import com.study.blog.common.exception.BlogException;
 import com.study.common.entity.Comment;
 import com.study.common.entity.CommentLike;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,17 +33,30 @@ public class CommentService {
 
   public List<CommentResponse> getComments(Long postId, UUID requesterId) {
     List<Comment> all = commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId);
+    if (all.isEmpty()) {
+      return List.of();
+    }
+
+    List<Long> commentIds = all.stream().map(Comment::getId).toList();
+    List<CommentLike> likes = commentLikeRepository.findByIdCommentIdIn(commentIds);
+
+    Map<Long, Long> likeCountByCommentId =
+        likes.stream()
+            .collect(
+                Collectors.groupingBy(l -> l.getId().getCommentId(), Collectors.counting()));
+    Map<Long, Boolean> likedByCommentId =
+        requesterId == null
+            ? Map.of()
+            : likes.stream()
+                .filter(l -> requesterId.equals(l.getId().getUserId()))
+                .collect(Collectors.toMap(l -> l.getId().getCommentId(), l -> true));
 
     Map<Long, CommentResponse> map = new LinkedHashMap<>();
     List<CommentResponse> roots = new ArrayList<>();
 
     for (Comment c : all) {
-      long likeCount = commentLikeRepository.countByIdCommentId(c.getId());
-      boolean liked =
-          requesterId != null
-              && commentLikeRepository
-                  .findByIdCommentIdAndIdUserId(c.getId(), requesterId)
-                  .isPresent();
+      long likeCount = likeCountByCommentId.getOrDefault(c.getId(), 0L);
+      boolean liked = likedByCommentId.getOrDefault(c.getId(), false);
       CommentResponse resp = CommentResponse.of(c, likeCount, liked);
       map.put(c.getId(), resp);
       if (c.getParentId() == null) {
@@ -61,8 +77,7 @@ public class CommentService {
   }
 
   @Transactional
-  public CommentResponse createComment(
-      Long postId, CommentCreateRequest req, UUID userId) {
+  public CommentResponse createComment(Long postId, CommentCreateRequest req, UUID userId) {
     Comment parent = null;
     if (req.getParentId() != null) {
       parent =
@@ -119,7 +134,11 @@ public class CommentService {
             })
         .orElseGet(
             () -> {
-              commentLikeRepository.save(new CommentLike(comment, userId));
+              try {
+                commentLikeRepository.saveAndFlush(new CommentLike(comment, userId));
+              } catch (DataIntegrityViolationException ignored) {
+                // concurrent insert — already liked
+              }
               return true;
             });
   }
