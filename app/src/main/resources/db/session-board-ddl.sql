@@ -14,20 +14,6 @@
 -- 이 확장이 활성화되어야 아래 gin_trgm_ops 인덱스들이 동작한다.
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
-
---임시 generation Table----
--- 이건 프로필 팀의 것이라 꼭 빼야함!! --
--- 테스트 용도로 잠시 넣어둔 것임 --
-CREATE TABLE generation (
-                            id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-                            label      TEXT NOT NULL,
-                            number     INT NOT NULL UNIQUE,
-                            start_date DATE NOT NULL,
-                            end_date   DATE,
-                            is_current BOOLEAN NOT NULL DEFAULT FALSE,
-                            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- ------------------------------------------------------------
 -- EVENT_POST
 -- ------------------------------------------------------------
