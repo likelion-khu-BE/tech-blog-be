@@ -1,6 +1,6 @@
 package com.study.common.entity.session;
 
-import com.study.common.entity.Member;
+import com.study.common.entity.member.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

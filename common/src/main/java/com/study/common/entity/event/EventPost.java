@@ -1,7 +1,7 @@
 package com.study.common.entity.event;
 
-import com.study.common.entity.Generation;
-import com.study.common.entity.Member;
+import com.study.common.entity.generation.Generation;
+import com.study.common.entity.member.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
