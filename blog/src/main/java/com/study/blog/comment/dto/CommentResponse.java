@@ -1,6 +1,6 @@
 package com.study.blog.comment.dto;
 
-import com.study.common.entity.Comment;
+import com.study.common.entity.comment.Comment;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.study.blog.comment;
 
-import com.study.common.entity.CommentLike;
-import com.study.common.entity.CommentLikeId;
+import com.study.common.entity.comment.CommentLike;
+import com.study.common.entity.comment.CommentLikeId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

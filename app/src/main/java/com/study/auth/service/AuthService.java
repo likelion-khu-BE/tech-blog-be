@@ -2,8 +2,8 @@ package com.study.auth.service;
 
 import com.study.auth.dto.LoginResponse;
 import com.study.auth.dto.SignupResponse;
-import com.study.common.entity.RefreshToken;
-import com.study.common.entity.User;
+import com.study.common.entity.auth.RefreshToken;
+import com.study.common.entity.auth.User;
 import com.study.common.exception.EmailAlreadyExistsException;
 import com.study.common.exception.InvalidCredentialsException;
 import com.study.common.exception.InvalidTokenException;

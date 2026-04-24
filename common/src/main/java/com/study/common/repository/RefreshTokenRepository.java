@@ -1,6 +1,8 @@
 package com.study.common.repository;
 
-import com.study.common.entity.RefreshToken;
+import com.study.common.entity.auth.RefreshTokenStatus;
+
+import com.study.common.entity.auth.RefreshToken;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,9 +22,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
    */
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
-      "UPDATE RefreshToken r SET r.status = com.study.common.entity.RefreshTokenStatus.USED"
+      "UPDATE RefreshToken r SET r.status = com.study.common.entity.auth.RefreshTokenStatus.USED"
           + " WHERE r.tokenHash = :tokenHash"
-          + " AND r.status = com.study.common.entity.RefreshTokenStatus.ACTIVE")
+          + " AND r.status = com.study.common.entity.auth.RefreshTokenStatus.ACTIVE")
   int markAsUsed(@Param("tokenHash") String tokenHash);
 
   /**
@@ -32,16 +34,16 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
    */
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
-      "UPDATE RefreshToken r SET r.status = com.study.common.entity.RefreshTokenStatus.REVOKED"
+      "UPDATE RefreshToken r SET r.status = com.study.common.entity.auth.RefreshTokenStatus.REVOKED"
           + " WHERE r.familyId = :familyId"
-          + " AND r.status <> com.study.common.entity.RefreshTokenStatus.REVOKED")
+          + " AND r.status <> com.study.common.entity.auth.RefreshTokenStatus.REVOKED")
   int revokeFamily(@Param("familyId") UUID familyId);
 
   /** 해당 유저의 모든 ACTIVE 토큰을 REVOKED 처리. 전체 로그아웃 시 사용. */
   @Modifying(flushAutomatically = true, clearAutomatically = true)
   @Query(
-      "UPDATE RefreshToken r SET r.status = com.study.common.entity.RefreshTokenStatus.REVOKED"
+      "UPDATE RefreshToken r SET r.status = com.study.common.entity.auth.RefreshTokenStatus.REVOKED"
           + " WHERE r.userId = :userId"
-          + " AND r.status = com.study.common.entity.RefreshTokenStatus.ACTIVE")
+          + " AND r.status = com.study.common.entity.auth.RefreshTokenStatus.ACTIVE")
   int revokeAllByUserId(@Param("userId") Long userId);
 }

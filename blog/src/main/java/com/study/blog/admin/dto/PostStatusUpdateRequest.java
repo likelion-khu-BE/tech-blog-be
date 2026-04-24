@@ -1,6 +1,6 @@
 package com.study.blog.admin.dto;
 
-import com.study.common.entity.PostStatus;
+import com.study.common.entity.post.PostStatus;
 import jakarta.validation.constraints.NotNull;
 
 public class PostStatusUpdateRequest {

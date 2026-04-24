@@ -1,7 +1,7 @@
 package com.study.blog.post;
 
-import com.study.common.entity.PostLike;
-import com.study.common.entity.PostLikeId;
+import com.study.common.entity.post.PostLike;
+import com.study.common.entity.post.PostLikeId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

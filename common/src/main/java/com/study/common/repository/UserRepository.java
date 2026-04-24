@@ -1,6 +1,6 @@
 package com.study.common.repository;
 
-import com.study.common.entity.User;
+import com.study.common.entity.auth.User;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
