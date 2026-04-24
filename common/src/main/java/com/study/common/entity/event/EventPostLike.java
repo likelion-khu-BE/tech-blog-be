@@ -1,6 +1,6 @@
 package com.study.common.entity.event;
 
-import com.study.common.entity.User;
+import com.study.common.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "event_post_like",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "post_id"}))
+    uniqueConstraints = @UniqueConstraint(columnNames = {"member_id", "post_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EventPostLike {
@@ -30,8 +30,8 @@ public class EventPostLike {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @JoinColumn(name = "member_id", nullable = false)
+  private Member member;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "post_id", nullable = false)
@@ -45,9 +45,9 @@ public class EventPostLike {
     createdAt = OffsetDateTime.now();
   }
 
-  public static EventPostLike of(User user, EventPost post) {
+  public static EventPostLike of(Member member, EventPost post) {
     EventPostLike eventPostLike = new EventPostLike();
-    eventPostLike.user = user;
+    eventPostLike.member = member;
     eventPostLike.post = post;
     return eventPostLike;
   }

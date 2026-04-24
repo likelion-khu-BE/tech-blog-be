@@ -1,4 +1,4 @@
-package com.study.common.entity.sessionboard;
+package com.study.common.entity;
 
 public enum PostStatus {
   DRAFT,

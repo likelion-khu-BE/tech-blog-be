@@ -2,7 +2,7 @@
 -- Event Session Board — PostgreSQL DDL
 -- ============================================================
 -- NOTE: 아래 테이블은 세션보드 팀이 소유하지 않습니다.
---   "user"    → 프로필 팀 DDL에서 생성
+--   member     → 프로필 팀 DDL에서 생성
 --   generation → 프로필 팀 DDL에서 생성
 -- FK 제약은 shared DB의 참조 무결성을 위해 유지합니다.
 -- notification → common 레이어에서 관리 (해당 DDL 별도 참고)
@@ -35,7 +35,7 @@ CREATE TYPE post_status AS ENUM ('DRAFT', 'PUBLISHED', 'HIDDEN');
 
 CREATE TABLE event_post (
                             id            BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                            author_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                            author_id     BIGINT      NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                             generation_id BIGINT      NOT NULL REFERENCES generation(id) ON DELETE RESTRICT,
                             type          TEXT        NOT NULL,
                             title         TEXT        NOT NULL,
@@ -63,10 +63,10 @@ CREATE TABLE event_post_image (
 -- ------------------------------------------------------------
 CREATE TABLE event_post_like (
                         id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                        user_id    BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        member_id  BIGINT      NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                         post_id    BIGINT      NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
                         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-                        UNIQUE (user_id, post_id)
+                        UNIQUE (member_id, post_id)
 );
 
 -- ------------------------------------------------------------
@@ -75,7 +75,7 @@ CREATE TABLE event_post_like (
 CREATE TABLE event_post_comment (
                          id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                          post_id    BIGINT      NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
-                         author_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                         author_id  BIGINT      NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                          parent_id  BIGINT      REFERENCES event_post_comment (id) ON DELETE CASCADE,
                          content    TEXT        NOT NULL,
                          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -101,9 +101,9 @@ CREATE TABLE session (
 CREATE TABLE session_speaker (
                                  id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                  session_id BIGINT NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                                 user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                                 member_id  BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                                  role       TEXT,
-                                 UNIQUE (session_id, user_id)
+                                 UNIQUE (session_id, member_id)
 );
 
 -- ------------------------------------------------------------
@@ -112,7 +112,7 @@ CREATE TABLE session_speaker (
 CREATE TABLE session_note (
                               id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                               session_id BIGINT      NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                              author_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                              author_id  BIGINT      NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                               body       TEXT,
                               created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -136,7 +136,7 @@ CREATE TYPE resource_visibility AS ENUM ('PUBLIC', 'MEMBER', 'PRIVATE');
 CREATE TABLE resource (
                           id          BIGINT              GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                           session_id  BIGINT              NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                          uploader_id BIGINT              NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                          uploader_id BIGINT              NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                           type        TEXT                NOT NULL,
                           name        TEXT                NOT NULL,
                           url         TEXT                NOT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE resource (
 CREATE TABLE retro (
                        id         BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                        session_id BIGINT      NOT NULL REFERENCES session(id) ON DELETE CASCADE,
-                       author_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                       author_id  BIGINT      NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                        rating     INT         CHECK (rating BETWEEN 1 AND 5),
                        body       TEXT,
                        created_at TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -1,6 +1,6 @@
 package com.study.common.entity.session;
 
-import com.study.common.entity.sessionboard.Generation;
+import com.study.common.entity.Generation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

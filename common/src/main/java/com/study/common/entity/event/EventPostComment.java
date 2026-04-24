@@ -1,6 +1,6 @@
 package com.study.common.entity.event;
 
-import com.study.common.entity.User;
+import com.study.common.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,7 +32,7 @@ public class EventPostComment {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  private Member author;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "parent_id")
@@ -49,7 +49,7 @@ public class EventPostComment {
     createdAt = OffsetDateTime.now();
   }
 
-  public static EventPostComment of(EventPost post, User author, String content) {
+  public static EventPostComment of(EventPost post, Member author, String content) {
     EventPostComment eventPostComment = new EventPostComment();
     eventPostComment.post = post;
     eventPostComment.author = author;
@@ -57,7 +57,7 @@ public class EventPostComment {
     return eventPostComment;
   }
 
-  public static EventPostComment ofReply(EventPost post, User author, EventPostComment parent, String content) {
+  public static EventPostComment ofReply(EventPost post, Member author, EventPostComment parent, String content) {
     EventPostComment eventPostComment = of(post, author, content);
     eventPostComment.parent = parent;
     return eventPostComment;

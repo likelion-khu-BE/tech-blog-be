@@ -1,7 +1,7 @@
 package com.study.common.entity.event;
 
-import com.study.common.entity.User;
-import com.study.common.entity.sessionboard.Generation;
+import com.study.common.entity.Generation;
+import com.study.common.entity.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,7 +31,7 @@ public class EventPost {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "author_id", nullable = false)
-  private User author;
+  private Member author;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "generation_id", nullable = false)
@@ -66,7 +66,7 @@ public class EventPost {
     createdAt = OffsetDateTime.now();
   }
 
-  public static EventPost of(User author, Generation generation, String type, String title) {
+  public static EventPost of(Member author, Generation generation, String type, String title) {
     EventPost post = new EventPost();
     post.author = author;
     post.generation = generation;
