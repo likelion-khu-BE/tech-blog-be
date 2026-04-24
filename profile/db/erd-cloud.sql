@@ -8,7 +8,7 @@ CREATE TABLE member
     session_type      ENUM ('backend','frontend','design','ai','pm','etc') NOT NULL,
     profile_image_url TEXT,
     github_url        TEXT,
-    displayed_email   VARCHAR(255),
+    displayed_email   TEXT,
     intro             TEXT,
     links_json        JSON,
     created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
