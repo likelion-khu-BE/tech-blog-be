@@ -118,11 +118,11 @@ class CommentApiTest {
     mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
         .andExpect(status().isOk())
         // 2 root comments
-        .andExpect(jsonPath("$.data.length()").value(2))
+        .andExpect(jsonPath("$.length()").value(2))
         // root1 has 2 replies
-        .andExpect(jsonPath("$.data[0].replies.length()").value(2))
+        .andExpect(jsonPath("$[0].replies.length()").value(2))
         // root2 has 0 replies
-        .andExpect(jsonPath("$.data[1].replies.length()").value(0));
+        .andExpect(jsonPath("$[1].replies.length()").value(0));
   }
 
   @Test
@@ -130,12 +130,12 @@ class CommentApiTest {
     mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
         .andExpect(status().isOk())
         // root1 fields
-        .andExpect(jsonPath("$.data[0].id").value(root1.getId()))
-        .andExpect(jsonPath("$.data[0].content").value("정말 유익한 글이네요! CI/CD 파이프라인 설정이 이렇게 간단하다니 놀랍습니다."))
-        .andExpect(jsonPath("$.data[0].userId").value(MOCK_USER_ID.toString()))
-        .andExpect(jsonPath("$.data[0].likeCount").value(1))
-        .andExpect(jsonPath("$.data[0].liked").value(true)) // MOCK_USER liked root1
-        .andExpect(jsonPath("$.data[0].parentId").doesNotExist());
+        .andExpect(jsonPath("$[0].id").value(root1.getId()))
+        .andExpect(jsonPath("$[0].content").value("정말 유익한 글이네요! CI/CD 파이프라인 설정이 이렇게 간단하다니 놀랍습니다."))
+        .andExpect(jsonPath("$[0].userId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$[0].likeCount").value(1))
+        .andExpect(jsonPath("$[0].liked").value(true)) // MOCK_USER liked root1
+        .andExpect(jsonPath("$[0].parentId").doesNotExist());
   }
 
   @Test
@@ -143,9 +143,9 @@ class CommentApiTest {
     mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
         .andExpect(status().isOk())
         // reply1 is first reply of root1
-        .andExpect(jsonPath("$.data[0].replies[0].parentId").value(root1.getId()))
-        .andExpect(jsonPath("$.data[0].replies[0].userId").value(OTHER_USER_ID.toString()))
-        .andExpect(jsonPath("$.data[0].replies[0].liked").value(false));
+        .andExpect(jsonPath("$[0].replies[0].parentId").value(root1.getId()))
+        .andExpect(jsonPath("$[0].replies[0].userId").value(OTHER_USER_ID.toString()))
+        .andExpect(jsonPath("$[0].replies[0].liked").value(false));
   }
 
   @Test
@@ -164,7 +164,7 @@ class CommentApiTest {
 
     mvc.perform(get("/api/blog/posts/{postId}/comments", emptyPost.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.length()").value(0));
+        .andExpect(jsonPath("$.length()").value(0));
   }
 
   // ── POST /api/blog/posts/{postId}/comments ───────────────────────────────
@@ -183,12 +183,12 @@ class CommentApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.data.content").value("Nginx 리버스 프록시 설정도 함께 설명해주시면 좋겠습니다!"))
-        .andExpect(jsonPath("$.data.userId").value(MOCK_USER_ID.toString()))
-        .andExpect(jsonPath("$.data.parentId").doesNotExist())
-        .andExpect(jsonPath("$.data.likeCount").value(0))
-        .andExpect(jsonPath("$.data.liked").value(false))
-        .andExpect(jsonPath("$.data.replies.length()").value(0));
+        .andExpect(jsonPath("$.content").value("Nginx 리버스 프록시 설정도 함께 설명해주시면 좋겠습니다!"))
+        .andExpect(jsonPath("$.userId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$.parentId").doesNotExist())
+        .andExpect(jsonPath("$.likeCount").value(0))
+        .andExpect(jsonPath("$.liked").value(false))
+        .andExpect(jsonPath("$.replies.length()").value(0));
   }
 
   @Test
@@ -208,8 +208,8 @@ class CommentApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.data.parentId").value(root2.getId()))
-        .andExpect(jsonPath("$.data.content").value("저는 EC2 t2.micro 무료 티어로 돌리고 있어요."));
+        .andExpect(jsonPath("$.parentId").value(root2.getId()))
+        .andExpect(jsonPath("$.content").value("저는 EC2 t2.micro 무료 티어로 돌리고 있어요."));
   }
 
   @Test
@@ -262,9 +262,9 @@ class CommentApiTest {
                 .content(body))
         .andExpect(status().isOk())
         .andExpect(
-            jsonPath("$.data.content")
+            jsonPath("$.content")
                 .value("수정된 댓글: self-hosted Runner보다 github-hosted가 안정적이에요!"))
-        .andExpect(jsonPath("$.data.id").value(root1.getId()));
+        .andExpect(jsonPath("$.id").value(root1.getId()));
   }
 
   @Test
@@ -336,7 +336,7 @@ class CommentApiTest {
     // root2 has no like from MOCK_USER
     mvc.perform(post("/api/blog/comments/{id}/like", root2.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.liked").value(true));
+        .andExpect(jsonPath("$.liked").value(true));
   }
 
   @Test
@@ -344,17 +344,17 @@ class CommentApiTest {
     // root1 is already liked by MOCK_USER (set in setUp)
     mvc.perform(post("/api/blog/comments/{id}/like", root1.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.liked").value(false));
+        .andExpect(jsonPath("$.liked").value(false));
   }
 
   @Test
   void toggleCommentLike_likeAndUnlike_likeCountChanges() throws Exception {
     // reply2 has no like — like it, then unlike it, verify state
     mvc.perform(post("/api/blog/comments/{id}/like", reply2.getId()))
-        .andExpect(jsonPath("$.data.liked").value(true));
+        .andExpect(jsonPath("$.liked").value(true));
 
     mvc.perform(post("/api/blog/comments/{id}/like", reply2.getId()))
-        .andExpect(jsonPath("$.data.liked").value(false));
+        .andExpect(jsonPath("$.liked").value(false));
   }
 
   @Test

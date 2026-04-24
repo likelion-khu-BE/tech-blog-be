@@ -119,7 +119,7 @@ com.study.blog
 | 컬럼         | 타입      | 제약                                  | 설명                 |
 |------------|---------|--------------------------------------|--------------------|
 | id         | BIGINT   | PK, AUTO_INCREMENT                   | 댓글 식별자             |
-| post_id    | BIGINT   | NOT NULL (논리적 참조, FK 없음)             | 소속 게시글             |
+| post_id    | BIGINT   | NOT NULL, FK → posts(id) CASCADE     | 소속 게시글             |
 | user_id    | UUID     | NOT NULL                             | 작성자                |
 | parent_id  | BIGINT   | NULL 가능, FK → comments(id) CASCADE  | 부모 댓글 (대댓글 구조)    |
 | content    | TEXT     | NOT NULL                             | 댓글 내용              |
@@ -128,9 +128,7 @@ com.study.blog
 - `parent_id IS NULL` → 최상위 댓글
 - `parent_id IS NOT NULL` → 대댓글 (1단계만 지원)
 - `parent_id ON DELETE CASCADE`: 부모 댓글 삭제 시 자식 댓글 자동 삭제
-- `post_id`는 DB FK 없이 애플리케이션 레벨에서만 관리 (게시글 삭제 시 댓글은 별도 처리 필요)
-
-> **주의**: `comments.post_id`에는 DB 레벨 FK가 없다. 어드민 강제 삭제 시 `postRepository.delete(post)` 전에 명시적으로 댓글을 삭제하거나 DB `ON DELETE CASCADE`로 처리해야 한다. 현재 어드민 `forceDeletePost`는 태그만 명시 삭제하고 있으며, `post_likes`·`post_bookmarks`·`comments`는 DB CASCADE로 처리된다.
+- `post_id ON DELETE CASCADE`: 게시글 삭제 시 댓글 자동 삭제
 
 ### 2-6. comment_likes
 

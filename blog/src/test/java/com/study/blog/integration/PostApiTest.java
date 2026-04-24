@@ -153,9 +153,9 @@ class PostApiTest {
     // A, B, C, E are PUBLISHED; D is DRAFT → expect 4
     mvc.perform(get("/api/blog/posts"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(4))
-        .andExpect(jsonPath("$.data.content").isArray())
-        .andExpect(jsonPath("$.data.number").value(0));
+        .andExpect(jsonPath("$.totalElements").value(4))
+        .andExpect(jsonPath("$.content").isArray())
+        .andExpect(jsonPath("$.number").value(0));
   }
 
   @Test
@@ -163,7 +163,7 @@ class PostApiTest {
     // A and E are PUBLISHED board=백엔드; D is DRAFT → expect 2
     mvc.perform(get("/api/blog/posts").param("board", "백엔드"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(2));
+        .andExpect(jsonPath("$.totalElements").value(2));
   }
 
   @Test
@@ -171,7 +171,7 @@ class PostApiTest {
     // A, C, E are PUBLISHED 13기; D is DRAFT → expect 3
     mvc.perform(get("/api/blog/posts").param("generation", "13기"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(3));
+        .andExpect(jsonPath("$.totalElements").value(3));
   }
 
   @Test
@@ -179,7 +179,7 @@ class PostApiTest {
     // "CI/CD" appears in titles of A and E
     mvc.perform(get("/api/blog/posts").param("keyword", "CI/CD"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(2));
+        .andExpect(jsonPath("$.totalElements").value(2));
   }
 
   @Test
@@ -187,8 +187,8 @@ class PostApiTest {
     // "Blue-Green" only appears in postE content
     mvc.perform(get("/api/blog/posts").param("keyword", "Blue-Green"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(1))
-        .andExpect(jsonPath("$.data.content[0].title").value("AWS EC2 CI/CD 자동 배포 파이프라인 심화편"));
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].title").value("AWS EC2 CI/CD 자동 배포 파이프라인 심화편"));
   }
 
   @Test
@@ -196,22 +196,22 @@ class PostApiTest {
     // MOCK_USER has A and E published (D is draft)
     mvc.perform(get("/api/blog/posts").param("authorId", MOCK_USER_ID.toString()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(2));
+        .andExpect(jsonPath("$.totalElements").value(2));
   }
 
   @Test
   void getPosts_pagination_respectsSizeAndPageParams() throws Exception {
     mvc.perform(get("/api/blog/posts").param("size", "2").param("page", "0"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.content.length()").value(2))
-        .andExpect(jsonPath("$.data.totalElements").value(4))
-        .andExpect(jsonPath("$.data.totalPages").value(2))
-        .andExpect(jsonPath("$.data.first").value(true));
+        .andExpect(jsonPath("$.content.length()").value(2))
+        .andExpect(jsonPath("$.totalElements").value(4))
+        .andExpect(jsonPath("$.totalPages").value(2))
+        .andExpect(jsonPath("$.first").value(true));
 
     mvc.perform(get("/api/blog/posts").param("size", "2").param("page", "1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.content.length()").value(2))
-        .andExpect(jsonPath("$.data.last").value(true));
+        .andExpect(jsonPath("$.content.length()").value(2))
+        .andExpect(jsonPath("$.last").value(true));
   }
 
   @Test
@@ -220,7 +220,7 @@ class PostApiTest {
     mvc.perform(
             get("/api/blog/posts").param("board", "백엔드").param("generation", "13기"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(2));
+        .andExpect(jsonPath("$.totalElements").value(2));
   }
 
   // ── GET /api/blog/posts/{id} ─────────────────────────────────────────────
@@ -229,30 +229,30 @@ class PostApiTest {
   void getPost_publishedPost_returnsFullDetails() throws Exception {
     mvc.perform(get("/api/blog/posts/{id}", postA.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.id").value(postA.getId()))
+        .andExpect(jsonPath("$.id").value(postA.getId()))
         .andExpect(
-            jsonPath("$.data.title").value("Spring Boot + GitHub Actions로 CI/CD 파이프라인 구축하기"))
-        .andExpect(jsonPath("$.data.status").value("PUBLISHED"))
-        .andExpect(jsonPath("$.data.board").value("백엔드"))
-        .andExpect(jsonPath("$.data.category").value("CI/CD"))
-        .andExpect(jsonPath("$.data.generation").value("13기"))
-        .andExpect(jsonPath("$.data.content").isString())
-        .andExpect(jsonPath("$.data.tags.length()").value(3))
-        .andExpect(jsonPath("$.data.likeCount").value(1))
-        .andExpect(jsonPath("$.data.bookmarkCount").value(1))
-        .andExpect(jsonPath("$.data.liked").value(true))
-        .andExpect(jsonPath("$.data.bookmarked").value(true))
-        .andExpect(jsonPath("$.data.authorId").value(MOCK_USER_ID.toString()))
-        .andExpect(jsonPath("$.data.createdAt").isString())
-        .andExpect(jsonPath("$.data.updatedAt").isString());
+            jsonPath("$.title").value("Spring Boot + GitHub Actions로 CI/CD 파이프라인 구축하기"))
+        .andExpect(jsonPath("$.status").value("PUBLISHED"))
+        .andExpect(jsonPath("$.board").value("백엔드"))
+        .andExpect(jsonPath("$.category").value("CI/CD"))
+        .andExpect(jsonPath("$.generation").value("13기"))
+        .andExpect(jsonPath("$.content").isString())
+        .andExpect(jsonPath("$.tags.length()").value(3))
+        .andExpect(jsonPath("$.likeCount").value(1))
+        .andExpect(jsonPath("$.bookmarkCount").value(1))
+        .andExpect(jsonPath("$.liked").value(true))
+        .andExpect(jsonPath("$.bookmarked").value(true))
+        .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$.createdAt").isString())
+        .andExpect(jsonPath("$.updatedAt").isString());
   }
 
   @Test
   void getPost_repostedPost_includesRepostFromId() throws Exception {
     mvc.perform(get("/api/blog/posts/{id}", postE.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.repostFromId").value(postA.getId()))
-        .andExpect(jsonPath("$.data.tags.length()").value(1));
+        .andExpect(jsonPath("$.repostFromId").value(postA.getId()))
+        .andExpect(jsonPath("$.tags.length()").value(1));
   }
 
   @Test
@@ -260,10 +260,10 @@ class PostApiTest {
     // postB has no like/bookmark from MOCK_USER
     mvc.perform(get("/api/blog/posts/{id}", postB.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.liked").value(false))
-        .andExpect(jsonPath("$.data.bookmarked").value(false))
-        .andExpect(jsonPath("$.data.likeCount").value(0))
-        .andExpect(jsonPath("$.data.bookmarkCount").value(0));
+        .andExpect(jsonPath("$.liked").value(false))
+        .andExpect(jsonPath("$.bookmarked").value(false))
+        .andExpect(jsonPath("$.likeCount").value(0))
+        .andExpect(jsonPath("$.bookmarkCount").value(0));
   }
 
   @Test
@@ -271,7 +271,7 @@ class PostApiTest {
     // MOCK_USER requests their own DRAFT → allowed
     mvc.perform(get("/api/blog/posts/{id}", postD.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.status").value("DRAFT"));
+        .andExpect(jsonPath("$.status").value("DRAFT"));
   }
 
   @Test
@@ -318,13 +318,13 @@ class PostApiTest {
 
     mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.data.title").value("JPA N+1 문제 완벽 해결 가이드"))
-        .andExpect(jsonPath("$.data.status").value("PUBLISHED"))
-        .andExpect(jsonPath("$.data.tags.length()").value(4))
-        .andExpect(jsonPath("$.data.authorId").value(MOCK_USER_ID.toString()))
-        .andExpect(jsonPath("$.data.id").isNumber())
-        .andExpect(jsonPath("$.data.liked").value(false))
-        .andExpect(jsonPath("$.data.bookmarked").value(false));
+        .andExpect(jsonPath("$.title").value("JPA N+1 문제 완벽 해결 가이드"))
+        .andExpect(jsonPath("$.status").value("PUBLISHED"))
+        .andExpect(jsonPath("$.tags.length()").value(4))
+        .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$.id").isNumber())
+        .andExpect(jsonPath("$.liked").value(false))
+        .andExpect(jsonPath("$.bookmarked").value(false));
   }
 
   @Test
@@ -343,8 +343,8 @@ class PostApiTest {
 
     mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.data.status").value("DRAFT"))
-        .andExpect(jsonPath("$.data.tags.length()").value(0));
+        .andExpect(jsonPath("$.status").value("DRAFT"))
+        .andExpect(jsonPath("$.tags.length()").value(0));
   }
 
   @Test
@@ -366,7 +366,7 @@ class PostApiTest {
 
     mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.data.repostFromId").value(postA.getId()));
+        .andExpect(jsonPath("$.repostFromId").value(postA.getId()));
   }
 
   @Test
@@ -407,8 +407,8 @@ class PostApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.title").value("[수정] Spring Boot + GitHub Actions CI/CD 완전판"))
-        .andExpect(jsonPath("$.data.tags.length()").value(4));
+        .andExpect(jsonPath("$.title").value("[수정] Spring Boot + GitHub Actions CI/CD 완전판"))
+        .andExpect(jsonPath("$.tags.length()").value(4));
   }
 
   @Test
@@ -429,7 +429,7 @@ class PostApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.status").value("PUBLISHED"));
+        .andExpect(jsonPath("$.status").value("PUBLISHED"));
   }
 
   @Test
@@ -499,7 +499,7 @@ class PostApiTest {
     // postB has no like from MOCK_USER
     mvc.perform(post("/api/blog/posts/{id}/like", postB.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.liked").value(true));
+        .andExpect(jsonPath("$.liked").value(true));
   }
 
   @Test
@@ -507,20 +507,20 @@ class PostApiTest {
     // postA already liked by MOCK_USER in setUp
     mvc.perform(post("/api/blog/posts/{id}/like", postA.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.liked").value(false));
+        .andExpect(jsonPath("$.liked").value(false));
   }
 
   @Test
   void toggleLike_twice_backToLiked() throws Exception {
     // Like postC (not liked), then like again → liked=true
     mvc.perform(post("/api/blog/posts/{id}/like", postC.getId()))
-        .andExpect(jsonPath("$.data.liked").value(true));
+        .andExpect(jsonPath("$.liked").value(true));
 
     mvc.perform(post("/api/blog/posts/{id}/like", postC.getId()))
-        .andExpect(jsonPath("$.data.liked").value(false));
+        .andExpect(jsonPath("$.liked").value(false));
 
     mvc.perform(post("/api/blog/posts/{id}/like", postC.getId()))
-        .andExpect(jsonPath("$.data.liked").value(true));
+        .andExpect(jsonPath("$.liked").value(true));
   }
 
   // ── POST /api/blog/posts/{id}/bookmark ──────────────────────────────────
@@ -529,7 +529,7 @@ class PostApiTest {
   void toggleBookmark_noExistingBookmark_returnsBookmarkedTrue() throws Exception {
     mvc.perform(post("/api/blog/posts/{id}/bookmark", postB.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.bookmarked").value(true));
+        .andExpect(jsonPath("$.bookmarked").value(true));
   }
 
   @Test
@@ -537,7 +537,7 @@ class PostApiTest {
     // postA already bookmarked by MOCK_USER in setUp
     mvc.perform(post("/api/blog/posts/{id}/bookmark", postA.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.bookmarked").value(false));
+        .andExpect(jsonPath("$.bookmarked").value(false));
   }
 
   @Test
@@ -547,7 +547,7 @@ class PostApiTest {
 
     mvc.perform(get("/api/blog/posts/{id}", postA.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.likeCount").value(2));
+        .andExpect(jsonPath("$.likeCount").value(2));
   }
 
   // ── CASCADE DELETE via @OnDelete ─────────────────────────────────────────

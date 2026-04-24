@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.blog.BlogTestApplication;
+import com.study.blog.common.auth.MockAuth;
 import com.study.common.entity.Comment;
 import com.study.blog.comment.CommentRepository;
 import com.study.common.entity.Post;
@@ -47,6 +48,7 @@ class AdminApiTest {
 
   static final UUID MOCK_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
   static final UUID OTHER_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+  static final String ADMIN_TOKEN = MockAuth.ADMIN_TOKEN;
 
   @Autowired MockMvc mvc;
   @Autowired PostRepository postRepository;
@@ -140,12 +142,12 @@ class AdminApiTest {
 
   @Test
   void getStats_returnsCorrectCounts() throws Exception {
-    mvc.perform(get("/api/blog/admin/stats"))
+    mvc.perform(get("/api/blog/admin/stats").header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalPosts").value(4))
-        .andExpect(jsonPath("$.data.publishedPosts").value(3))
-        .andExpect(jsonPath("$.data.draftPosts").value(1))
-        .andExpect(jsonPath("$.data.totalComments").value(3));
+        .andExpect(jsonPath("$.totalPosts").value(4))
+        .andExpect(jsonPath("$.publishedPosts").value(3))
+        .andExpect(jsonPath("$.draftPosts").value(1))
+        .andExpect(jsonPath("$.totalComments").value(3));
   }
 
   @Test
@@ -161,51 +163,73 @@ class AdminApiTest {
             .generation("12기")
             .build());
 
-    mvc.perform(get("/api/blog/admin/stats"))
+    mvc.perform(get("/api/blog/admin/stats").header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalPosts").value(5))
-        .andExpect(jsonPath("$.data.draftPosts").value(2))
-        .andExpect(jsonPath("$.data.publishedPosts").value(3));
+        .andExpect(jsonPath("$.totalPosts").value(5))
+        .andExpect(jsonPath("$.draftPosts").value(2))
+        .andExpect(jsonPath("$.publishedPosts").value(3));
+  }
+
+  @Test
+  void getStats_noToken_returns401() throws Exception {
+    mvc.perform(get("/api/blog/admin/stats")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void getStats_wrongToken_returns401() throws Exception {
+    mvc.perform(get("/api/blog/admin/stats").header("X-Admin-Token", "wrong-token"))
+        .andExpect(status().isUnauthorized());
   }
 
   // ── GET /api/blog/admin/posts ────────────────────────────────────────────
 
   @Test
   void getAllPosts_includesDrafts() throws Exception {
-    mvc.perform(get("/api/blog/admin/posts"))
+    mvc.perform(get("/api/blog/admin/posts").header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isOk())
         // Admin sees all 4 posts (including DRAFT)
-        .andExpect(jsonPath("$.data.totalElements").value(4))
-        .andExpect(jsonPath("$.data.content").isArray());
+        .andExpect(jsonPath("$.totalElements").value(4))
+        .andExpect(jsonPath("$.content").isArray());
   }
 
   @Test
   void getAllPosts_pagination_defaultPage20() throws Exception {
     // Default page size is 20 → all 4 fit on first page
-    mvc.perform(get("/api/blog/admin/posts"))
+    mvc.perform(get("/api/blog/admin/posts").header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.size").value(20))
-        .andExpect(jsonPath("$.data.numberOfElements").value(4))
-        .andExpect(jsonPath("$.data.totalPages").value(1));
+        .andExpect(jsonPath("$.size").value(20))
+        .andExpect(jsonPath("$.numberOfElements").value(4))
+        .andExpect(jsonPath("$.totalPages").value(1));
   }
 
   @Test
   void getAllPosts_customPageSize_paginatesCorrectly() throws Exception {
-    mvc.perform(get("/api/blog/admin/posts").param("size", "2").param("page", "0"))
+    mvc.perform(
+            get("/api/blog/admin/posts")
+                .header("X-Admin-Token", ADMIN_TOKEN)
+                .param("size", "2")
+                .param("page", "0"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.totalElements").value(4))
-        .andExpect(jsonPath("$.data.content.length()").value(2))
-        .andExpect(jsonPath("$.data.totalPages").value(2));
+        .andExpect(jsonPath("$.totalElements").value(4))
+        .andExpect(jsonPath("$.content.length()").value(2))
+        .andExpect(jsonPath("$.totalPages").value(2));
   }
 
   @Test
   void getAllPosts_postFields_includeTagsAndLikeCount() throws Exception {
-    // Admin post list should include tags and likeCount
-    // p1 is the most recent PUBLISHED post with tags
-    mvc.perform(get("/api/blog/admin/posts").param("size", "10").param("page", "0"))
+    mvc.perform(
+            get("/api/blog/admin/posts")
+                .header("X-Admin-Token", ADMIN_TOKEN)
+                .param("size", "10")
+                .param("page", "0"))
         .andExpect(status().isOk())
         // p4 (DRAFT) is most recent, then p3, p2, p1 — sorted by createdAt desc
-        .andExpect(jsonPath("$.data.content[0].status").value("DRAFT")); // p4 is most recent
+        .andExpect(jsonPath("$.content[0].status").value("DRAFT")); // p4 is most recent
+  }
+
+  @Test
+  void getAllPosts_noToken_returns401() throws Exception {
+    mvc.perform(get("/api/blog/admin/posts")).andExpect(status().isUnauthorized());
   }
 
   // ── PATCH /api/blog/admin/posts/{id}/status ──────────────────────────────
@@ -218,6 +242,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p1.getId())
+                .header("X-Admin-Token", ADMIN_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk());
@@ -235,6 +260,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p4.getId())
+                .header("X-Admin-Token", ADMIN_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk());
@@ -251,6 +277,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", 999999L)
+                .header("X-Admin-Token", ADMIN_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isNotFound());
@@ -264,6 +291,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p1.getId())
+                .header("X-Admin-Token", ADMIN_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isBadRequest());
@@ -277,9 +305,23 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p1.getId())
+                .header("X-Admin-Token", ADMIN_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void changePostStatus_noToken_returns401() throws Exception {
+    String body = """
+        {"status": "DRAFT"}
+        """;
+
+    mvc.perform(
+            patch("/api/blog/admin/posts/{id}/status", p1.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isUnauthorized());
   }
 
   // ── DELETE /api/blog/admin/posts/{id} ────────────────────────────────────
@@ -300,7 +342,8 @@ class AdminApiTest {
                 .build());
     Long toDeleteId = toDelete.getId();
 
-    mvc.perform(delete("/api/blog/admin/posts/{id}", toDeleteId))
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", toDeleteId).header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isNoContent());
 
     assertThat(postRepository.findById(toDeleteId)).isEmpty();
@@ -308,7 +351,6 @@ class AdminApiTest {
 
   @Test
   void forceDeletePost_withTags_deleteTagsAndPost() throws Exception {
-    // p2 has no likes or comments — only need to delete it (tags are handled by service)
     Post toDelete =
         postRepository.save(
             Post.builder()
@@ -324,7 +366,8 @@ class AdminApiTest {
     postTagRepository.save(new PostTag(toDelete, "Hibernate"));
     Long toDeleteId = toDelete.getId();
 
-    mvc.perform(delete("/api/blog/admin/posts/{id}", toDeleteId))
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", toDeleteId).header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isNoContent());
 
     assertThat(postRepository.findById(toDeleteId)).isEmpty();
@@ -333,13 +376,13 @@ class AdminApiTest {
 
   @Test
   void forceDeletePost_notFound_returns404() throws Exception {
-    mvc.perform(delete("/api/blog/admin/posts/{id}", 999999L)).andExpect(status().isNotFound());
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", 999999L).header("X-Admin-Token", ADMIN_TOKEN))
+        .andExpect(status().isNotFound());
   }
 
   @Test
   void forceDeletePost_withLikesAndComments_returns204() throws Exception {
-    // Create a post with a tag, a like, and a comment to cover all FK cascade paths
-    // Without ON DELETE CASCADE any of these would raise DataIntegrityViolationException → 500
     Post richPost =
         postRepository.save(
             Post.builder()
@@ -360,7 +403,15 @@ class AdminApiTest {
             .content("어드민 삭제 시 함께 사라질 댓글입니다.")
             .build());
 
-    mvc.perform(delete("/api/blog/admin/posts/{id}", richPost.getId()))
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", richPost.getId())
+                .header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isNoContent());
+  }
+
+  @Test
+  void forceDeletePost_noToken_returns401() throws Exception {
+    mvc.perform(delete("/api/blog/admin/posts/{id}", p1.getId()))
+        .andExpect(status().isUnauthorized());
   }
 }
