@@ -1,5 +1,6 @@
-package com.study.common.entity.sessionboard;
+package com.study.common.entity.session;
 
+import com.study.common.entity.sessionboard.Generation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -38,7 +39,7 @@ public class Session {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private SessionStatus status = SessionStatus.scheduled;
+  private SessionStatus status = SessionStatus.SCHEDULED;
 
   @Column(name = "started_at")
   private OffsetDateTime startedAt;

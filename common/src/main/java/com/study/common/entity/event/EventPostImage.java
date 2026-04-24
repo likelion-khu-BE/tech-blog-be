@@ -1,6 +1,5 @@
-package com.study.common.entity.sessionboard;
+package com.study.common.entity.event;
 
-import com.study.common.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,31 +10,30 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(
-    name = "\"like\"",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "post_id"}))
+@Table(name = "event_post_image")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Like {
+public class EventPostImage {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
-
-  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "post_id", nullable = false)
   private EventPost post;
+
+  @Column(nullable = false)
+  private String url;
+
+  @Column(name = "\"order\"", nullable = false)
+  private int order = 0;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
@@ -45,10 +43,10 @@ public class Like {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Like of(User user, EventPost post) {
-    Like like = new Like();
-    like.user = user;
-    like.post = post;
-    return like;
+  public static EventPostImage of(EventPost post, String url) {
+    EventPostImage image = new EventPostImage();
+    image.post = post;
+    image.url = url;
+    return image;
   }
 }
