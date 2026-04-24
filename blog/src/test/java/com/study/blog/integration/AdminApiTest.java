@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.blog.BlogTestApplication;
-import com.study.blog.common.auth.MockAuth;
+import com.study.blog.shared.auth.MockAuth;
 import com.study.common.entity.Comment;
 import com.study.blog.comment.CommentRepository;
 import com.study.common.entity.Post;

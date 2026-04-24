@@ -1,4 +1,4 @@
-package com.study.blog.common.exception;
+package com.study.blog.shared.exception;
 
 import org.springframework.http.HttpStatus;
 

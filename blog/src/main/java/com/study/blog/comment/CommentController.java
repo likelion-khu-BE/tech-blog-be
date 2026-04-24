@@ -3,7 +3,7 @@ package com.study.blog.comment;
 import com.study.blog.comment.dto.CommentCreateRequest;
 import com.study.blog.comment.dto.CommentResponse;
 import com.study.blog.comment.dto.CommentUpdateRequest;
-import com.study.blog.common.auth.MockAuth;
+import com.study.blog.shared.auth.MockAuth;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;

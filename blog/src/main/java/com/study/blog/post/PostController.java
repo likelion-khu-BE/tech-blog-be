@@ -1,6 +1,6 @@
 package com.study.blog.post;
 
-import com.study.blog.common.auth.MockAuth;
+import com.study.blog.shared.auth.MockAuth;
 import com.study.blog.post.dto.PostCreateRequest;
 import com.study.blog.post.dto.PostResponse;
 import com.study.blog.post.dto.PostSummaryResponse;

@@ -1,6 +1,6 @@
-package com.study.blog.common.exception;
+package com.study.blog.shared.exception;
 
-import com.study.blog.common.ApiResponse;
+import com.study.blog.shared.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

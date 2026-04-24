@@ -1,4 +1,4 @@
-package com.study.blog.common.auth;
+package com.study.blog.shared.auth;
 
 import java.util.UUID;
 

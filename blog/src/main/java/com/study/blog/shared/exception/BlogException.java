@@ -1,4 +1,4 @@
-package com.study.blog.common.exception;
+package com.study.blog.shared.exception;
 
 public class BlogException extends RuntimeException {
 

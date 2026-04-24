@@ -1,7 +1,7 @@
 package com.study.blog.post;
 
-import com.study.blog.common.exception.BlogErrorCode;
-import com.study.blog.common.exception.BlogException;
+import com.study.blog.shared.exception.BlogErrorCode;
+import com.study.blog.shared.exception.BlogException;
 import com.study.blog.post.dto.PostCreateRequest;
 import com.study.blog.post.dto.PostResponse;
 import com.study.blog.post.dto.PostSummaryResponse;

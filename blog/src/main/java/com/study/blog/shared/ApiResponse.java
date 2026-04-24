@@ -1,4 +1,4 @@
-package com.study.blog.common;
+package com.study.blog.shared;
 
 public class ApiResponse<T> {
 
