@@ -7,23 +7,17 @@ import java.util.List;
 
 public class PostCreateRequest {
 
-  @NotBlank
-  private String title;
+  @NotBlank private String title;
 
-  @NotBlank
-  private String content;
+  @NotBlank private String content;
 
-  @NotBlank
-  private String board;
+  @NotBlank private String board;
 
-  @NotBlank
-  private String category;
+  @NotBlank private String category;
 
-  @NotNull
-  private PostStatus status;
+  @NotNull private PostStatus status;
 
-  @NotBlank
-  private String generation;
+  @NotBlank private String generation;
 
   private List<String> tags;
 

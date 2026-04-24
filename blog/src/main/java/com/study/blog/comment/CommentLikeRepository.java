@@ -16,9 +16,12 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Commen
 
   long countByIdCommentId(Long commentId);
 
-  @Query("SELECT cl.id.commentId, COUNT(cl) FROM CommentLike cl WHERE cl.id.commentId IN :commentIds GROUP BY cl.id.commentId")
+  @Query(
+      "SELECT cl.id.commentId, COUNT(cl) FROM CommentLike cl WHERE cl.id.commentId IN :commentIds GROUP BY cl.id.commentId")
   List<Object[]> countGroupedByCommentId(@Param("commentIds") Collection<Long> commentIds);
 
-  @Query("SELECT cl.id.commentId FROM CommentLike cl WHERE cl.id.commentId IN :commentIds AND cl.id.userId = :userId")
-  List<Long> findLikedCommentIds(@Param("commentIds") Collection<Long> commentIds, @Param("userId") UUID userId);
+  @Query(
+      "SELECT cl.id.commentId FROM CommentLike cl WHERE cl.id.commentId IN :commentIds AND cl.id.userId = :userId")
+  List<Long> findLikedCommentIds(
+      @Param("commentIds") Collection<Long> commentIds, @Param("userId") UUID userId);
 }

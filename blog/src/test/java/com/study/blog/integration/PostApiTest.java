@@ -9,19 +9,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.blog.BlogTestApplication;
-import com.study.common.entity.Comment;
-import com.study.common.entity.CommentLike;
 import com.study.blog.comment.CommentLikeRepository;
 import com.study.blog.comment.CommentRepository;
-import com.study.common.entity.Post;
-import com.study.common.entity.PostBookmark;
 import com.study.blog.post.PostBookmarkRepository;
-import com.study.common.entity.PostLike;
 import com.study.blog.post.PostLikeRepository;
 import com.study.blog.post.PostRepository;
+import com.study.blog.post.PostTagRepository;
+import com.study.common.entity.Comment;
+import com.study.common.entity.CommentLike;
+import com.study.common.entity.Post;
+import com.study.common.entity.PostBookmark;
+import com.study.common.entity.PostLike;
 import com.study.common.entity.PostStatus;
 import com.study.common.entity.PostTag;
-import com.study.blog.post.PostTagRepository;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -221,8 +221,7 @@ class PostApiTest {
   @Test
   void getPosts_combinedFilters_boardAndGeneration() throws Exception {
     // board=백엔드 AND generation=13기 AND PUBLISHED → A, E
-    mvc.perform(
-            get("/api/blog/posts").param("board", "백엔드").param("generation", "13기"))
+    mvc.perform(get("/api/blog/posts").param("board", "백엔드").param("generation", "13기"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalElements").value(2));
   }
@@ -234,8 +233,7 @@ class PostApiTest {
     mvc.perform(get("/api/blog/posts/{id}", postA.getId()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(postA.getId()))
-        .andExpect(
-            jsonPath("$.title").value("Spring Boot + GitHub Actions로 CI/CD 파이프라인 구축하기"))
+        .andExpect(jsonPath("$.title").value("Spring Boot + GitHub Actions로 CI/CD 파이프라인 구축하기"))
         .andExpect(jsonPath("$.status").value("PUBLISHED"))
         .andExpect(jsonPath("$.board").value("백엔드"))
         .andExpect(jsonPath("$.category").value("CI/CD"))
@@ -294,8 +292,7 @@ class PostApiTest {
                 .build());
 
     // MOCK_USER (via MockAuth) tries to read OTHER_USER's DRAFT → 403
-    mvc.perform(get("/api/blog/posts/{id}", otherDraft.getId()))
-        .andExpect(status().isForbidden());
+    mvc.perform(get("/api/blog/posts/{id}", otherDraft.getId())).andExpect(status().isForbidden());
   }
 
   @Test
@@ -481,14 +478,12 @@ class PostApiTest {
   @Test
   void deletePost_ownDraftWithNoDependents_returns204() throws Exception {
     // postD: MOCK_USER's DRAFT with no likes/bookmarks/comments
-    mvc.perform(delete("/api/blog/posts/{id}", postD.getId()))
-        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", postD.getId())).andExpect(status().isNoContent());
   }
 
   @Test
   void deletePost_othersPost_returns403() throws Exception {
-    mvc.perform(delete("/api/blog/posts/{id}", postB.getId()))
-        .andExpect(status().isForbidden());
+    mvc.perform(delete("/api/blog/posts/{id}", postB.getId())).andExpect(status().isForbidden());
   }
 
   @Test
@@ -562,15 +557,13 @@ class PostApiTest {
   void deletePost_withLike_returns204() throws Exception {
     // postA is owned by MOCK_USER and already has a like from MOCK_USER (setUp)
     // Without ON DELETE CASCADE this would fail with FK constraint violation
-    mvc.perform(delete("/api/blog/posts/{id}", postA.getId()))
-        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", postA.getId())).andExpect(status().isNoContent());
   }
 
   @Test
   void deletePost_withBookmark_returns204() throws Exception {
     // postA is owned by MOCK_USER and already has a bookmark from MOCK_USER (setUp)
-    mvc.perform(delete("/api/blog/posts/{id}", postA.getId()))
-        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", postA.getId())).andExpect(status().isNoContent());
   }
 
   @Test
@@ -601,8 +594,7 @@ class PostApiTest {
 
     // If any FK cascade is missing the delete raises a DataIntegrityViolationException → 500
     Long richId = rich.getId();
-    mvc.perform(delete("/api/blog/posts/{id}", richId))
-        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", richId)).andExpect(status().isNoContent());
 
     assertThat(postRepository.findById(richId)).isEmpty();
     assertThat(postTagRepository.findByPost(rich)).isEmpty();

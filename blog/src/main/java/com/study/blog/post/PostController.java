@@ -1,10 +1,10 @@
 package com.study.blog.post;
 
-import com.study.blog.shared.auth.MockAuth;
 import com.study.blog.post.dto.PostCreateRequest;
 import com.study.blog.post.dto.PostResponse;
 import com.study.blog.post.dto.PostSummaryResponse;
 import com.study.blog.post.dto.PostUpdateRequest;
+import com.study.blog.shared.auth.MockAuth;
 import jakarta.validation.Valid;
 import java.util.Map;
 import java.util.UUID;

@@ -7,20 +7,15 @@ import java.util.List;
 
 public class PostUpdateRequest {
 
-  @NotBlank
-  private String title;
+  @NotBlank private String title;
 
-  @NotBlank
-  private String content;
+  @NotBlank private String content;
 
-  @NotBlank
-  private String board;
+  @NotBlank private String board;
 
-  @NotBlank
-  private String category;
+  @NotBlank private String category;
 
-  @NotNull
-  private PostStatus status;
+  @NotNull private PostStatus status;
 
   private List<String> tags;
 

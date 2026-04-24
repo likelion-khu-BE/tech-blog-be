@@ -19,8 +19,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostTag {
 
-  @EmbeddedId
-  private PostTagId id;
+  @EmbeddedId private PostTagId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("postId")

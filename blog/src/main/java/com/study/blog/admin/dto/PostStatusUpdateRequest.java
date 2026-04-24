@@ -5,8 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class PostStatusUpdateRequest {
 
-  @NotNull
-  private PostStatus status;
+  @NotNull private PostStatus status;
 
   public PostStatus getStatus() {
     return status;

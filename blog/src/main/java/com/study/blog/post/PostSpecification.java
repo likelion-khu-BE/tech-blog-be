@@ -37,8 +37,7 @@ public class PostSpecification {
     return (root, query, cb) -> {
       if (keyword == null || keyword.isBlank()) return cb.conjunction();
       String pattern = "%" + keyword + "%";
-      return cb.or(
-          cb.like(root.get("title"), pattern), cb.like(root.get("content"), pattern));
+      return cb.or(cb.like(root.get("title"), pattern), cb.like(root.get("content"), pattern));
     };
   }
 }

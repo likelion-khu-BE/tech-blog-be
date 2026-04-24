@@ -1,11 +1,11 @@
 package com.study.blog.post;
 
-import com.study.blog.shared.exception.BlogErrorCode;
-import com.study.blog.shared.exception.BlogException;
 import com.study.blog.post.dto.PostCreateRequest;
 import com.study.blog.post.dto.PostResponse;
 import com.study.blog.post.dto.PostSummaryResponse;
 import com.study.blog.post.dto.PostUpdateRequest;
+import com.study.blog.shared.exception.BlogErrorCode;
+import com.study.blog.shared.exception.BlogException;
 import com.study.common.entity.Post;
 import com.study.common.entity.PostBookmark;
 import com.study.common.entity.PostLike;
@@ -111,7 +111,8 @@ public class PostService {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 
-    post.update(req.getTitle(), req.getContent(), req.getBoard(), req.getCategory(), req.getStatus());
+    post.update(
+        req.getTitle(), req.getContent(), req.getBoard(), req.getCategory(), req.getStatus());
 
     postTagRepository.deleteByPost(post);
     saveTags(post, req.getTags());
@@ -179,10 +180,7 @@ public class PostService {
 
   private void saveTags(Post post, List<String> tags) {
     if (tags == null || tags.isEmpty()) return;
-    tags.stream()
-        .distinct()
-        .map(tag -> new PostTag(post, tag))
-        .forEach(postTagRepository::save);
+    tags.stream().distinct().map(tag -> new PostTag(post, tag)).forEach(postTagRepository::save);
   }
 
   private PostResponse toResponse(Post post, UUID requesterId) {

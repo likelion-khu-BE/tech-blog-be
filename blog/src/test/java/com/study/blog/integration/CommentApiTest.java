@@ -9,12 +9,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.blog.BlogTestApplication;
-import com.study.common.entity.Comment;
-import com.study.common.entity.CommentLike;
 import com.study.blog.comment.CommentLikeRepository;
 import com.study.blog.comment.CommentRepository;
-import com.study.common.entity.Post;
 import com.study.blog.post.PostRepository;
+import com.study.common.entity.Comment;
+import com.study.common.entity.CommentLike;
+import com.study.common.entity.Post;
 import com.study.common.entity.PostStatus;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -266,8 +266,7 @@ class CommentApiTest {
                 .content(body))
         .andExpect(status().isOk())
         .andExpect(
-            jsonPath("$.content")
-                .value("수정된 댓글: self-hosted Runner보다 github-hosted가 안정적이에요!"))
+            jsonPath("$.content").value("수정된 댓글: self-hosted Runner보다 github-hosted가 안정적이에요!"))
         .andExpect(jsonPath("$.id").value(root1.getId()));
   }
 
@@ -324,8 +323,7 @@ class CommentApiTest {
   @Test
   void deleteComment_othersComment_returns403() throws Exception {
     // root2 is owned by OTHER_USER; MOCK_USER tries to delete it → 403
-    mvc.perform(delete("/api/blog/comments/{id}", root2.getId()))
-        .andExpect(status().isForbidden());
+    mvc.perform(delete("/api/blog/comments/{id}", root2.getId())).andExpect(status().isForbidden());
   }
 
   @Test
@@ -374,15 +372,13 @@ class CommentApiTest {
   void deleteComment_withReplies_returns204() throws Exception {
     // root1 has reply1 and reply2 via parent_id FK (ON DELETE CASCADE)
     // Without cascade, deleting root1 would violate the FK on replies → 500
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId()))
-        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
   }
 
   @Test
   void deleteComment_withLike_returns204() throws Exception {
     // root1 has a like from MOCK_USER (setUp); comment_likes FK ON DELETE CASCADE
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId()))
-        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
   }
 
   @Test
@@ -391,8 +387,7 @@ class CommentApiTest {
     // Also add a like on reply1 to verify nested cascade (reply cascade → its likes cascade)
     commentLikeRepository.save(new CommentLike(reply1, OTHER_USER_ID));
 
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId()))
-        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
 
     assertThat(commentRepository.findById(root1.getId())).isEmpty();
     assertThat(commentRepository.findById(reply1.getId())).isEmpty();

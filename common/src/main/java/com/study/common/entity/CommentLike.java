@@ -18,8 +18,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CommentLike {
 
-  @EmbeddedId
-  private CommentLikeId id;
+  @EmbeddedId private CommentLikeId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("commentId")

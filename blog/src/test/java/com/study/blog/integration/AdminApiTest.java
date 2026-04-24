@@ -8,16 +8,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.blog.BlogTestApplication;
-import com.study.blog.shared.auth.MockAuth;
-import com.study.common.entity.Comment;
 import com.study.blog.comment.CommentRepository;
-import com.study.common.entity.Post;
-import com.study.common.entity.PostLike;
 import com.study.blog.post.PostLikeRepository;
 import com.study.blog.post.PostRepository;
+import com.study.blog.post.PostTagRepository;
+import com.study.blog.shared.auth.MockAuth;
+import com.study.common.entity.Comment;
+import com.study.common.entity.Post;
+import com.study.common.entity.PostLike;
 import com.study.common.entity.PostStatus;
 import com.study.common.entity.PostTag;
-import com.study.blog.post.PostTagRepository;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -239,7 +239,8 @@ class AdminApiTest {
 
   @Test
   void changePostStatus_publishedToDraft_succeeds() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "DRAFT"}
         """;
 
@@ -257,7 +258,8 @@ class AdminApiTest {
 
   @Test
   void changePostStatus_draftToPublished_succeeds() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "PUBLISHED"}
         """;
 
@@ -274,7 +276,8 @@ class AdminApiTest {
 
   @Test
   void changePostStatus_notFound_returns404() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "DRAFT"}
         """;
 
@@ -288,7 +291,8 @@ class AdminApiTest {
 
   @Test
   void changePostStatus_nullStatus_returns400() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": null}
         """;
 
@@ -302,7 +306,8 @@ class AdminApiTest {
 
   @Test
   void changePostStatus_invalidStatusValue_returns400() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "INVALID_STATUS"}
         """;
 
@@ -316,7 +321,8 @@ class AdminApiTest {
 
   @Test
   void changePostStatus_noToken_returns401() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "DRAFT"}
         """;
 
@@ -379,8 +385,7 @@ class AdminApiTest {
 
   @Test
   void forceDeletePost_notFound_returns404() throws Exception {
-    mvc.perform(
-            delete("/api/blog/admin/posts/{id}", 999999L).header("X-Admin-Token", ADMIN_TOKEN))
+    mvc.perform(delete("/api/blog/admin/posts/{id}", 999999L).header("X-Admin-Token", ADMIN_TOKEN))
         .andExpect(status().isNotFound());
   }
 
