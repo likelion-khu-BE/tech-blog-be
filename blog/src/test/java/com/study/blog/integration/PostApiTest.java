@@ -1,5 +1,6 @@
 package com.study.blog.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -596,7 +597,12 @@ class PostApiTest {
     commentLikeRepository.save(new CommentLike(comment, MOCK_USER_ID));
 
     // If any FK cascade is missing the delete raises a DataIntegrityViolationException → 500
-    mvc.perform(delete("/api/blog/posts/{id}", rich.getId()))
+    Long richId = rich.getId();
+    mvc.perform(delete("/api/blog/posts/{id}", richId))
         .andExpect(status().isNoContent());
+
+    assertThat(postRepository.findById(richId)).isEmpty();
+    assertThat(postTagRepository.findByPost(rich)).isEmpty();
+    assertThat(commentRepository.findById(comment.getId())).isEmpty();
   }
 }

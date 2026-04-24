@@ -1,5 +1,6 @@
 package com.study.blog.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -389,5 +390,9 @@ class CommentApiTest {
 
     mvc.perform(delete("/api/blog/comments/{id}", root1.getId()))
         .andExpect(status().isNoContent());
+
+    assertThat(commentRepository.findById(root1.getId())).isEmpty();
+    assertThat(commentRepository.findById(reply1.getId())).isEmpty();
+    assertThat(commentRepository.findById(reply2.getId())).isEmpty();
   }
 }
