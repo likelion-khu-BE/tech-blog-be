@@ -7,7 +7,6 @@ CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'a
 CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc');
 
 -- 2. 핵심 테이블 생성 (PK: BIGINT / Long)
--- user_id: users.id FK (1:1). 로그인 이메일은 users.login_email이 원본 — member에 중복 저장 금지.
 -- 전제: users 테이블은 auth 팀 DDL이 먼저 생성해야 한다.
 CREATE TABLE member (
     id                BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -17,6 +16,8 @@ CREATE TABLE member (
     session_type      session_type NOT NULL,
     profile_image_url TEXT,
     github_url        TEXT,
+    displayed_email   TEXT,
+    intro             TEXT,
     links_json        JSONB,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
