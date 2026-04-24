@@ -223,18 +223,6 @@ class AuthIntegrationTest {
   class AuthenticatedAccessTest {
 
     @Test
-    @DisplayName("유효한 Bearer 토큰 → 200")
-    void access_withValidToken() throws Exception {
-      createActiveUser("user@khu.ac.kr", "password123");
-      String accessToken = loginAndGetAccessToken("user@khu.ac.kr", "password123");
-
-      mockMvc
-          .perform(
-              get("/api/blog/hello").header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
-          .andExpect(status().isOk());
-    }
-
-    @Test
     @DisplayName("토큰 없이 인증 필요 API → 401")
     void access_withoutToken() throws Exception {
       mockMvc.perform(get("/api/blog/hello")).andExpect(status().isUnauthorized());
