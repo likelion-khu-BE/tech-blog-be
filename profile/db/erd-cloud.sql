@@ -1,5 +1,4 @@
 -- 1. 멤버 테이블 (프로필)
--- user_id: users.id FK (1:1). 로그인 이메일은 users에서 관리 — member에 중복 저장하지 않음.
 CREATE TABLE member
 (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
@@ -9,6 +8,8 @@ CREATE TABLE member
     session_type      ENUM ('backend','frontend','design','ai','pm','etc') NOT NULL,
     profile_image_url TEXT,
     github_url        TEXT,
+    displayed_email   VARCHAR(255),
+    intro             TEXT,
     links_json        JSON,
     created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
