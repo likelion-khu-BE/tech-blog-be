@@ -70,6 +70,12 @@ public class Member {
   @Column(name = "github_url")
   private String githubUrl;
 
+  @Column(name = "displayed_email")
+  private String displayedEmail;
+
+  @Column(name = "intro")
+  private String intro;
+
   @Column(name = "links_json", columnDefinition = "jsonb")
   private String linksJson;
 
@@ -82,11 +88,7 @@ public class Member {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
-  /**
-   * 새 멤버 생성. User(계정)는 이미 존재해야 한다 — 회원가입 승인 플로우에서 User 생성 후 이 메서드로 프로필을 만든다.
-   *
-   * <p>email을 받지 않는 이유: 계정 이메일은 {@link User#getLoginEmail()}이 원본. 중복 저장 금지.
-   */
+  /** 새 멤버 생성. User(계정)는 이미 존재해야 한다 — 회원가입 승인 플로우에서 User 생성 후 이 메서드로 프로필을 만든다. */
   public static Member create(
       User user,
       String name,
@@ -94,6 +96,8 @@ public class Member {
       String department,
       String profileImageUrl,
       String githubUrl,
+      String displayedEmail,
+      String intro,
       String linksJson) {
     Member member = new Member();
     member.user = user;
@@ -102,6 +106,8 @@ public class Member {
     member.department = department;
     member.profileImageUrl = profileImageUrl;
     member.githubUrl = githubUrl;
+    member.displayedEmail = displayedEmail;
+    member.intro = intro;
     member.linksJson = linksJson;
     return member;
   }
@@ -112,12 +118,16 @@ public class Member {
       String department,
       String profileImageUrl,
       String githubUrl,
+      String displayedEmail,
+      String intro,
       String linksJson) {
     this.name = name;
     this.sessionType = sessionType;
     this.department = department;
     this.profileImageUrl = profileImageUrl;
     this.githubUrl = githubUrl;
+    this.displayedEmail = displayedEmail;
+    this.intro = intro;
     this.linksJson = linksJson;
   }
 
