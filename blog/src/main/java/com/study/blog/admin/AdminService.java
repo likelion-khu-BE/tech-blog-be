@@ -95,7 +95,7 @@ public class AdminService {
   }
 
   private Map<Long, Long> batchLikeCountByPostId(Collection<Long> postIds) {
-    return postLikeRepository.findByIdPostIdIn(postIds).stream()
-        .collect(Collectors.groupingBy(l -> l.getId().getPostId(), Collectors.counting()));
+    return postLikeRepository.countGroupedByPostId(postIds).stream()
+        .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
   }
 }

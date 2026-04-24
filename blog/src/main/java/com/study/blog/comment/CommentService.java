@@ -6,9 +6,7 @@ import com.study.blog.comment.dto.CommentUpdateRequest;
 import com.study.blog.common.exception.BlogErrorCode;
 import com.study.blog.common.exception.BlogException;
 import com.study.common.entity.Comment;
-import com.study.common.entity.CommentLike;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,18 +36,15 @@ public class CommentService {
     }
 
     List<Long> commentIds = all.stream().map(Comment::getId).toList();
-    List<CommentLike> likes = commentLikeRepository.findByIdCommentIdIn(commentIds);
 
     Map<Long, Long> likeCountByCommentId =
-        likes.stream()
-            .collect(
-                Collectors.groupingBy(l -> l.getId().getCommentId(), Collectors.counting()));
+        commentLikeRepository.countGroupedByCommentId(commentIds).stream()
+            .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
     Map<Long, Boolean> likedByCommentId =
         requesterId == null
             ? Map.of()
-            : likes.stream()
-                .filter(l -> requesterId.equals(l.getId().getUserId()))
-                .collect(Collectors.toMap(l -> l.getId().getCommentId(), l -> true));
+            : commentLikeRepository.findLikedCommentIds(commentIds, requesterId).stream()
+                .collect(Collectors.toMap(id -> id, id -> true));
 
     Map<Long, CommentResponse> map = new LinkedHashMap<>();
     List<CommentResponse> roots = new ArrayList<>();
