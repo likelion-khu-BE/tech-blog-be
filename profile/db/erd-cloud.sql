@@ -1,9 +1,10 @@
--- 1. 멤버 테이블
+-- 1. 멤버 테이블 (프로필)
+-- user_id: users.id FK (1:1). 로그인 이메일은 users에서 관리 — member에 중복 저장하지 않음.
 CREATE TABLE member
 (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id           BIGINT       NOT NULL UNIQUE,
     name              VARCHAR(255) NOT NULL,
-    email             VARCHAR(255) NOT NULL UNIQUE,
     department        VARCHAR(255),
     session_type      ENUM ('backend','frontend','design','ai','pm','etc') NOT NULL,
     profile_image_url TEXT,
@@ -11,7 +12,8 @@ CREATE TABLE member
     links_json        JSON,
     created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 -- 2. 기수 테이블
