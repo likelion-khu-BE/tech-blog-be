@@ -1,4 +1,4 @@
-package com.study.common.entity.sessionboard;
+package com.study.common.entity.session;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -9,11 +9,11 @@ public class ResourceVisibilityConverter
 
   @Override
   public String convertToDatabaseColumn(ResourceVisibility attribute) {
-    return attribute == null ? null : attribute.toDbValue();
+    return attribute == null ? null : attribute.name();
   }
 
   @Override
   public ResourceVisibility convertToEntityAttribute(String dbData) {
-    return dbData == null ? null : ResourceVisibility.fromDbValue(dbData);
+    return dbData == null ? null : ResourceVisibility.valueOf(dbData);
   }
 }

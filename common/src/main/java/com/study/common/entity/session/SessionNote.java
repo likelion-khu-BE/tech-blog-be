@@ -1,4 +1,4 @@
-package com.study.common.entity.sessionboard;
+package com.study.common.entity.session;
 
 import com.study.common.entity.User;
 import jakarta.persistence.Column;
@@ -17,10 +17,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "retro")
+@Table(name = "session_note")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Retro {
+public class SessionNote {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,9 +34,6 @@ public class Retro {
   @JoinColumn(name = "author_id", nullable = false)
   private User author;
 
-  /** 1 ~ 5 */
-  private Integer rating;
-
   private String body;
 
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -47,10 +44,10 @@ public class Retro {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Retro of(Session session, User author) {
-    Retro retro = new Retro();
-    retro.session = session;
-    retro.author = author;
-    return retro;
+  public static SessionNote of(Session session, User author) {
+    SessionNote note = new SessionNote();
+    note.session = session;
+    note.author = author;
+    return note;
   }
 }

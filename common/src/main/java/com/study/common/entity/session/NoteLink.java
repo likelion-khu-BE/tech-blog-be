@@ -1,4 +1,4 @@
-package com.study.common.entity.sessionboard;
+package com.study.common.entity.session;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
