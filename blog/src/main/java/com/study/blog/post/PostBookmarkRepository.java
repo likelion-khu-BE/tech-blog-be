@@ -1,7 +1,7 @@
 package com.study.blog.post;
 
-import com.study.common.entity.PostBookmark;
-import com.study.common.entity.PostBookmarkId;
+import com.study.common.entity.post.PostBookmark;
+import com.study.common.entity.post.PostBookmarkId;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;

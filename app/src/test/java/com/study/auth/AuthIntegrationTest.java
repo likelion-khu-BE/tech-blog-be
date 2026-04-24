@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.auth.dto.LoginRequest;
 import com.study.auth.dto.SignupRequest;
-import com.study.common.entity.User;
+import com.study.common.entity.auth.User;
 import com.study.common.repository.RefreshTokenRepository;
 import com.study.common.repository.UserRepository;
 import jakarta.servlet.http.Cookie;

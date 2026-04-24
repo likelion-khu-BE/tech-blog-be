@@ -1,6 +1,6 @@
 package com.study.common.security;
 
-import com.study.common.entity.UserRole;
+import com.study.common.entity.auth.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

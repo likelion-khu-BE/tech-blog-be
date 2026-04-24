@@ -1,6 +1,6 @@
 package com.study.blog.comment;
 
-import com.study.common.entity.Comment;
+import com.study.common.entity.comment.Comment;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
