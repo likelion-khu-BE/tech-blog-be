@@ -1,60 +1,79 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.0' apply false
-    id 'io.spring.dependency-management' version '1.1.7' apply false
-    id 'com.diffplug.spotless' version '7.0.4' apply false
+    id 'org.springframework.boot' version '3.5.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.diffplug.spotless' version '7.0.4'
 }
 
-allprojects {
-    group = 'com.study'
-    version = '0.0.1-SNAPSHOT'
+group = 'com.study'
+version = '0.0.1-SNAPSHOT'
 
-    repositories {
-        mavenCentral()
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
-subprojects {
-    apply plugin: 'java-library'
-    apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'com.diffplug.spotless'
+repositories {
+    mavenCentral()
+}
 
-    spotless {
-        java {
-            googleJavaFormat()
-            formatAnnotations()
-            removeUnusedImports()
-            trimTrailingWhitespace()
-            endWithNewline()
-        }
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
     }
+}
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters']
+}
+
+tasks.named('bootRun') {
+    workingDir = rootProject.projectDir
+}
+
+// spring-dotenv가 프로젝트 루트의 .env를 읽으려면 working directory가 루트여야 한다
+tasks.named('test') {
+    useJUnitPlatform()
+    workingDir = rootProject.projectDir
+}
+
+spotless {
     java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-        }
+        googleJavaFormat()
+        formatAnnotations()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
+}
 
-    configurations {
-        compileOnly {
-            extendsFrom annotationProcessor
-        }
-    }
+dependencies {
+    // Web + Validation
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    dependencyManagement {
-        imports {
-            mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.0'
-        }
-    }
+    // JPA + PostgreSQL
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
 
-    dependencies {
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
-        testImplementation 'org.springframework.boot:spring-boot-starter-test'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    }
+    // .env 로딩
+    implementation 'me.paulschwarz:spring-dotenv:3.0.0'
 
-    tasks.named('test') {
-        useJUnitPlatform()
-    }
+    // Spring Security (auto-config 포함)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

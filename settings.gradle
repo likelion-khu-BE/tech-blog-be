@@ -1,11 +1,1 @@
 rootProject.name = 'study-be'
-
-include(
-    'common',
-    'contract',
-    'blog',
-    'qna',
-    'profile',
-    'session-board',
-    'app'
-)
