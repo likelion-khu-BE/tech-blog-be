@@ -9,12 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.StudyBeApplication;
-import com.study.blog.infrastructure.comment.CommentLikeRepository;
-import com.study.blog.infrastructure.comment.CommentRepository;
-import com.study.blog.infrastructure.post.PostBookmarkRepository;
-import com.study.blog.infrastructure.post.PostLikeRepository;
-import com.study.blog.infrastructure.post.PostRepository;
-import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.domain.comment.Comment;
 import com.study.blog.domain.comment.CommentLike;
 import com.study.blog.domain.post.Post;
@@ -22,6 +16,12 @@ import com.study.blog.domain.post.PostBookmark;
 import com.study.blog.domain.post.PostLike;
 import com.study.blog.domain.post.PostStatus;
 import com.study.blog.domain.post.PostTag;
+import com.study.blog.infrastructure.comment.CommentLikeRepository;
+import com.study.blog.infrastructure.comment.CommentRepository;
+import com.study.blog.infrastructure.post.PostBookmarkRepository;
+import com.study.blog.infrastructure.post.PostLikeRepository;
+import com.study.blog.infrastructure.post.PostRepository;
+import com.study.blog.infrastructure.post.PostTagRepository;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

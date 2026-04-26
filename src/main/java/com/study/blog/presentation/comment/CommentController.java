@@ -1,7 +1,6 @@
 package com.study.blog.presentation.comment;
 
 import com.study.blog.application.comment.CommentService;
-
 import com.study.blog.application.comment.dto.CommentCreateRequest;
 import com.study.blog.application.comment.dto.CommentResponse;
 import com.study.blog.application.comment.dto.CommentUpdateRequest;

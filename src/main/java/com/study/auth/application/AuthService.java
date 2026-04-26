@@ -1,7 +1,5 @@
 package com.study.auth.application;
 
-import com.study.auth.presentation.dto.LoginResponse;
-import com.study.auth.presentation.dto.SignupResponse;
 import com.study.auth.domain.RefreshToken;
 import com.study.auth.domain.User;
 import com.study.auth.domain.exception.EmailAlreadyExistsException;
@@ -13,6 +11,8 @@ import com.study.auth.infrastructure.RefreshTokenRepository;
 import com.study.auth.infrastructure.UserRepository;
 import com.study.auth.infrastructure.security.JwtProvider;
 import com.study.auth.infrastructure.security.TokenHasher;
+import com.study.auth.presentation.dto.LoginResponse;
+import com.study.auth.presentation.dto.SignupResponse;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,6 @@ package com.study.profile.domain.team;
 import com.study.profile.domain.generation.Generation;
 import com.study.profile.domain.techstack.TeamTechStack;
 import com.study.profile.domain.techstack.TechStack;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

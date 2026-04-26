@@ -35,8 +35,7 @@ public class SessionSpeaker {
   @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
-  @Column
-  private String role;
+  @Column private String role;
 
   public static SessionSpeaker of(Session session, Member member) {
     SessionSpeaker speaker = new SessionSpeaker();

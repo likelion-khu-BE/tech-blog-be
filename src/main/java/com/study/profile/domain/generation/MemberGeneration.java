@@ -1,7 +1,6 @@
 package com.study.profile.domain.generation;
 
 import com.study.profile.domain.member.Member;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

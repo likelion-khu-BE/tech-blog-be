@@ -1,7 +1,5 @@
 package com.study.auth.infrastructure;
 
-import com.study.auth.domain.RefreshTokenStatus;
-
 import com.study.auth.domain.RefreshToken;
 import java.util.Optional;
 import java.util.UUID;

@@ -1,11 +1,11 @@
 package com.study.auth.presentation.controller;
 
+import com.study.auth.application.AuthService;
 import com.study.auth.presentation.dto.LoginRequest;
 import com.study.auth.presentation.dto.LoginResponse;
 import com.study.auth.presentation.dto.SignupRequest;
 import com.study.auth.presentation.dto.SignupResponse;
 import com.study.auth.presentation.dto.TokenRefreshResponse;
-import com.study.auth.application.AuthService;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;

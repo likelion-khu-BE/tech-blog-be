@@ -1,8 +1,7 @@
 package com.study.profile.domain.member;
 
-import com.study.profile.domain.techstack.MemberTechStack;
 import com.study.auth.domain.User;
-
+import com.study.profile.domain.techstack.MemberTechStack;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

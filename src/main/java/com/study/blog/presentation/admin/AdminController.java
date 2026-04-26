@@ -1,7 +1,6 @@
 package com.study.blog.presentation.admin;
 
 import com.study.blog.application.admin.AdminService;
-
 import com.study.blog.application.admin.dto.AdminPostResponse;
 import com.study.blog.application.admin.dto.AdminStatsResponse;
 import com.study.blog.application.admin.dto.PostStatusUpdateRequest;

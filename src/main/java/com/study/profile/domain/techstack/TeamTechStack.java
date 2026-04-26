@@ -1,7 +1,6 @@
 package com.study.profile.domain.techstack;
 
 import com.study.profile.domain.team.TeamProfile;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

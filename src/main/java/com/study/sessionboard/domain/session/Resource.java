@@ -57,7 +57,8 @@ public class Resource {
     uploadedAt = OffsetDateTime.now();
   }
 
-  public static Resource of(Session session, Member uploader, String type, String name, String url) {
+  public static Resource of(
+      Session session, Member uploader, String type, String name, String url) {
     Resource resource = new Resource();
     resource.session = session;
     resource.uploader = uploader;
