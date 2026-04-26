@@ -1,7 +1,6 @@
 package com.study.profile.domain.team;
 
 import com.study.profile.domain.member.Member;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,7 +1,6 @@
 package com.study.blog.presentation.post;
 
 import com.study.blog.application.post.PostService;
-
 import com.study.blog.application.post.dto.PostCreateRequest;
 import com.study.blog.application.post.dto.PostResponse;
 import com.study.blog.application.post.dto.PostSummaryResponse;

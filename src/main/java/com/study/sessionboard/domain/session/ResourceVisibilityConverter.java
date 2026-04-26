@@ -4,8 +4,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 @Converter(autoApply = true)
-public class ResourceVisibilityConverter
-    implements AttributeConverter<ResourceVisibility, String> {
+public class ResourceVisibilityConverter implements AttributeConverter<ResourceVisibility, String> {
 
   @Override
   public String convertToDatabaseColumn(ResourceVisibility attribute) {

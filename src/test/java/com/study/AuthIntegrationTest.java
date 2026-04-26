@@ -7,11 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.study.auth.presentation.dto.LoginRequest;
-import com.study.auth.presentation.dto.SignupRequest;
 import com.study.auth.domain.User;
 import com.study.auth.infrastructure.RefreshTokenRepository;
 import com.study.auth.infrastructure.UserRepository;
+import com.study.auth.presentation.dto.LoginRequest;
+import com.study.auth.presentation.dto.SignupRequest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

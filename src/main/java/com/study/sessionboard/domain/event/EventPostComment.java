@@ -57,7 +57,8 @@ public class EventPostComment {
     return eventPostComment;
   }
 
-  public static EventPostComment ofReply(EventPost post, Member author, EventPostComment parent, String content) {
+  public static EventPostComment ofReply(
+      EventPost post, Member author, EventPostComment parent, String content) {
     EventPostComment eventPostComment = of(post, author, content);
     eventPostComment.parent = parent;
     return eventPostComment;
