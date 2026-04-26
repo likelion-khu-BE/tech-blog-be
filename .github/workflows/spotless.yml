@@ -1,8 +1,8 @@
-name: Spotless (main)
+name: Spotless (dev)
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
 
 permissions:
   contents: write
