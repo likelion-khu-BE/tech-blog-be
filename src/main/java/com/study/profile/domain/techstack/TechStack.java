@@ -56,8 +56,8 @@ public class TechStack {
   private Instant createdAt; // 등록 시각
 
   /**
-   * 새 기술 스택을 목록에 추가할 때 사용하는 정적 팩토리 메서드.
-   * (예: TechStack.create("Kotlin", TechStackCategory.language,  "https://.../kotlin.svg"))
+   * 새 기술 스택을 목록에 추가할 때 사용하는 정적 팩토리 메서드. (예: TechStack.create("Kotlin", TechStackCategory.language,
+   * "https://.../kotlin.svg"))
    */
   public static TechStack create(String name, TechStackCategory category, String logoUrl) {
     TechStack techStack = new TechStack();
