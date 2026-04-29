@@ -49,22 +49,28 @@ public class TechStack {
   @Column(name = "category", nullable = false)
   private TechStackCategory category; // 분류 (language/framework/ai/design/tool/infra/etc)
 
+  @Column(name = "logo_url")
+  private String logoUrl; // 기술 스택 로고 이미지 URL (nullable)
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt; // 등록 시각
 
   /**
-   * 새 기술 스택을 목록에 추가할 때 사용하는 정적 팩토리 메서드. (예: TechStack.create("Kotlin", TechStackCategory.language))
+   * 새 기술 스택을 목록에 추가할 때 사용하는 정적 팩토리 메서드.
+   * (예: TechStack.create("Kotlin", TechStackCategory.language,  "https://.../kotlin.svg"))
    */
-  public static TechStack create(String name, TechStackCategory category) {
+  public static TechStack create(String name, TechStackCategory category, String logoUrl) {
     TechStack techStack = new TechStack();
     techStack.name = name;
     techStack.category = category;
+    techStack.logoUrl = logoUrl;
     return techStack;
   }
 
-  public void update(String name, TechStackCategory category) {
+  public void update(String name, TechStackCategory category, String logoUrl) {
     this.name = name;
     this.category = category;
+    this.logoUrl = logoUrl;
   }
 
   /** DB 저장 직전에 JPA가 자동으로 현재 시각을 createdAt에 넣어준다. */

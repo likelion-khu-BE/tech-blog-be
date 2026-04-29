@@ -49,6 +49,7 @@ CREATE TABLE tech_stack
     id         BIGINT       NOT NULL AUTO_INCREMENT,
     name       VARCHAR(255) NOT NULL UNIQUE,
     category   ENUM ('language','framework','ai','design','tool','infra','etc') NOT NULL,
+    logo_url   TEXT,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
