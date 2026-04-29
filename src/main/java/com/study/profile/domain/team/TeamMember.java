@@ -4,6 +4,8 @@ import com.study.profile.domain.member.Member;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -57,6 +59,10 @@ public class TeamMember {
   @Column(name = "is_lead", nullable = false)
   private Boolean isLead = false; // 팀장 여부 (true면 팀장, false면 일반 팀원)
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", nullable = false)
+  private TeamMemberStatus status; // 팀원 가입 상태 (pending/accepted/rejected/left/kicked)
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt; // 팀에 합류한 시각
 
@@ -71,6 +77,7 @@ public class TeamMember {
     teamMember.team = team;
     teamMember.member = member;
     teamMember.isLead = isLead;
+    teamMember.status = isLead ? TeamMemberStatus.accepted : TeamMemberStatus.pending;
     if (roles != null) {
       for (RoleInTeam role : roles) {
         teamMember.addRole(role);

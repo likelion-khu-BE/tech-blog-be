@@ -102,6 +102,7 @@ CREATE TABLE team_member
     team_id    BIGINT   NOT NULL,
     member_id  BIGINT   NOT NULL,
     is_lead    BOOLEAN  NOT NULL DEFAULT FALSE,
+    status     ENUM ('pending','accepted','rejected','left','kicked') NOT NULL DEFAULT 'pending',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (team_id) REFERENCES team_profile (id) ON DELETE CASCADE,

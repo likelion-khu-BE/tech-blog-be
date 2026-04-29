@@ -5,6 +5,7 @@ CREATE TYPE tech_stack_category AS ENUM ('language', 'framework', 'ai', 'design'
 CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'qna_answer', 'qna_question', 'qna_accepted', 'other');
 CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'all');
 CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc');
+CREATE TYPE team_member_status AS ENUM ('pending', 'accepted', 'rejected', 'left', 'kicked');
 
 -- 2. 핵심 테이블 생성 (PK: BIGINT / Long)
 -- 전제: users 테이블은 auth 팀 DDL이 먼저 생성해야 한다.
@@ -82,6 +83,7 @@ CREATE TABLE team_member (
     team_id    BIGINT NOT NULL REFERENCES team_profile(id) ON DELETE CASCADE,
     member_id  BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     is_lead    BOOLEAN NOT NULL DEFAULT FALSE,
+    status     team_member_status NOT NULL DEFAULT 'pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
