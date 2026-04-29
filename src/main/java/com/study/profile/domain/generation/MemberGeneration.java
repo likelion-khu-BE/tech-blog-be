@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,7 +31,12 @@ import lombok.NoArgsConstructor;
  * <p>[DB 테이블: member_generation]
  */
 @Entity
-@Table(name = "member_generation")
+@Table(
+    name = "member_generation",
+    uniqueConstraints =
+        @UniqueConstraint(
+            name = "uq_member_generation",
+            columnNames = {"member_id", "generation_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberGeneration {
