@@ -46,6 +46,7 @@ CREATE TABLE tech_stack (
     id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name       TEXT NOT NULL UNIQUE,
     category   tech_stack_category NOT NULL,
+    logo_url   TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
