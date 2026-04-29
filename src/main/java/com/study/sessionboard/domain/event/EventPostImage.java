@@ -49,4 +49,12 @@ public class EventPostImage {
     image.url = url;
     return image;
   }
+
+  public static EventPostImage of(EventPost post, String url, int order) {
+    EventPostImage image = new EventPostImage();
+    image.post = post;
+    image.url = url;
+    image.order = order;
+    return image;
+  }
 }
