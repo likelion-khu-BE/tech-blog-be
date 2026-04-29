@@ -30,6 +30,9 @@ CREATE TABLE generation
     PRIMARY KEY (id)
 );
 
+-- generation.is_current는 PostgreSQL의 partial unique index로 1개만 TRUE 보장
+-- (profile-ddl.sql 참고). MySQL은 partial unique 미지원 → 시각화상 제약 표시 X.
+
 -- 3. 멤버-기수 연결 테이블
 CREATE TABLE member_generation
 (
@@ -39,6 +42,7 @@ CREATE TABLE member_generation
     role_in_gen   ENUM ('member','operating') NOT NULL DEFAULT 'member',
     joined_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
+    UNIQUE KEY uq_member_generation (member_id, generation_id),
     FOREIGN KEY (member_id) REFERENCES member (id) ON DELETE CASCADE,
     FOREIGN KEY (generation_id) REFERENCES generation (id) ON DELETE CASCADE
 );
@@ -49,6 +53,7 @@ CREATE TABLE tech_stack
     id         BIGINT       NOT NULL AUTO_INCREMENT,
     name       VARCHAR(255) NOT NULL UNIQUE,
     category   ENUM ('language','framework','ai','design','tool','infra','etc') NOT NULL,
+    logo_url   TEXT,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
@@ -101,8 +106,10 @@ CREATE TABLE team_member
     team_id    BIGINT   NOT NULL,
     member_id  BIGINT   NOT NULL,
     is_lead    BOOLEAN  NOT NULL DEFAULT FALSE,
+    status     ENUM ('pending','accepted','rejected','left','kicked') NOT NULL DEFAULT 'pending',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
+    UNIQUE KEY uq_team_member (team_id, member_id),
     FOREIGN KEY (team_id) REFERENCES team_profile (id) ON DELETE CASCADE,
     FOREIGN KEY (member_id) REFERENCES member (id) ON DELETE CASCADE
 );

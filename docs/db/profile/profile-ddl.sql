@@ -5,6 +5,7 @@ CREATE TYPE tech_stack_category AS ENUM ('language', 'framework', 'ai', 'design'
 CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'qna_answer', 'qna_question', 'qna_accepted', 'other');
 CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'all');
 CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc');
+CREATE TYPE team_member_status AS ENUM ('pending', 'accepted', 'rejected', 'left', 'kicked');
 
 -- 2. 핵심 테이블 생성 (PK: BIGINT / Long)
 -- 전제: users 테이블은 auth 팀 DDL이 먼저 생성해야 한다.
@@ -33,19 +34,24 @@ CREATE TABLE generation (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 한 시점에 활동 중인 기수는 1개 (is_current=TRUE인 row 1개로 제한)
+CREATE UNIQUE INDEX uq_generation_is_current ON generation (is_current) WHERE is_current = TRUE;
+
 -- 3. 관계 및 활동 테이블
 CREATE TABLE member_generation (
     id            BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     member_id     BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     generation_id BIGINT NOT NULL REFERENCES generation(id) ON DELETE CASCADE,
     role_in_gen   generation_role NOT NULL DEFAULT 'member',
-    joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_member_generation UNIQUE (member_id, generation_id)
 );
 
 CREATE TABLE tech_stack (
     id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name       TEXT NOT NULL UNIQUE,
     category   tech_stack_category NOT NULL,
+    logo_url   TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -81,7 +87,9 @@ CREATE TABLE team_member (
     team_id    BIGINT NOT NULL REFERENCES team_profile(id) ON DELETE CASCADE,
     member_id  BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     is_lead    BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    status     team_member_status NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_team_member UNIQUE (team_id, member_id)
 );
 
 CREATE TABLE team_member_role (
