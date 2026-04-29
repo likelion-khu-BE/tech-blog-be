@@ -34,13 +34,17 @@ CREATE TABLE generation (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 한 시점에 활동 중인 기수는 1개 (is_current=TRUE인 row 1개로 제한)
+CREATE UNIQUE INDEX uq_generation_is_current ON generation (is_current) WHERE is_current = TRUE;
+
 -- 3. 관계 및 활동 테이블
 CREATE TABLE member_generation (
     id            BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     member_id     BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     generation_id BIGINT NOT NULL REFERENCES generation(id) ON DELETE CASCADE,
     role_in_gen   generation_role NOT NULL DEFAULT 'member',
-    joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_member_generation UNIQUE (member_id, generation_id)
 );
 
 CREATE TABLE tech_stack (
@@ -84,7 +88,8 @@ CREATE TABLE team_member (
     member_id  BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     is_lead    BOOLEAN NOT NULL DEFAULT FALSE,
     status     team_member_status NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_team_member UNIQUE (team_id, member_id)
 );
 
 CREATE TABLE team_member_role (

@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,12 @@ import lombok.NoArgsConstructor;
  * <p>[DB 테이블: team_member]
  */
 @Entity
-@Table(name = "team_member")
+@Table(
+    name = "team_member",
+    uniqueConstraints =
+        @UniqueConstraint(
+            name = "uq_team_member",
+            columnNames = {"team_id", "member_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TeamMember {
