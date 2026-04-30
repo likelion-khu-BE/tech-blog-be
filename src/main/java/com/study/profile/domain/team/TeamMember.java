@@ -63,7 +63,7 @@ public class TeamMember {
   private List<TeamMemberRole> roles = new ArrayList<>();
 
   @Column(name = "is_lead", nullable = false)
-  private Boolean isLead = false; // 팀장 여부 (true면 팀장, false면 일반 팀원)
+  private boolean isLead = false; // 팀장 여부 (true면 팀장, false면 일반 팀원)
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
