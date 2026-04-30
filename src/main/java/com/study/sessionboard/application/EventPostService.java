@@ -41,9 +41,7 @@ public class EventPostService {
 
     EventPost post = EventPost.of(loginMember, generation, request.getType(), request.getTitle());
 
-    // EventPost 엔티티에 body/tags/status setter가 없어서 지금은 title만 저장됨
-    // 엔티티에 update 메서드 추가되면 아래 주석 해제
-    // post.updateContent(request.getBody(), request.getTags(), request.getStatus());
+    post.update(request.getTitle(), request.getBody(), request.getTags(), request.getStatus());
 
     EventPost saved = postRepository.save(post);
 

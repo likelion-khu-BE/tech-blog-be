@@ -74,4 +74,12 @@ public class EventPost {
     post.title = title;
     return post;
   }
+
+  public void update(
+      String title, String body, java.util.List<String> tags, EventPostStatus status) {
+    if (title != null) this.title = title;
+    if (body != null) this.body = body;
+    if (tags != null) this.tags = tags.toArray(new String[0]);
+    if (status != null) this.status = status;
+  }
 }
