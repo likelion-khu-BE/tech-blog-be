@@ -7,9 +7,7 @@ import com.study.qna.domain.QuestionStatus;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * 질문 상세 응답 DTO.
- */
+/** 질문 상세 응답 DTO. */
 public record QuestionDetailResponse(
     Long id,
     String title,

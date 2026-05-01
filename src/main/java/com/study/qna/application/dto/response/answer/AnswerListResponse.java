@@ -2,10 +2,9 @@ package com.study.qna.application.dto.response.answer;
 
 import java.util.List;
 
-/**
- * 답변 목록 응답 DTO.
- */
-public record AnswerListResponse(AnswerDetailResponse acceptedAnswer, List<AnswerDetailResponse> answers) {
+/** 답변 목록 응답 DTO. */
+public record AnswerListResponse(
+    AnswerDetailResponse acceptedAnswer, List<AnswerDetailResponse> answers) {
 
   public static AnswerListResponse of(List<AnswerDetailResponse> answers) {
     AnswerDetailResponse accepted =

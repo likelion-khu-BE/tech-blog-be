@@ -127,6 +127,3 @@ public class Answer {
     this.updatedAt = Instant.now();
   }
 }
-
-
-

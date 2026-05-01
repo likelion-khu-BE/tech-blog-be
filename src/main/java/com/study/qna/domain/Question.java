@@ -32,8 +32,7 @@ import org.hibernate.annotations.SQLRestriction;
 /**
  * QnA 질문 도메인 엔티티.
  *
- * <p>질문 본문/상태/조회수/답변수/태그 연관을 관리한다.
- * 작성자는 userId(Long)만 저장해 타 BC 엔티티와 직접 결합하지 않는다.
+ * <p>질문 본문/상태/조회수/답변수/태그 연관을 관리한다. 작성자는 userId(Long)만 저장해 타 BC 엔티티와 직접 결합하지 않는다.
  */
 public class Question {
 
@@ -154,6 +153,3 @@ public class Question {
     this.updatedAt = Instant.now();
   }
 }
-
-
-

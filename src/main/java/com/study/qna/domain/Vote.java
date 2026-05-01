@@ -23,7 +23,9 @@ import org.hibernate.annotations.DynamicUpdate;
 @Table(
     name = "vote",
     uniqueConstraints = {
-      @UniqueConstraint(name = "uq_vote_answer_user", columnNames = {"answer_id", "user_id"})
+      @UniqueConstraint(
+          name = "uq_vote_answer_user",
+          columnNames = {"answer_id", "user_id"})
     })
 @Getter
 @DynamicUpdate
@@ -66,6 +68,3 @@ public class Vote {
     this.createdAt = Instant.now();
   }
 }
-
-
-
