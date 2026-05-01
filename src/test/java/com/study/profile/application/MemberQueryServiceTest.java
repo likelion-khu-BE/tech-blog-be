@@ -1,6 +1,8 @@
 package com.study.profile.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -17,25 +19,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * {@link MemberQueryServiceImpl} 단위 테스트 — Mock 기반, DB 없음.
+ * {@link MemberQueryService} 단위 테스트 — Mock 기반, DB 없음.
  *
- * <p>핵심 로직 검증: Member 있음/없음 분기 + DTO 필드 매핑.
- *
- * <p>JPA 쿼리({@code findByUserId})와 트랜잭션 전파는 Spring 책임이라 검증 대상 아님.
+ * <p>핵심 로직 검증: Member 매핑 + DTO 필드 변환 + 시스템 불일치 시 throw.
  */
 @ExtendWith(MockitoExtension.class)
-class MemberQueryServiceImplTest {
+class MemberQueryServiceTest {
 
   @Mock private MemberRepository memberRepository;
 
-  @InjectMocks private MemberQueryServiceImpl memberQueryService;
+  @InjectMocks private MemberQueryService memberQueryService;
 
   @Nested
   @DisplayName("getById")
   class GetById {
 
     @Test
-    @DisplayName("Member 있음 → Optional.of(dto), 필드 매핑 정확")
+    @DisplayName("Member 있음 → DTO 반환, 필드 매핑 정확")
     void getById_memberExists_returnsDto() {
       // Given
       Member member = mock(Member.class);
@@ -45,17 +45,16 @@ class MemberQueryServiceImplTest {
       given(memberRepository.findByUserId(1L)).willReturn(Optional.of(member));
 
       // When
-      Optional<MemberSummaryDto> result = memberQueryService.getById(1L);
+      MemberSummaryDto dto = memberQueryService.getById(1L);
 
       // Then
-      assertThat(result).isPresent();
-      assertThat(result.get().memberId()).isEqualTo(100L);
-      assertThat(result.get().name()).isEqualTo("임근엽");
-      assertThat(result.get().profileImageUrl()).isEqualTo("https://img/k.png");
+      assertThat(dto.memberId()).isEqualTo(100L);
+      assertThat(dto.name()).isEqualTo("임근엽");
+      assertThat(dto.profileImageUrl()).isEqualTo("https://img/k.png");
     }
 
     @Test
-    @DisplayName("profileImageUrl이 null이어도 정상 매핑 (record 자체는 null 허용)")
+    @DisplayName("profileImageUrl이 null이어도 정상 매핑 (DTO 필드 null 허용)")
     void getById_nullProfileImage_mapsCorrectly() {
       // Given
       Member member = mock(Member.class);
@@ -65,24 +64,22 @@ class MemberQueryServiceImplTest {
       given(memberRepository.findByUserId(1L)).willReturn(Optional.of(member));
 
       // When
-      Optional<MemberSummaryDto> result = memberQueryService.getById(1L);
+      MemberSummaryDto dto = memberQueryService.getById(1L);
 
       // Then
-      assertThat(result).isPresent();
-      assertThat(result.get().profileImageUrl()).isNull();
+      assertThat(dto.profileImageUrl()).isNull();
     }
 
     @Test
-    @DisplayName("Member 없음 → Optional.empty()")
-    void getById_memberNotFound_returnsEmpty() {
+    @DisplayName("Member 없음 → IllegalStateException (시스템 불일치)")
+    void getById_memberNotFound_throws() {
       // Given
-      given(memberRepository.findByUserId(999L)).willReturn(Optional.empty());
+      given(memberRepository.findByUserId(any())).willReturn(Optional.empty());
 
-      // When
-      Optional<MemberSummaryDto> result = memberQueryService.getById(999L);
-
-      // Then
-      assertThat(result).isEmpty();
+      // When / Then
+      assertThatThrownBy(() -> memberQueryService.getById(999L))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("Member 없음");
     }
   }
 }

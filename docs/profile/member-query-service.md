@@ -15,18 +15,17 @@ public class BlogPostService {
 
     public PostResponse getPost(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(...);
-        MemberSummaryDto author = memberQueryService.getById(post.getUserId())
-            .orElseThrow(() -> new IllegalStateException("작성자 프로필 없음"));
+        MemberSummaryDto author = memberQueryService.getById(post.getUserId());
         return PostResponse.of(post, author);
     }
 }
 ```
 
-## 인터페이스
+## 시그니처
 
 ```java
-public interface MemberQueryService {
-    Optional<MemberSummaryDto> getById(Long userId);
+public class MemberQueryService {
+    public MemberSummaryDto getById(Long userId);   // throws IllegalStateException
 }
 
 public record MemberSummaryDto(
@@ -38,12 +37,12 @@ public record MemberSummaryDto(
 
 ## 응답 처리
 
-| 상황 | 응답 | 호출부가 결정 |
-|---|---|---|
-| Member 있음 | `Optional.of(dto)` | 정상 사용 |
-| Member 없음 | `Optional.empty()` | throw / 기본 표시 / skip 등 자체 정책 |
+| 상황 | 응답 |
+|---|---|
+| Member 있음 | `MemberSummaryDto` 반환 |
+| Member 없음 | `IllegalStateException` throw — **시스템 불일치** (profile-init 강제 + ACTIVE 사용자 = Member 보장이라 발생하면 안 되는 상황) |
 
-`Member 없음` = profile-init 미완료 가능성. `auth.User`는 있으나 프로필 등록 안 한 상태.
+호출부는 throw를 catch하지 않고 그대로 흘려보내면 `GlobalExceptionHandler`가 일관 처리.
 
 ## 응답 활용
 
@@ -73,7 +72,7 @@ Member m = memberRepository.findByUserId(userId).orElseThrow(...);
 restTemplate.getForObject("/api/profile/members/" + memberId, ...);
 ```
 
-→ 항상 `MemberQueryService` 인터페이스를 통해 접근. profile 도메인 모델·Repository에 직접 의존 X.
+→ 항상 `MemberQueryService`를 통해 접근. profile 도메인 모델·Repository에 직접 의존 X.
 
 ## 식별자 단 분리
 
@@ -104,6 +103,6 @@ posts.forEach(p -> memberQueryService.getById(p.getUserId()));
 같은 jar 모놀리식 + BC 격리 환경의 표준 통신 방법:
 
 - **성능**: 같은 프로세스 내라 HTTP 오버헤드 불필요 (메서드 호출 μs vs HTTP ms)
-- **컴파일 타임 안전성**: 인터페이스 시그니처 변경 시 외부 BC 즉시 컴파일 오류
+- **컴파일 타임 안전성**: 시그니처 변경 시 외부 BC 즉시 컴파일 오류
 - **트랜잭션 일관성**: Spring `@Transactional` 자동 전파 → 외부 BC 트랜잭션과 같은 컨텍스트
-- **분산 전환 옵션**: 인터페이스를 추후 HTTP 어댑터로 갈아끼우면 됨 (Adapter 패턴)
+- **분산 전환 옵션**: 미래 분산화 시 HTTP 어댑터로 갈아끼울 때 Extract Interface로 cheap하게 처리 가능
