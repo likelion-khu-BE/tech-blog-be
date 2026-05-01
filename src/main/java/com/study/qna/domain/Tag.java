@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
-@Entity
+@Entity(name = "QnaTag")
 @Table(name = "tag")
 @Getter
 @DynamicUpdate

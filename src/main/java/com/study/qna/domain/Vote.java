@@ -19,7 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
-@Entity
+@Entity(name = "QnaVote")
 @Table(
     name = "vote",
     uniqueConstraints = {
