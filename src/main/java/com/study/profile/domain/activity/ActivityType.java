@@ -12,5 +12,7 @@ public enum ActivityType {
   qna_question,
   qna_answer,
   qna_accepted,
+  session_post,
+  session_comment,
   other
 }
