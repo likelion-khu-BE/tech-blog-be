@@ -22,7 +22,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-@Entity
+@Entity(name = "QnaQuestion")
 @Table(name = "question")
 @Getter
 @DynamicUpdate
