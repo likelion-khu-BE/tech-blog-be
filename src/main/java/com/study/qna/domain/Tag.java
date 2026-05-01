@@ -18,9 +18,7 @@ import org.hibernate.annotations.DynamicUpdate;
 @Getter
 @DynamicUpdate
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-/**
- * QnA 태그 도메인 엔티티.
- */
+/** QnA 태그 도메인 엔티티. */
 public class Tag {
 
   @Id
@@ -44,6 +42,3 @@ public class Tag {
     this.createdAt = Instant.now();
   }
 }
-
-
-

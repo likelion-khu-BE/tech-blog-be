@@ -18,14 +18,14 @@ import org.hibernate.annotations.DynamicUpdate;
 @Table(
     name = "question_tag",
     uniqueConstraints = {
-      @UniqueConstraint(name = "uq_question_tag", columnNames = {"question_id", "tag_id"})
+      @UniqueConstraint(
+          name = "uq_question_tag",
+          columnNames = {"question_id", "tag_id"})
     })
 @Getter
 @DynamicUpdate
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-/**
- * 질문-태그 연결 도메인 엔티티.
- */
+/** 질문-태그 연결 도메인 엔티티. */
 public class QuestionTag {
 
   @Id
@@ -47,6 +47,3 @@ public class QuestionTag {
     return questionTag;
   }
 }
-
-
-
