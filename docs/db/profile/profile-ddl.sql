@@ -2,7 +2,7 @@
 CREATE TYPE session_type AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'etc');
 CREATE TYPE generation_role AS ENUM ('member', 'operating');
 CREATE TYPE tech_stack_category AS ENUM ('language', 'framework', 'ai', 'design', 'tool', 'infra', 'etc');
-CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'qna_answer', 'qna_question', 'qna_accepted', 'other');
+CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'qna_answer', 'qna_question', 'qna_accepted', 'session_speak', 'session_note', 'session_event_post', 'session_event_comment');
 CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'all');
 CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc');
 CREATE TYPE team_member_status AS ENUM ('pending', 'accepted', 'rejected', 'left', 'kicked');
@@ -106,11 +106,10 @@ CREATE TABLE team_image (
 );
 
 CREATE TABLE activity (
-    id             BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    member_id      BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    type           activity_type NOT NULL,
-    reference_id   BIGINT,
-    reference_type TEXT,
-    score          INT NOT NULL DEFAULT 0,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    member_id    BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    type         activity_type NOT NULL,
+    reference_id BIGINT,
+    score        INT NOT NULL DEFAULT 0,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

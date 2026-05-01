@@ -138,13 +138,12 @@ CREATE TABLE team_image
 -- 11. 활동 점수 및 로그 테이블
 CREATE TABLE activity
 (
-    id             BIGINT   NOT NULL AUTO_INCREMENT,
-    member_id      BIGINT   NOT NULL,
-    type           ENUM ('blog_post','blog_comment','qna_answer','qna_question','qna_accepted','other') NOT NULL,
-    reference_id   BIGINT,
-    reference_type VARCHAR(255),
-    score          INT      NOT NULL DEFAULT 0,
-    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id           BIGINT   NOT NULL AUTO_INCREMENT,
+    member_id    BIGINT   NOT NULL,
+    type         ENUM ('blog_post','blog_comment','qna_answer','qna_question','qna_accepted','session_speak','session_note','session_event_post','session_event_comment') NOT NULL,
+    reference_id BIGINT,
+    score        INT      NOT NULL DEFAULT 0,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (member_id) REFERENCES member (id) ON DELETE CASCADE
 );

@@ -32,17 +32,19 @@ public class BlogPostService {
 
 `com.study.shared.event` 패키지. 행위별로 record 1개씩.
 
-| 이벤트 | 발행자 | 의미 |
-|---|---|---|
-| `BlogPostCreated` | blog | 블로그 글 발행 |
-| `BlogCommentCreated` | blog | 블로그 댓글 작성 |
-| `QnaQuestionCreated` | qna | 질문 등록 |
-| `QnaAnswerCreated` | qna | 답변 작성 |
-| `QnaAnswerAccepted` | qna | 답변 채택됨 (`userId` = 채택된 답변자) |
-| `SessionPostCreated` | sessionboard | 세션보드 게시글 작성 |
-| `SessionCommentCreated` | sessionboard | 세션보드 댓글 작성 |
+| 이벤트 | 발행자 | 매핑 entity | 의미 |
+|---|---|---|---|
+| `BlogPostCreated` | blog | `Post` | 블로그 글 발행 |
+| `BlogCommentCreated` | blog | `Comment` | 블로그 댓글 작성 |
+| `QnaQuestionCreated` | qna | `Question` | 질문 등록 |
+| `QnaAnswerCreated` | qna | `Answer` | 답변 작성 |
+| `QnaAnswerAccepted` | qna | `Answer` | 답변 채택됨 (`userId` = 채택된 답변자) |
+| `SessionSpeakerRegistered` | sessionboard | `SessionSpeaker` | 발표자 등록 |
+| `SessionNoteCreated` | sessionboard | `SessionNote` | 발표 자료/노트 작성 |
+| `EventPostCreated` | sessionboard | `EventPost` | 행사 게시글 작성 |
+| `EventPostCommentCreated` | sessionboard | `EventPostComment` | 행사 게시글 댓글 |
 
-> 세션보드 이벤트 2개 — 정확한 도메인 매핑은 sessionboard 팀과 합의 시 확정. 추가 활동(발표 자료, 발표자 등록 등)은 후속 PR로.
+> 좋아요·북마크·자료 업로드·회고 등 추가 활동은 점수 정책 결정 후 *purely additive* 방식으로 추가 가능.
 
 각 이벤트 record 형식:
 ```java
@@ -53,8 +55,10 @@ public record BlogCommentCreated(Long userId, Long commentId) {}
 public record QnaQuestionCreated(Long userId, Long questionId) {}
 public record QnaAnswerCreated(Long userId, Long answerId) {}
 public record QnaAnswerAccepted(Long userId, Long answerId) {}
-public record SessionPostCreated(Long userId, Long postId) {}
-public record SessionCommentCreated(Long userId, Long commentId) {}
+public record SessionSpeakerRegistered(Long userId, Long sessionId) {}
+public record SessionNoteCreated(Long userId, Long noteId) {}
+public record EventPostCreated(Long userId, Long postId) {}
+public record EventPostCommentCreated(Long userId, Long commentId) {}
 ```
 
 ## 이벤트 필드 규칙

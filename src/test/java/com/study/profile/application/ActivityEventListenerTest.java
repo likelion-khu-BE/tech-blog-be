@@ -5,11 +5,13 @@ import static org.mockito.Mockito.verify;
 import com.study.profile.domain.activity.ActivityType;
 import com.study.shared.event.BlogCommentCreated;
 import com.study.shared.event.BlogPostCreated;
+import com.study.shared.event.EventPostCommentCreated;
+import com.study.shared.event.EventPostCreated;
 import com.study.shared.event.QnaAnswerAccepted;
 import com.study.shared.event.QnaAnswerCreated;
 import com.study.shared.event.QnaQuestionCreated;
-import com.study.shared.event.SessionCommentCreated;
-import com.study.shared.event.SessionPostCreated;
+import com.study.shared.event.SessionNoteCreated;
+import com.study.shared.event.SessionSpeakerRegistered;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,16 +67,30 @@ class ActivityEventListenerTest {
   }
 
   @Test
-  @DisplayName("SessionPostCreated → recorder.record(session_post)")
-  void sessionPostCreated() {
-    listener.onSessionPostCreated(new SessionPostCreated(1L, 42L));
-    verify(activityRecorder).record(1L, ActivityType.session_post, 42L);
+  @DisplayName("SessionSpeakerRegistered → recorder.record(session_speak)")
+  void sessionSpeakerRegistered() {
+    listener.onSessionSpeakerRegistered(new SessionSpeakerRegistered(1L, 42L));
+    verify(activityRecorder).record(1L, ActivityType.session_speak, 42L);
   }
 
   @Test
-  @DisplayName("SessionCommentCreated → recorder.record(session_comment)")
-  void sessionCommentCreated() {
-    listener.onSessionCommentCreated(new SessionCommentCreated(1L, 42L));
-    verify(activityRecorder).record(1L, ActivityType.session_comment, 42L);
+  @DisplayName("SessionNoteCreated → recorder.record(session_note)")
+  void sessionNoteCreated() {
+    listener.onSessionNoteCreated(new SessionNoteCreated(1L, 42L));
+    verify(activityRecorder).record(1L, ActivityType.session_note, 42L);
+  }
+
+  @Test
+  @DisplayName("EventPostCreated → recorder.record(session_event_post)")
+  void eventPostCreated() {
+    listener.onEventPostCreated(new EventPostCreated(1L, 42L));
+    verify(activityRecorder).record(1L, ActivityType.session_event_post, 42L);
+  }
+
+  @Test
+  @DisplayName("EventPostCommentCreated → recorder.record(session_event_comment)")
+  void eventPostCommentCreated() {
+    listener.onEventPostCommentCreated(new EventPostCommentCreated(1L, 42L));
+    verify(activityRecorder).record(1L, ActivityType.session_event_comment, 42L);
   }
 }

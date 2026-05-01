@@ -7,16 +7,18 @@ import com.study.profile.infrastructure.ActivityRepository;
 import com.study.profile.infrastructure.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 활동 기록 내부 서비스.
  *
- * <p>{@link ActivityEventListener}가 외부 BC 이벤트를 받아 호출. profile 내부 전용 — 외부 BC가 직접 호출 X (이벤트 발행으로만
- * 통신).
+ * <p>{@link ActivityEventListener}가 외부 BC 이벤트를 받아 호출. profile 내부 전용 — 외부 BC는 이벤트 발행으로만 통신.
+ * package-private 가시성으로 외부 호출 차단.
  *
  * <p>책임: ActivityType별 점수 매핑 + Member 매핑(userId → Member) + Activity 행 저장.
  *
- * <p>트랜잭션: 호출하는 listener의 publisher 트랜잭션에 자동 참여 (Spring {@code @EventListener} 기본 동작).
+ * <p>트랜잭션: {@link Transactional} 명시. Listener의 publisher 트랜잭션에 자동 참여 (Spring 기본 propagation =
+ * REQUIRED). 직접 호출 시에도 새 트랜잭션 시작.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,8 @@ public class ActivityRecorder {
    * @param referenceId 활동 대상 식별자 (post.id, comment.id 등)
    * @throws IllegalStateException Member 없음 (profile-init 미완료) — publisher 트랜잭션과 함께 롤백
    */
-  public void record(Long userId, ActivityType type, Long referenceId) {
+  @Transactional
+  void record(Long userId, ActivityType type, Long referenceId) {
     Member member =
         memberRepository
             .findByUserId(userId)
@@ -54,9 +57,9 @@ public class ActivityRecorder {
    */
   private int scoreOf(ActivityType type) {
     return switch (type) {
-      case blog_post, qna_accepted, session_post -> 10;
-      case blog_comment, qna_question, qna_answer, session_comment -> 5;
-      case other -> 0; // 현재 미사용 — 미래에 새 활동 등장 시 새 ActivityType 추가
+      case session_speak -> 20; // 발표 노력 가중
+      case blog_post, qna_accepted, session_event_post, session_note -> 10;
+      case blog_comment, qna_question, qna_answer, session_event_comment -> 5;
     };
   }
 }

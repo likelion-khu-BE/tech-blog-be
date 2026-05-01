@@ -3,8 +3,22 @@ package com.study.profile.domain.activity;
 /**
  * 활동마다 점수(score)가 다르게 부여된다.
  *
- * <p>blog_post : 블로그 글 작성 +10 blog_comment : 블로그 글 댓글 작성 +5 qna_question : Q&A 질문 등록 +5 qna_answer
- * : Q&A 질문에 답변 작성 +5 qna_accepted : 작성한 답변이 채택됨 (추가 점수 부여) +10 other : 기타 활동
+ * <p>점수 정책 ({@link com.study.profile.application.ActivityRecorder} 참조):
+ *
+ * <ul>
+ *   <li>session_speak : +20 (발표는 노력 가중)
+ *   <li>blog_post / qna_accepted / session_event_post / session_note : +10
+ *   <li>blog_comment / qna_question / qna_answer / session_event_comment : +5
+ * </ul>
+ *
+ * <p>session 활동 매핑은 sessionboard 도메인 entity에 대응:
+ *
+ * <ul>
+ *   <li>session_speak — {@code SessionSpeaker} 등록 (발표자)
+ *   <li>session_note — {@code SessionNote} 작성 (발표 자료)
+ *   <li>session_event_post — {@code EventPost} 작성 (행사 게시글)
+ *   <li>session_event_comment — {@code EventPostComment} 작성 (행사 게시글 댓글)
+ * </ul>
  */
 public enum ActivityType {
   blog_post,
@@ -12,7 +26,8 @@ public enum ActivityType {
   qna_question,
   qna_answer,
   qna_accepted,
-  session_post,
-  session_comment,
-  other
+  session_speak,
+  session_note,
+  session_event_post,
+  session_event_comment
 }

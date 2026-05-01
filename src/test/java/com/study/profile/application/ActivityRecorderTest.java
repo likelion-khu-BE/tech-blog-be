@@ -107,12 +107,25 @@ class ActivityRecorderTest {
     }
 
     @Test
-    @DisplayName("session_post → 10점")
-    void sessionPost_10() {
+    @DisplayName("session_speak → 20점")
+    void sessionSpeak_20() {
       Member member = mock(Member.class);
       given(memberRepository.findByUserId(1L)).willReturn(Optional.of(member));
 
-      activityRecorder.record(1L, ActivityType.session_post, 42L);
+      activityRecorder.record(1L, ActivityType.session_speak, 42L);
+
+      ArgumentCaptor<Activity> captor = ArgumentCaptor.forClass(Activity.class);
+      verify(activityRepository).save(captor.capture());
+      assertThat(captor.getValue().getScore()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("session_note → 10점")
+    void sessionNote_10() {
+      Member member = mock(Member.class);
+      given(memberRepository.findByUserId(1L)).willReturn(Optional.of(member));
+
+      activityRecorder.record(1L, ActivityType.session_note, 42L);
 
       ArgumentCaptor<Activity> captor = ArgumentCaptor.forClass(Activity.class);
       verify(activityRepository).save(captor.capture());
@@ -120,12 +133,25 @@ class ActivityRecorderTest {
     }
 
     @Test
-    @DisplayName("session_comment → 5점")
-    void sessionComment_5() {
+    @DisplayName("session_event_post → 10점")
+    void sessionEventPost_10() {
       Member member = mock(Member.class);
       given(memberRepository.findByUserId(1L)).willReturn(Optional.of(member));
 
-      activityRecorder.record(1L, ActivityType.session_comment, 42L);
+      activityRecorder.record(1L, ActivityType.session_event_post, 42L);
+
+      ArgumentCaptor<Activity> captor = ArgumentCaptor.forClass(Activity.class);
+      verify(activityRepository).save(captor.capture());
+      assertThat(captor.getValue().getScore()).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("session_event_comment → 5점")
+    void sessionEventComment_5() {
+      Member member = mock(Member.class);
+      given(memberRepository.findByUserId(1L)).willReturn(Optional.of(member));
+
+      activityRecorder.record(1L, ActivityType.session_event_comment, 42L);
 
       ArgumentCaptor<Activity> captor = ArgumentCaptor.forClass(Activity.class);
       verify(activityRepository).save(captor.capture());

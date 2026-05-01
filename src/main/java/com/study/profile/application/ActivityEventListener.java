@@ -3,11 +3,13 @@ package com.study.profile.application;
 import com.study.profile.domain.activity.ActivityType;
 import com.study.shared.event.BlogCommentCreated;
 import com.study.shared.event.BlogPostCreated;
+import com.study.shared.event.EventPostCommentCreated;
+import com.study.shared.event.EventPostCreated;
 import com.study.shared.event.QnaAnswerAccepted;
 import com.study.shared.event.QnaAnswerCreated;
 import com.study.shared.event.QnaQuestionCreated;
-import com.study.shared.event.SessionCommentCreated;
-import com.study.shared.event.SessionPostCreated;
+import com.study.shared.event.SessionNoteCreated;
+import com.study.shared.event.SessionSpeakerRegistered;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -52,12 +54,22 @@ public class ActivityEventListener {
   }
 
   @EventListener
-  public void onSessionPostCreated(SessionPostCreated event) {
-    activityRecorder.record(event.userId(), ActivityType.session_post, event.postId());
+  public void onSessionSpeakerRegistered(SessionSpeakerRegistered event) {
+    activityRecorder.record(event.userId(), ActivityType.session_speak, event.sessionId());
   }
 
   @EventListener
-  public void onSessionCommentCreated(SessionCommentCreated event) {
-    activityRecorder.record(event.userId(), ActivityType.session_comment, event.commentId());
+  public void onSessionNoteCreated(SessionNoteCreated event) {
+    activityRecorder.record(event.userId(), ActivityType.session_note, event.noteId());
+  }
+
+  @EventListener
+  public void onEventPostCreated(EventPostCreated event) {
+    activityRecorder.record(event.userId(), ActivityType.session_event_post, event.postId());
+  }
+
+  @EventListener
+  public void onEventPostCommentCreated(EventPostCommentCreated event) {
+    activityRecorder.record(event.userId(), ActivityType.session_event_comment, event.commentId());
   }
 }

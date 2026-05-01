@@ -47,16 +47,11 @@ public class Activity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "type", nullable = false)
-  private ActivityType type; // 활동 종류 (blog_post/../other)
+  private ActivityType type; // 활동 종류
 
   // 이 서비스(profile 모듈)가 아닌 외부 모듈(blog, qna 등)에서 관리하는 ID이므로
   @Column(name = "reference_id")
   private Long referenceId;
-
-  // 참조 타입 이름. 어떤 종류의 콘텐츠를 가리키는지 구분하는 문자열.
-  // 예) "blog_post", "qna_answer" — referenceId와 함께 "어디서 온 ID인지" 맥락을 제공한다.
-  @Column(name = "reference_type")
-  private String referenceType;
 
   @Column(name = "score", nullable = false)
   private Integer score = 0; // 이 활동으로 얻은 점수 (기본값 0)
@@ -68,8 +63,6 @@ public class Activity {
    * 새 활동 기록을 생성할 때 사용하는 정적 팩토리 메서드.
    *
    * <p>예) Activity.create(홍길동, ActivityType.blog_post, 글ID, 10) → "홍길동이 해당 블로그 글을 작성해 10점 획득"을 기록.
-   *
-   * <p>{@code referenceType} 필드는 더 이상 사용하지 않음 (type enum이 같은 정보 표현). 별도 정합성 PR에서 컬럼 함께 제거 예정.
    */
   public static Activity create(Member member, ActivityType type, Long referenceId, int score) {
     Activity activity = new Activity();
