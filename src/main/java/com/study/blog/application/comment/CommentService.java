@@ -77,10 +77,10 @@ public class CommentService {
   @Transactional
   public CommentResponse createComment(Long postId, CommentCreateRequest req, UUID userId) {
     Comment parent = null;
-    if (req.getParentId() != null) {
+    if (req.parentId() != null) {
       parent =
           commentRepository
-              .findById(req.getParentId())
+              .findById(req.parentId())
               .orElseThrow(() -> new BlogException(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
       if (!parent.getPostId().equals(postId)) {
         throw new BlogException(BlogErrorCode.PARENT_COMMENT_NOT_FOUND);
@@ -92,7 +92,7 @@ public class CommentService {
             .postId(postId)
             .userId(userId)
             .parent(parent)
-            .content(req.getContent())
+            .content(req.content())
             .build();
     comment = commentRepository.save(comment);
     return CommentResponse.of(comment, 0, false);
@@ -104,7 +104,7 @@ public class CommentService {
     if (!comment.getUserId().equals(userId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
-    comment.updateContent(req.getContent());
+    comment.updateContent(req.content());
     long likeCount = commentLikeRepository.countByIdCommentId(commentId);
     boolean liked =
         commentLikeRepository.findByIdCommentIdAndIdUserId(commentId, userId).isPresent();

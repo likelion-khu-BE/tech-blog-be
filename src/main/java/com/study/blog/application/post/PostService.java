@@ -95,17 +95,17 @@ public class PostService {
     Post post =
         Post.builder()
             .userId(userId)
-            .title(req.getTitle())
-            .content(req.getContent())
-            .board(req.getBoard())
-            .category(req.getCategory())
-            .status(req.getStatus())
-            .generation(req.getGeneration())
-            .repostFromId(req.getRepostFromId())
+            .title(req.title())
+            .content(req.content())
+            .board(req.board())
+            .category(req.category())
+            .status(req.status())
+            .generation(req.generation())
+            .repostFromId(req.repostFromId())
             .build();
     post = postRepository.save(post);
 
-    saveTags(post, req.getTags());
+    saveTags(post, req.tags());
     return toResponse(post, userId);
   }
 
@@ -116,11 +116,10 @@ public class PostService {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 
-    post.update(
-        req.getTitle(), req.getContent(), req.getBoard(), req.getCategory(), req.getStatus());
+    post.update(req.title(), req.content(), req.board(), req.category(), req.status());
 
     postTagRepository.deleteByPost(post);
-    saveTags(post, req.getTags());
+    saveTags(post, req.tags());
 
     return toResponse(post, userId);
   }

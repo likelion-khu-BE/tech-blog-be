@@ -14,7 +14,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "post_bookmarks")
+@Table(name = "blog_post_bookmarks")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostBookmark {
 
