@@ -5,14 +5,13 @@ import com.study.blog.domain.comment.CommentLikeId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CommentLikeRepository extends JpaRepository<CommentLike, CommentLikeId> {
 
-  Optional<CommentLike> findByIdCommentIdAndIdUserId(Long commentId, UUID userId);
+  Optional<CommentLike> findByIdCommentIdAndIdUserId(Long commentId, Long userId);
 
   long countByIdCommentId(Long commentId);
 
@@ -23,5 +22,5 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Commen
   @Query(
       "SELECT cl.id.commentId FROM CommentLike cl WHERE cl.id.commentId IN :commentIds AND cl.id.userId = :userId")
   List<Long> findLikedCommentIds(
-      @Param("commentIds") Collection<Long> commentIds, @Param("userId") UUID userId);
+      @Param("commentIds") Collection<Long> commentIds, @Param("userId") Long userId);
 }

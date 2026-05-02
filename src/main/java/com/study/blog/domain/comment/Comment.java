@@ -47,7 +47,7 @@ public class Comment {
   private LocalDateTime createdAt;
 
   @Builder
-  public Comment(Long postId, UUID userId, Comment parent, String content) {
+  public Comment(Long postId, Long userId, Comment parent, String content) {
     this.postId = postId;
     this.userId = userId;
     this.parent = parent;

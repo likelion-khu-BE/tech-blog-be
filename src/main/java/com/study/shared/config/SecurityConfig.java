@@ -59,6 +59,11 @@ public class SecurityConfig {
                         "/api/health",
                         "/api/health/**")
                     .permitAll()
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.GET,
+                        "/api/blog/posts",
+                        "/api/blog/posts/**")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
 
