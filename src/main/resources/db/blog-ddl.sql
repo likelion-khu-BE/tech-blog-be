@@ -15,7 +15,7 @@ CREATE TYPE blog_post_status AS ENUM ('DRAFT', 'PUBLISHED');
 -- ------------------------------------------------------------
 CREATE TABLE blog_posts (
     id              BIGSERIAL         PRIMARY KEY,
-    user_id         UUID              NOT NULL,
+    user_id         BIGINT            NOT NULL,
     title           VARCHAR(255)      NOT NULL,
     content         TEXT              NOT NULL,
     board           VARCHAR(20)       NOT NULL,
@@ -49,7 +49,7 @@ CREATE INDEX idx_blog_post_tag_name ON blog_post_tags (tag_name);
 -- ------------------------------------------------------------
 CREATE TABLE blog_post_likes (
     post_id  BIGINT NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
-    user_id  UUID   NOT NULL,
+    user_id  BIGINT NOT NULL,
     PRIMARY KEY (post_id, user_id)
 );
 
@@ -60,7 +60,7 @@ CREATE INDEX idx_blog_post_like_user ON blog_post_likes (user_id);
 -- ------------------------------------------------------------
 CREATE TABLE blog_post_bookmarks (
     post_id  BIGINT NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
-    user_id  UUID   NOT NULL,
+    user_id  BIGINT NOT NULL,
     PRIMARY KEY (post_id, user_id)
 );
 
@@ -71,8 +71,8 @@ CREATE INDEX idx_blog_post_bookmark_user ON blog_post_bookmarks (user_id);
 -- ------------------------------------------------------------
 CREATE TABLE blog_comments (
     id          BIGSERIAL    PRIMARY KEY,
-    post_id     BIGINT       NOT NULL,
-    user_id     UUID         NOT NULL,
+    post_id     BIGINT       NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
+    user_id     BIGINT       NOT NULL,
     parent_id   BIGINT       REFERENCES blog_comments(id) ON DELETE CASCADE,
     content     TEXT         NOT NULL,
     created_at  TIMESTAMP(6) NOT NULL
@@ -88,7 +88,7 @@ CREATE INDEX idx_blog_comment_created ON blog_comments (created_at);
 -- ------------------------------------------------------------
 CREATE TABLE blog_comment_likes (
     comment_id  BIGINT NOT NULL REFERENCES blog_comments(id) ON DELETE CASCADE,
-    user_id     UUID   NOT NULL,
+    user_id     BIGINT NOT NULL,
     PRIMARY KEY (comment_id, user_id)
 );
 
