@@ -25,6 +25,12 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_ACCESS_EXPIRATION: ${{ secrets.JWT_ACCESS_EXPIRATION }}
       JWT_REFRESH_EXPIRATION: ${{ secrets.JWT_REFRESH_EXPIRATION }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      S3_BUCKET_EVENT: ${{ secrets.S3_BUCKET_EVENT }}
+      S3_BUCKET_SESSION: ${{ secrets.S3_BUCKET_SESSION }}
+      S3_PRESIGNED_URL_EXPIRATION: ${{ secrets.S3_PRESIGNED_URL_EXPIRATION }}
     steps:
       - name: 소스코드 체크아웃
         uses: actions/checkout@v4
