@@ -52,8 +52,8 @@ public class AdminController {
       @PathVariable Long id,
       @Valid @RequestBody PostStatusUpdateRequest req) {
     validateAdminToken(token);
-    adminService.changePostStatus(id, req.getStatus());
-    return ResponseEntity.ok().build();
+    adminService.changePostStatus(id, req.status());
+    return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/posts/{id}")
@@ -62,7 +62,7 @@ public class AdminController {
       @PathVariable Long id) {
     validateAdminToken(token);
     adminService.forceDeletePost(id);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok().build();
   }
 
   private void validateAdminToken(String token) {

@@ -14,7 +14,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "post_tags")
+@Table(name = "blog_post_tags")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostTag {
