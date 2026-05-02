@@ -49,7 +49,8 @@ public class PostController {
   @GetMapping("/{id}")
   public ResponseEntity<PostResponse> getPost(
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
-    return ResponseEntity.ok(postService.getPost(id, user.userId()));
+    Long requesterId = user != null ? user.userId() : null;
+    return ResponseEntity.ok(postService.getPost(id, requesterId));
   }
 
   @PostMapping

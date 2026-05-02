@@ -61,7 +61,7 @@ public class Post {
 
   @Builder
   public Post(
-      UUID userId,
+      Long userId,
       String title,
       String content,
       String board,
