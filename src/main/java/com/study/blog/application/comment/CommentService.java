@@ -9,11 +9,9 @@ import com.study.blog.infrastructure.comment.CommentLikeRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,7 @@ public class CommentService {
     this.commentLikeRepository = commentLikeRepository;
   }
 
-  public List<CommentResponse> getComments(Long postId, UUID requesterId) {
+  public List<CommentResponse> getComments(Long postId, Long requesterId) {
     List<Comment> all = commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId);
     if (all.isEmpty()) {
       return List.of();
@@ -49,33 +47,20 @@ public class CommentService {
             : commentLikeRepository.findLikedCommentIds(commentIds, requesterId).stream()
                 .collect(Collectors.toMap(id -> id, id -> true));
 
-    Map<Long, CommentResponse> map = new LinkedHashMap<>();
-    List<CommentResponse> roots = new ArrayList<>();
+    Map<Long, List<Comment>> childrenByParentId =
+        all.stream()
+            .filter(c -> c.getParentId() != null)
+            .collect(Collectors.groupingBy(Comment::getParentId));
 
-    for (Comment c : all) {
-      long likeCount = likeCountByCommentId.getOrDefault(c.getId(), 0L);
-      boolean liked = likedByCommentId.getOrDefault(c.getId(), false);
-      CommentResponse resp = CommentResponse.of(c, likeCount, liked);
-      map.put(c.getId(), resp);
-      if (c.getParentId() == null) {
-        roots.add(resp);
-      }
-    }
-
-    for (Comment c : all) {
-      if (c.getParentId() != null) {
-        CommentResponse parent = map.get(c.getParentId());
-        if (parent != null) {
-          parent.addReply(map.get(c.getId()));
-        }
-      }
-    }
-
-    return roots;
+    return all.stream()
+        .filter(c -> c.getParentId() == null)
+        .sorted(Comparator.comparing(Comment::getCreatedAt))
+        .map(root -> buildTree(root, childrenByParentId, likeCountByCommentId, likedByCommentId))
+        .toList();
   }
 
   @Transactional
-  public CommentResponse createComment(Long postId, CommentCreateRequest req, UUID userId) {
+  public CommentResponse createComment(Long postId, CommentCreateRequest req, Long userId) {
     Comment parent = null;
     if (req.parentId() != null) {
       parent =
@@ -95,11 +80,11 @@ public class CommentService {
             .content(req.content())
             .build();
     comment = commentRepository.save(comment);
-    return CommentResponse.of(comment, 0, false);
+    return CommentResponse.of(comment, 0, false, List.of());
   }
 
   @Transactional
-  public CommentResponse updateComment(Long commentId, CommentUpdateRequest req, UUID userId) {
+  public CommentResponse updateComment(Long commentId, CommentUpdateRequest req, Long userId) {
     Comment comment = findById(commentId);
     if (!comment.getUserId().equals(userId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
@@ -108,11 +93,11 @@ public class CommentService {
     long likeCount = commentLikeRepository.countByIdCommentId(commentId);
     boolean liked =
         commentLikeRepository.findByIdCommentIdAndIdUserId(commentId, userId).isPresent();
-    return CommentResponse.of(comment, likeCount, liked);
+    return CommentResponse.of(comment, likeCount, liked, List.of());
   }
 
   @Transactional
-  public void deleteComment(Long commentId, UUID userId) {
+  public void deleteComment(Long commentId, Long userId) {
     Comment comment = findById(commentId);
     if (!comment.getUserId().equals(userId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
@@ -121,7 +106,7 @@ public class CommentService {
   }
 
   @Transactional
-  public boolean toggleLike(Long commentId, UUID userId) {
+  public boolean toggleLike(Long commentId, Long userId) {
     Comment comment = findById(commentId);
     return commentLikeRepository
         .findByIdCommentIdAndIdUserId(commentId, userId)
@@ -139,6 +124,23 @@ public class CommentService {
               }
               return true;
             });
+  }
+
+  private CommentResponse buildTree(
+      Comment comment,
+      Map<Long, List<Comment>> childrenByParentId,
+      Map<Long, Long> likeCountByCommentId,
+      Map<Long, Boolean> likedByCommentId) {
+    List<CommentResponse> replies =
+        childrenByParentId.getOrDefault(comment.getId(), List.of()).stream()
+            .sorted(Comparator.comparing(Comment::getCreatedAt))
+            .map(child -> buildTree(child, childrenByParentId, likeCountByCommentId, likedByCommentId))
+            .toList();
+    return CommentResponse.of(
+        comment,
+        likeCountByCommentId.getOrDefault(comment.getId(), 0L),
+        likedByCommentId.getOrDefault(comment.getId(), false),
+        replies);
   }
 
   private Comment findById(Long commentId) {
