@@ -41,10 +41,9 @@ public class AdminController {
   }
 
   @PatchMapping("/posts/{id}/status")
-  public ResponseEntity<Void> changePostStatus(
+  public ResponseEntity<AdminPostResponse> changePostStatus(
       @PathVariable Long id, @Valid @RequestBody PostStatusUpdateRequest req) {
-    adminService.changePostStatus(id, req.status());
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok(adminService.changePostStatus(id, req.status()));
   }
 
   @DeleteMapping("/posts/{id}")

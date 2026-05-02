@@ -248,9 +248,10 @@ class AdminApiTest {
                 .header("X-Admin-Token", ADMIN_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(p1.getId()))
+        .andExpect(jsonPath("$.status").value("DRAFT"));
 
-    // Verify status actually changed in DB
     Post updated = postRepository.findById(p1.getId()).orElseThrow();
     assertThat(updated.getStatus()).isEqualTo(PostStatus.DRAFT);
   }
@@ -267,7 +268,9 @@ class AdminApiTest {
                 .header("X-Admin-Token", ADMIN_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(p4.getId()))
+        .andExpect(jsonPath("$.status").value("PUBLISHED"));
 
     Post updated = postRepository.findById(p4.getId()).orElseThrow();
     assertThat(updated.getStatus()).isEqualTo(PostStatus.PUBLISHED);
