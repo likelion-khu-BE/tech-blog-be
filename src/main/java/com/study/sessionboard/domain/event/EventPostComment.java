@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import lombok.AccessLevel;
@@ -44,9 +45,17 @@ public class EventPostComment {
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
+  @Column(name = "updated_at")
+  private OffsetDateTime updatedAt;
+
   @PrePersist
   void prePersist() {
     createdAt = OffsetDateTime.now();
+  }
+
+  @PreUpdate
+  void preUpdate() {
+    updatedAt = OffsetDateTime.now();
   }
 
   public static EventPostComment of(EventPost post, Member author, String content) {
