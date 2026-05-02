@@ -7,7 +7,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
@@ -26,7 +25,7 @@ public class PostBookmark {
   @OnDelete(action = OnDeleteAction.CASCADE)
   private Post post;
 
-  public PostBookmark(Post post, UUID userId) {
+  public PostBookmark(Post post, Long userId) {
     this.post = post;
     this.id = new PostBookmarkId(post.getId(), userId);
   }

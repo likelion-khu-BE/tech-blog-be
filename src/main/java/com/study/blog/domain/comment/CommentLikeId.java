@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,8 +17,8 @@ public class CommentLikeId implements Serializable {
   @Column(name = "comment_id")
   private Long commentId;
 
-  @Column(name = "user_id", columnDefinition = "uuid")
-  private UUID userId;
+  @Column(name = "user_id")
+  private Long userId;
 
   @Override
   public boolean equals(Object o) {

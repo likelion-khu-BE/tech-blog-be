@@ -2,7 +2,6 @@ package com.study.blog.infrastructure.post;
 
 import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostStatus;
-import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 
 public class PostSpecification {
@@ -28,7 +27,7 @@ public class PostSpecification {
         generation == null ? cb.conjunction() : cb.equal(root.get("generation"), generation);
   }
 
-  public static Specification<Post> withAuthor(UUID authorId) {
+  public static Specification<Post> withAuthor(Long authorId) {
     return (root, query, cb) ->
         authorId == null ? cb.conjunction() : cb.equal(root.get("userId"), authorId);
   }

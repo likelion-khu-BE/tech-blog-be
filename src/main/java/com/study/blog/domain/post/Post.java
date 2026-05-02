@@ -2,20 +2,19 @@ package com.study.blog.domain.post;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "blog_posts")
@@ -27,8 +26,8 @@ public class Post {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "user_id", columnDefinition = "uuid", nullable = false)
-  private UUID userId;
+  @Column(name = "user_id", nullable = false)
+  private Long userId;
 
   @Column(nullable = false)
   private String title;
@@ -42,8 +41,8 @@ public class Post {
   @Column(nullable = false, length = 20)
   private String category;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 20)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+  @Column(nullable = false, columnDefinition = "blog_post_status")
   private PostStatus status;
 
   @Column(nullable = false, length = 10)
