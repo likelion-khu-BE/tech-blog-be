@@ -29,8 +29,10 @@ CREATE TABLE event_post (
                             tags          TEXT[]      NOT NULL DEFAULT '{}',
                             status        post_status NOT NULL DEFAULT 'DRAFT',
                             like_count    INT         NOT NULL DEFAULT 0,
-                            published_at  TIMESTAMPTZ,
-                            created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+                            comment_count INT         NOT NULL DEFAULT 0,
+                            has_thumb     BOOLEAN     NOT NULL DEFAULT FALSE,
+                            created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+                            updated_at    TIMESTAMPTZ
 );
 
 -- ------------------------------------------------------------
@@ -64,7 +66,8 @@ CREATE TABLE event_post_comment (
                          author_id  BIGINT      NOT NULL REFERENCES member(id) ON DELETE CASCADE,
                          parent_id  BIGINT      REFERENCES event_post_comment (id) ON DELETE CASCADE,
                          content    TEXT        NOT NULL,
-                         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                         updated_at TIMESTAMPTZ
 );
 
 -- ------------------------------------------------------------
