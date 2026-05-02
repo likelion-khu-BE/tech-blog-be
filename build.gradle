@@ -33,12 +33,6 @@ tasks.named('bootRun') {
 }
 
 // spring-dotenv가 프로젝트 루트의 .env를 읽으려면 working directory가 루트여야 한다
-tasks.named('compileTestJava') {
-    exclude '**/integration/PostApiTest.java'
-    exclude '**/integration/CommentApiTest.java'
-    exclude '**/integration/AdminApiTest.java'
-}
-
 tasks.named('test') {
     useJUnitPlatform()
     workingDir = rootProject.projectDir

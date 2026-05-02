@@ -16,7 +16,6 @@ import com.study.blog.domain.post.PostStatus;
 import com.study.blog.infrastructure.comment.CommentLikeRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.infrastructure.post.PostRepository;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +47,8 @@ import org.springframework.transaction.annotation.Transactional;
         + " Testcontainers(PostgreSQL) 도입 후 재활성화 예정.")
 class CommentApiTest {
 
-  static final UUID MOCK_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-  static final UUID OTHER_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+  static final Long MOCK_USER_ID = 1L;
+  static final Long OTHER_USER_ID = 2L;
 
   @Autowired MockMvc mvc;
   @Autowired PostRepository postRepository;
@@ -136,7 +135,7 @@ class CommentApiTest {
         // root1 fields
         .andExpect(jsonPath("$[0].id").value(root1.getId()))
         .andExpect(jsonPath("$[0].content").value("정말 유익한 글이네요! CI/CD 파이프라인 설정이 이렇게 간단하다니 놀랍습니다."))
-        .andExpect(jsonPath("$[0].userId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$[0].userId").value(MOCK_USER_ID))
         .andExpect(jsonPath("$[0].likeCount").value(1))
         .andExpect(jsonPath("$[0].liked").value(true)) // MOCK_USER liked root1
         .andExpect(jsonPath("$[0].parentId").doesNotExist());
@@ -148,7 +147,7 @@ class CommentApiTest {
         .andExpect(status().isOk())
         // reply1 is first reply of root1
         .andExpect(jsonPath("$[0].replies[0].parentId").value(root1.getId()))
-        .andExpect(jsonPath("$[0].replies[0].userId").value(OTHER_USER_ID.toString()))
+        .andExpect(jsonPath("$[0].replies[0].userId").value(OTHER_USER_ID))
         .andExpect(jsonPath("$[0].replies[0].liked").value(false));
   }
 
@@ -188,7 +187,7 @@ class CommentApiTest {
                 .content(body))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.content").value("Nginx 리버스 프록시 설정도 함께 설명해주시면 좋겠습니다!"))
-        .andExpect(jsonPath("$.userId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$.userId").value(MOCK_USER_ID))
         .andExpect(jsonPath("$.parentId").doesNotExist())
         .andExpect(jsonPath("$.likeCount").value(0))
         .andExpect(jsonPath("$.liked").value(false))
