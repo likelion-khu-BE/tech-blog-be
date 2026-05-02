@@ -22,7 +22,6 @@ import com.study.blog.infrastructure.post.PostBookmarkRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +55,8 @@ import org.springframework.transaction.annotation.Transactional;
         + " Testcontainers(PostgreSQL) 도입 후 재활성화 예정.")
 class PostApiTest {
 
-  static final UUID MOCK_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-  static final UUID OTHER_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+  static final Long MOCK_USER_ID = 1L;
+  static final Long OTHER_USER_ID = 2L;
 
   @Autowired MockMvc mvc;
   @Autowired PostRepository postRepository;
@@ -198,7 +197,7 @@ class PostApiTest {
   @Test
   void getPosts_filterByAuthorId_returnsAuthorPublishedPosts() throws Exception {
     // MOCK_USER has A and E published (D is draft)
-    mvc.perform(get("/api/blog/posts").param("authorId", MOCK_USER_ID.toString()))
+    mvc.perform(get("/api/blog/posts").param("authorId", String.valueOf(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalElements").value(2));
   }
@@ -244,7 +243,7 @@ class PostApiTest {
         .andExpect(jsonPath("$.bookmarkCount").value(1))
         .andExpect(jsonPath("$.liked").value(true))
         .andExpect(jsonPath("$.bookmarked").value(true))
-        .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID))
         .andExpect(jsonPath("$.createdAt").isString())
         .andExpect(jsonPath("$.updatedAt").isString());
   }
@@ -322,7 +321,7 @@ class PostApiTest {
         .andExpect(jsonPath("$.title").value("JPA N+1 문제 완벽 해결 가이드"))
         .andExpect(jsonPath("$.status").value("PUBLISHED"))
         .andExpect(jsonPath("$.tags.length()").value(4))
-        .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID.toString()))
+        .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID))
         .andExpect(jsonPath("$.id").isNumber())
         .andExpect(jsonPath("$.liked").value(false))
         .andExpect(jsonPath("$.bookmarked").value(false));

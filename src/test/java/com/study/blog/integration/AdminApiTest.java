@@ -18,7 +18,6 @@ import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.shared.auth.MockAuth;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +48,8 @@ import org.springframework.transaction.annotation.Transactional;
         + " Testcontainers(PostgreSQL) 도입 후 재활성화 예정.")
 class AdminApiTest {
 
-  static final UUID MOCK_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-  static final UUID OTHER_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+  static final Long MOCK_USER_ID = 1L;
+  static final Long OTHER_USER_ID = 2L;
   static final String ADMIN_TOKEN = MockAuth.ADMIN_TOKEN;
 
   @Autowired MockMvc mvc;
