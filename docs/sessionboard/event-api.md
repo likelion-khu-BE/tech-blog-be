@@ -4,7 +4,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| Base URL | `/api/v1` |
+| Base URL | `/api` |
 | 인증 | `Authorization: Bearer {accessToken}` (모든 쓰기 요청 필수) |
 | Content-Type | `application/json` |
 | 날짜 형식 | ISO 8601 (`2025-05-18T10:00:00Z`) |
