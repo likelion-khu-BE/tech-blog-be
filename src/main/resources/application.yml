@@ -35,6 +35,22 @@ spring:
       hibernate:
         format_sql: true         # SQL을 보기 좋게 줄바꿈 (한 줄 쿼리 → 포맷팅)
 
+# === AWS S3 ===
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ${AWS_REGION}
+
+      s3:
+        bucket:
+          event: ${S3_BUCKET_EVENT}
+          session: ${S3_BUCKET_SESSION}
+        presigned-url-expiration: ${S3_PRESIGNED_URL_EXPIRATION}  # 초 단위, 기본 10분
+
 # === JWT 인증 ===
 # JWT_SECRET은 반드시 Base64 인코딩된 256bit 이상 키여야 한다
 # 생성: openssl rand -base64 32
