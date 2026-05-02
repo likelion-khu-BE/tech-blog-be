@@ -4,24 +4,22 @@ import com.study.blog.application.admin.AdminService;
 import com.study.blog.application.admin.dto.AdminPostResponse;
 import com.study.blog.application.admin.dto.AdminStatsResponse;
 import com.study.blog.application.admin.dto.PostStatusUpdateRequest;
-import com.study.blog.shared.auth.MockAuth;
-import com.study.blog.shared.exception.BlogErrorCode;
-import com.study.blog.shared.exception.BlogException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/blog/admin")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
   private final AdminService adminService;
@@ -31,43 +29,27 @@ public class AdminController {
   }
 
   @GetMapping("/stats")
-  public ResponseEntity<AdminStatsResponse> getStats(
-      @RequestHeader(value = "X-Admin-Token", required = false) String token) {
-    validateAdminToken(token);
+  public ResponseEntity<AdminStatsResponse> getStats() {
     return ResponseEntity.ok(adminService.getStats());
   }
 
   @GetMapping("/posts")
   public ResponseEntity<Page<AdminPostResponse>> getAllPosts(
-      @RequestHeader(value = "X-Admin-Token", required = false) String token,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size) {
-    validateAdminToken(token);
     return ResponseEntity.ok(adminService.getAllPosts(page, size));
   }
 
   @PatchMapping("/posts/{id}/status")
   public ResponseEntity<Void> changePostStatus(
-      @RequestHeader(value = "X-Admin-Token", required = false) String token,
-      @PathVariable Long id,
-      @Valid @RequestBody PostStatusUpdateRequest req) {
-    validateAdminToken(token);
+      @PathVariable Long id, @Valid @RequestBody PostStatusUpdateRequest req) {
     adminService.changePostStatus(id, req.status());
-    return ResponseEntity.noContent().build();
-  }
-
-  @DeleteMapping("/posts/{id}")
-  public ResponseEntity<Void> forceDeletePost(
-      @RequestHeader(value = "X-Admin-Token", required = false) String token,
-      @PathVariable Long id) {
-    validateAdminToken(token);
-    adminService.forceDeletePost(id);
     return ResponseEntity.ok().build();
   }
 
-  private void validateAdminToken(String token) {
-    if (!MockAuth.ADMIN_TOKEN.equals(token)) {
-      throw new BlogException(BlogErrorCode.UNAUTHORIZED);
-    }
+  @DeleteMapping("/posts/{id}")
+  public ResponseEntity<Void> forceDeletePost(@PathVariable Long id) {
+    adminService.forceDeletePost(id);
+    return ResponseEntity.noContent().build();
   }
 }

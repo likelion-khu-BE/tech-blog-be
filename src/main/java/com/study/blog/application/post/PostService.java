@@ -19,7 +19,6 @@ import com.study.blog.shared.exception.BlogException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -53,7 +52,7 @@ public class PostService {
       String board,
       String category,
       String generation,
-      UUID authorId,
+      Long authorId,
       String keyword,
       int page,
       int size) {
@@ -80,7 +79,7 @@ public class PostService {
                 likeCountByPostId.getOrDefault(post.getId(), 0L)));
   }
 
-  public PostResponse getPost(Long postId, UUID requesterId) {
+  public PostResponse getPost(Long postId, Long requesterId) {
     Post post = findById(postId);
 
     if (post.getStatus() == PostStatus.DRAFT && !post.getUserId().equals(requesterId)) {
@@ -91,7 +90,7 @@ public class PostService {
   }
 
   @Transactional
-  public PostResponse createPost(PostCreateRequest req, UUID userId) {
+  public PostResponse createPost(PostCreateRequest req, Long userId) {
     Post post =
         Post.builder()
             .userId(userId)
@@ -110,7 +109,7 @@ public class PostService {
   }
 
   @Transactional
-  public PostResponse updatePost(Long postId, PostUpdateRequest req, UUID userId) {
+  public PostResponse updatePost(Long postId, PostUpdateRequest req, Long userId) {
     Post post = findById(postId);
     if (!post.getUserId().equals(userId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
@@ -125,7 +124,7 @@ public class PostService {
   }
 
   @Transactional
-  public void deletePost(Long postId, UUID userId) {
+  public void deletePost(Long postId, Long userId) {
     Post post = findById(postId);
     if (!post.getUserId().equals(userId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
@@ -135,7 +134,7 @@ public class PostService {
   }
 
   @Transactional
-  public boolean toggleLike(Long postId, UUID userId) {
+  public boolean toggleLike(Long postId, Long userId) {
     Post post = findById(postId);
     return postLikeRepository
         .findByIdPostIdAndIdUserId(postId, userId)
@@ -156,7 +155,7 @@ public class PostService {
   }
 
   @Transactional
-  public boolean toggleBookmark(Long postId, UUID userId) {
+  public boolean toggleBookmark(Long postId, Long userId) {
     Post post = findById(postId);
     return postBookmarkRepository
         .findByIdPostIdAndIdUserId(postId, userId)
@@ -187,7 +186,7 @@ public class PostService {
     tags.stream().distinct().map(tag -> new PostTag(post, tag)).forEach(postTagRepository::save);
   }
 
-  private PostResponse toResponse(Post post, UUID requesterId) {
+  private PostResponse toResponse(Post post, Long requesterId) {
     List<String> tags =
         postTagRepository.findByPost(post).stream().map(PostTag::getTagName).toList();
     long likeCount = postLikeRepository.countByIdPostId(post.getId());

@@ -4,7 +4,6 @@ import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostStatus;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 public record PostResponse(
     Long id,
@@ -15,7 +14,7 @@ public record PostResponse(
     PostStatus status,
     String generation,
     Long repostFromId,
-    UUID authorId,
+    Long authorId,
     List<String> tags,
     long likeCount,
     long bookmarkCount,

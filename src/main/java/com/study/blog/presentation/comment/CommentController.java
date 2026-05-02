@@ -1,16 +1,17 @@
 package com.study.blog.presentation.comment;
 
+import com.study.auth.infrastructure.security.CurrentUser;
+import com.study.auth.infrastructure.security.CustomUserDetails;
 import com.study.blog.application.comment.CommentService;
 import com.study.blog.application.comment.dto.CommentCreateRequest;
 import com.study.blog.application.comment.dto.CommentResponse;
 import com.study.blog.application.comment.dto.CommentUpdateRequest;
-import com.study.blog.shared.auth.MockAuth;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,37 +32,43 @@ public class CommentController {
   }
 
   @GetMapping("/posts/{postId}/comments")
-  public ResponseEntity<List<CommentResponse>> getComments(@PathVariable Long postId) {
-    UUID userId = MockAuth.MOCK_USER_ID;
-    return ResponseEntity.ok(commentService.getComments(postId, userId));
+  public ResponseEntity<List<CommentResponse>> getComments(
+      @PathVariable Long postId, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(commentService.getComments(postId, user.userId()));
   }
 
   @PostMapping("/posts/{postId}/comments")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<CommentResponse> createComment(
-      @PathVariable Long postId, @Valid @RequestBody CommentCreateRequest req) {
-    UUID userId = MockAuth.MOCK_USER_ID;
+      @PathVariable Long postId,
+      @Valid @RequestBody CommentCreateRequest req,
+      @CurrentUser CustomUserDetails user) {
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(commentService.createComment(postId, req, userId));
+        .body(commentService.createComment(postId, req, user.userId()));
   }
 
   @PutMapping("/comments/{id}")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<CommentResponse> updateComment(
-      @PathVariable Long id, @Valid @RequestBody CommentUpdateRequest req) {
-    UUID userId = MockAuth.MOCK_USER_ID;
-    return ResponseEntity.ok(commentService.updateComment(id, req, userId));
+      @PathVariable Long id,
+      @Valid @RequestBody CommentUpdateRequest req,
+      @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(commentService.updateComment(id, req, user.userId()));
   }
 
   @DeleteMapping("/comments/{id}")
-  public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
-    UUID userId = MockAuth.MOCK_USER_ID;
-    commentService.deleteComment(id, userId);
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<Void> deleteComment(
+      @PathVariable Long id, @CurrentUser CustomUserDetails user) {
+    commentService.deleteComment(id, user.userId());
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/comments/{id}/like")
-  public ResponseEntity<Map<String, Boolean>> toggleLike(@PathVariable Long id) {
-    UUID userId = MockAuth.MOCK_USER_ID;
-    boolean liked = commentService.toggleLike(id, userId);
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<Map<String, Boolean>> toggleLike(
+      @PathVariable Long id, @CurrentUser CustomUserDetails user) {
+    boolean liked = commentService.toggleLike(id, user.userId());
     return ResponseEntity.ok(Map.of("liked", liked));
   }
 }
