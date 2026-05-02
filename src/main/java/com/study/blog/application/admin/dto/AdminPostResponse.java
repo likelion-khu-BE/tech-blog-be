@@ -4,7 +4,6 @@ import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostStatus;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 public record AdminPostResponse(
     Long id,
@@ -13,7 +12,7 @@ public record AdminPostResponse(
     String category,
     String generation,
     PostStatus status,
-    UUID authorId,
+    Long authorId,
     List<String> tags,
     long likeCount,
     LocalDateTime createdAt) {
