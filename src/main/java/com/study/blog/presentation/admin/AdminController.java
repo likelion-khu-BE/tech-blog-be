@@ -50,6 +50,6 @@ public class AdminController {
   @DeleteMapping("/posts/{id}")
   public ResponseEntity<Void> forceDeletePost(@PathVariable Long id) {
     adminService.forceDeletePost(id);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok().build();
   }
 }
