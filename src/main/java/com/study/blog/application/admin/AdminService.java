@@ -68,12 +68,16 @@ public class AdminService {
   }
 
   @Transactional
-  public void changePostStatus(Long postId, PostStatus status) {
+  public AdminPostResponse changePostStatus(Long postId, PostStatus status) {
     Post post =
         postRepository
             .findById(postId)
             .orElseThrow(() -> new BlogException(BlogErrorCode.POST_NOT_FOUND));
     post.changeStatus(status);
+    List<String> tags =
+        postTagRepository.findByPost(post).stream().map(PostTag::getTagName).toList();
+    long likeCount = postLikeRepository.countByIdPostId(postId);
+    return AdminPostResponse.of(post, tags, likeCount);
   }
 
   @Transactional
