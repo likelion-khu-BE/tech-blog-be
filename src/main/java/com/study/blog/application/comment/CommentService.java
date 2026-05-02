@@ -134,7 +134,9 @@ public class CommentService {
     List<CommentResponse> replies =
         childrenByParentId.getOrDefault(comment.getId(), List.of()).stream()
             .sorted(Comparator.comparing(Comment::getCreatedAt))
-            .map(child -> buildTree(child, childrenByParentId, likeCountByCommentId, likedByCommentId))
+            .map(
+                child ->
+                    buildTree(child, childrenByParentId, likeCountByCommentId, likedByCommentId))
             .toList();
     return CommentResponse.of(
         comment,

@@ -35,8 +35,7 @@ public class AdminController {
 
   @GetMapping("/posts")
   public ResponseEntity<Page<AdminPostResponse>> getAllPosts(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "20") int size) {
+      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
     return ResponseEntity.ok(adminService.getAllPosts(page, size));
   }
 

@@ -57,7 +57,8 @@ public class PostController {
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<PostResponse> createPost(
       @Valid @RequestBody PostCreateRequest req, @CurrentUser CustomUserDetails user) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(req, user.userId()));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(postService.createPost(req, user.userId()));
   }
 
   @PutMapping("/{id}")
