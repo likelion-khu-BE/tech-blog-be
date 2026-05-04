@@ -48,6 +48,11 @@ public class GlobalExceptionHandler {
     return errorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
   }
 
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e) {
+    return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException e) {
     // @Valid 검증 실패 시 첫 번째 에러 메시지만 반환
