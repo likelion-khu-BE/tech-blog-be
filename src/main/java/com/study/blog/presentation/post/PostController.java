@@ -58,7 +58,7 @@ public class PostController {
   public ResponseEntity<PostResponse> createPost(
       @Valid @RequestBody PostCreateRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(postService.createPost(req, user.userId()));
+        .body(postService.createPost(req, user.userId(), user.email()));
   }
 
   @PutMapping("/{id}")
