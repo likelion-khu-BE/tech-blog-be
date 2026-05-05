@@ -38,8 +38,9 @@ public class EventPost {
   @JoinColumn(name = "generation_id", nullable = false)
   private Generation generation;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String type;
+  private EventPostType type;
 
   @Column(nullable = false)
   private String title;
@@ -78,7 +79,7 @@ public class EventPost {
     updatedAt = OffsetDateTime.now();
   }
 
-  public static EventPost of(Member author, Generation generation, String type, String title) {
+  public static EventPost of(Member author, Generation generation, EventPostType type, String title) {
     EventPost post = new EventPost();
     post.author = author;
     post.generation = generation;

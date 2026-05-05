@@ -5,7 +5,6 @@ import com.study.sessionboard.application.event.dto.PageWrapper;
 import com.study.sessionboard.domain.event.EventPost;
 import com.study.sessionboard.domain.event.EventPostStatus;
 import com.study.sessionboard.domain.event.EventPostType;
-import com.study.sessionboard.infrastructure.event.EventPostCommentRepository;
 import com.study.sessionboard.infrastructure.event.EventPostImageRepository;
 import com.study.sessionboard.infrastructure.event.EventPostRepository;
 import java.util.HashMap;
@@ -22,15 +21,12 @@ public class EventPostService {
 
   private final EventPostRepository eventPostRepository;
   private final EventPostImageRepository eventPostImageRepository;
-  private final EventPostCommentRepository eventPostCommentRepository;
 
   public EventPostService(
       EventPostRepository eventPostRepository,
-      EventPostImageRepository eventPostImageRepository,
-      EventPostCommentRepository eventPostCommentRepository) {
+      EventPostImageRepository eventPostImageRepository) {
     this.eventPostRepository = eventPostRepository;
     this.eventPostImageRepository = eventPostImageRepository;
-    this.eventPostCommentRepository = eventPostCommentRepository;
   }
 
   public PageWrapper<EventPostSummaryResponse> getEventPosts(
@@ -42,7 +38,7 @@ public class EventPostService {
 
     List<Long> postIds = posts.map(EventPost::getId).toList();
 
-    // 썸네일: 게시글당 첫 번째 이미지만 배치 조회
+    // 썸네일 URL: 게시글당 첫 번째 이미지만 배치 조회
     Map<Long, String> thumbMap = new HashMap<>();
     if (!postIds.isEmpty()) {
       eventPostImageRepository
@@ -50,21 +46,8 @@ public class EventPostService {
           .forEach(img -> thumbMap.put(img.getPost().getId(), img.getUrl()));
     }
 
-    // 댓글 수: 게시글별 배치 조회
-    Map<Long, Integer> commentCountMap = new HashMap<>();
-    if (!postIds.isEmpty()) {
-      eventPostCommentRepository
-          .countByPostIdIn(postIds)
-          .forEach(row -> commentCountMap.put((Long) row[0], ((Long) row[1]).intValue()));
-    }
-
     Page<EventPostSummaryResponse> responsePage =
-        posts.map(
-            post ->
-                EventPostSummaryResponse.of(
-                    post,
-                    thumbMap.get(post.getId()),
-                    commentCountMap.getOrDefault(post.getId(), 0)));
+        posts.map(post -> EventPostSummaryResponse.of(post, thumbMap.get(post.getId())));
 
     return PageWrapper.from(responsePage);
   }
