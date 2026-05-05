@@ -19,7 +19,7 @@ public record EventPostSummaryResponse(
     boolean hasThumb,
     String thumbUrl) {
 
-  public static EventPostSummaryResponse of(EventPost post, String thumbUrl, int commentCount) {
+  public static EventPostSummaryResponse of(EventPost post, String thumbUrl) {
     return new EventPostSummaryResponse(
         post.getId(),
         post.getType(),
@@ -29,8 +29,8 @@ public record EventPostSummaryResponse(
         extractExcerpt(post.getBody()),
         Arrays.asList(post.getTags()),
         post.getLikeCount(),
-        commentCount,
-        thumbUrl != null,
+        post.getCommentCount(),
+        post.isHasThumb(),
         thumbUrl);
   }
 
