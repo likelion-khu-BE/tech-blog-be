@@ -61,7 +61,8 @@ public class AnswerService {
   }
 
   @Transactional
-  public AnswerDetailResponse updateAnswer(Long answerId, AnswerUpdateRequest request, Long userId) {
+  public AnswerDetailResponse updateAnswer(
+      Long answerId, AnswerUpdateRequest request, Long userId) {
     Answer answer =
         answerRepository
             .findById(answerId)
