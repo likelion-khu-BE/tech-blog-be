@@ -111,6 +111,9 @@ public class JwtProvider {
       Long userId = Long.valueOf(claims.getSubject());
       UserRole role = UserRole.valueOf(claims.get("role", String.class));
       String email = claims.get("email", String.class);
+      if (email == null) {
+        return Optional.empty();
+      }
       return Optional.of(new AccessTokenInfo(userId, role, email));
     } catch (JwtException | IllegalArgumentException e) {
       return Optional.empty();
