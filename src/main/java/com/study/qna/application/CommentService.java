@@ -31,6 +31,7 @@ public class CommentService {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new AnswerNotFoundException(answerId));
         Comment comment = Comment.createForAnswer(userId, answer, request.content());
+        answer.incrementCommentCount();
         Comment saved = commentRepository.save(comment);
         MemberSummaryResponse author = MemberSummaryResponse.of(saved.getUserId(), String.valueOf(saved.getUserId()), 0);
         return CommentResponse.of(saved, author);
