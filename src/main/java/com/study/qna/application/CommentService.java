@@ -22,7 +22,7 @@ public class CommentService {
     public List<CommentResponse> getComments(Long answerId) {
         answerRepository.findById(answerId)
                 .orElseThrow(() -> new AnswerNotFoundException(answerId));
-        return commentRepository.findByAnswerIdOrderByCreatedAtAsc(answerId).stream()
+        return commentRepository.findByAnswer_IdOrderByCreatedAtAsc(answerId).stream()
                 .map(comment -> CommentResponse.of(comment, MemberSummaryResponse.of(comment.getUserId(), String.valueOf(comment.getUserId()), 0)))
                 .toList();
     }
