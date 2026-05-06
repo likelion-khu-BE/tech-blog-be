@@ -26,9 +26,7 @@ public class QuestionService {
   private final TagRepository tagRepository;
 
   public List<QuestionSummaryResponse> getQuestions() {
-    return questionRepository.findAllWithTags().stream()
-        .map(this::toSummaryResponse)
-        .toList();
+    return questionRepository.findAllWithTags().stream().map(this::toSummaryResponse).toList();
   }
 
   public QuestionDetailResponse getQuestion(Long questionId) {
