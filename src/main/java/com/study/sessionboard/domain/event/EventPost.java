@@ -79,7 +79,8 @@ public class EventPost {
     updatedAt = OffsetDateTime.now();
   }
 
-  public static EventPost of(Member author, Generation generation, EventPostType type, String title) {
+  public static EventPost of(
+      Member author, Generation generation, EventPostType type, String title) {
     EventPost post = new EventPost();
     post.author = author;
     post.generation = generation;

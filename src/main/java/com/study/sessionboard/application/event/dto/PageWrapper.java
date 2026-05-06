@@ -4,12 +4,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 public record PageWrapper<T>(
-    List<T> content,
-    int page,
-    int size,
-    long totalElements,
-    int totalPages,
-    boolean hasNext) {
+    List<T> content, int page, int size, long totalElements, int totalPages, boolean hasNext) {
 
   public static <T> PageWrapper<T> from(Page<T> pageResult) {
     return new PageWrapper<>(
