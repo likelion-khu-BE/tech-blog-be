@@ -15,12 +15,12 @@
 
 | 섹션 | 담당 | 테이블 |
 |------|------|--------|
-| 1. 멤버 | domain.member | `member` |
-| 2. 기수 | domain.member | `generation`, `member_generation` |
-| 3. 기술 스택 | domain.team | `tech_stack` |
-| 4. 멤버 기술스택 | domain.team | `member_tech_stack` |
-| 5. 팀 | domain.team | `team_profile`, `team_member`, `team_member_role`, `team_tech_stack`, `team_image` |
-| 6. 활동 기록 | domain.activity | `activity` |
+| 1. 멤버 | 세인 | `member` |
+| 2. 기수 | 세인 | `generation`, `member_generation` |
+| 3. 기술 스택 | 시현 | `tech_stack` |
+| 4. 멤버 기술스택 | 시현 | `member_tech_stack` |
+| 5. 팀 | 시현 | `team_profile`, `team_member`, `team_member_role`, `team_tech_stack`, `team_image` |
+| 6. 활동 기록 | 근엽 | `activity` |
 
 ---
 
@@ -86,7 +86,7 @@
 ---
 
 ## 1. 멤버 (Members)
-> **담당: domain.member**
+> **담당: 세인**
 
 ### 1-1. 내 프로필 조회
 
@@ -253,7 +253,7 @@ GET /profile/members/me/teams
 ---
 
 ## 2. 기수 (Generations)
-> **담당: domain.member**
+> **담당: 세인**
 
 ### 2-1. 기수 목록 조회
 
@@ -394,7 +394,7 @@ POST /profile/generations/{generationId}/members
 ---
 
 ## 3. 기술 스택 (Tech Stacks)
-> **담당: domain.team**
+> **담당: 시현**
 >
 > 기술 스택은 시드 데이터로 제공된다 (`tech_stack_seed.json`). 일반 사용자는 읽기만 가능하고, 관리자만 추가/수정/삭제할 수 있다.
 
@@ -478,7 +478,7 @@ DELETE /profile/tech-stacks/{techStackId}
 ---
 
 ## 4. 멤버 기술 스택 (Member Tech Stacks)
-> **담당: domain.team**
+> **담당: 시현**
 
 ### 4-1. 멤버 기술 스택 조회
 
@@ -538,7 +538,7 @@ PUT /profile/members/me/tech-stacks
 ---
 
 ## 5. 팀 (Teams)
-> **담당: domain.team**
+> **담당: 시현**
 >
 ### 5-1. 팀 목록 조회
 
@@ -845,7 +845,7 @@ DELETE /profile/teams/{teamId}/members/me
 ---
 
 ## 6. 활동 기록 (Activities)
-> **담당: domain.activity**
+> **담당: 근엽**
 >
 > 활동 기록은 blog / qna / sessionboard 도메인에서 이벤트 방식으로 자동 적재된다. 이 섹션은 **읽기 전용** API만 제공한다.
 
@@ -984,37 +984,37 @@ GET /profile/contributions/ranking
 
 ## 엔드포인트 요약
 
-| 메서드 | 경로 | 설명 | 담당 |
-|--------|------|------|------|
-| `GET` | `/profile/members/me` | 내 프로필 조회 | member |
-| `PATCH` | `/profile/members/me` | 내 프로필 수정 | member |
-| `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | team |
-| `GET` | `/profile/members` | 멤버 목록 | member |
-| `GET` | `/profile/members/{memberId}` | 멤버 상세 | member |
-| `GET` | `/profile/generations` | 기수 목록 | member |
-| `POST` | `/profile/generations` | 기수 생성 (관리자) | member |
-| `GET` | `/profile/generations/{generationId}` | 기수 상세 | member |
-| `PATCH` | `/profile/generations/{generationId}` | 기수 수정 (관리자) | member |
-| `GET` | `/profile/generations/{generationId}/members` | 기수 멤버 목록 | member |
-| `POST` | `/profile/generations/{generationId}/members` | 기수에 멤버 등록 (관리자) | member |
-| `GET` | `/profile/tech-stacks` | 기술 스택 목록 | team |
-| `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | team |
-| `PATCH` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | team |
-| `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | team |
-| `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | team |
-| `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | team |
-| `GET` | `/profile/teams` | 팀 목록 | team |
-| `POST` | `/profile/teams` | 팀 생성 | team |
-| `GET` | `/profile/teams/{teamId}` | 팀 상세 | team |
-| `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | team |
-| `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | team |
-| `GET` | `/profile/teams/{teamId}/invite-code` | 초대 코드 조회 (팀장) | team |
-| `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | team |
-| `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | team |
-| `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | team |
-| `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장) | team |
-| `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | team |
-| `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | team |
-| `GET` | `/profile/members/{memberId}/activities` | 멤버 활동 목록 | activity |
-| `GET` | `/profile/members/{memberId}/contributions` | 멤버 기여도 요약 | activity |
-| `GET` | `/profile/contributions/ranking` | 기여도 랭킹 | activity |
+| 구현 | 메서드 | 경로 | 설명 | 담당 |
+|---|--------|------|------|------|
+| [ ] | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
+| [ ] | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
+| [ ] | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
+| [ ] | `GET` | `/profile/members` | 멤버 목록 | 세인 |
+| [ ] | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
+| [ ] | `GET` | `/profile/generations` | 기수 목록 | 세인 |
+| [ ] | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
+| [ ] | `GET` | `/profile/generations/{generationId}` | 기수 상세 | 세인 |
+| [ ] | `PATCH` | `/profile/generations/{generationId}` | 기수 수정 (관리자) | 세인 |
+| [ ] | `GET` | `/profile/generations/{generationId}/members` | 기수 멤버 목록 | 세인 |
+| [ ] | `POST` | `/profile/generations/{generationId}/members` | 기수에 멤버 등록 (관리자) | 세인 |
+| ✅ | `GET` | `/profile/tech-stacks` | 기술 스택 목록 | 시현 |
+| [ ] | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 시현 |
+| [ ] | `PATCH` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 시현 |
+| [ ] | `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | 시현 |
+| [ ] | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 시현 |
+| [ ] | `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | 시현 |
+| [ ] | `GET` | `/profile/teams` | 팀 목록 | 시현 |
+| [ ] | `POST` | `/profile/teams` | 팀 생성 | 시현 |
+| [ ] | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
+| [ ] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
+| [ ] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
+| [ ] | `GET` | `/profile/teams/{teamId}/invite-code` | 초대 코드 조회 (팀장) | 시현 |
+| [ ] | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
+| [ ] | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |
+| [ ] | `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | 시현 |
+| [ ] | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장) | 시현 |
+| [ ] | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |
+| [ ] | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
+| [ ] | `GET` | `/profile/members/{memberId}/activities` | 멤버 활동 목록 | 근엽 |
+| [ ] | `GET` | `/profile/members/{memberId}/contributions` | 멤버 기여도 요약 | 근엽 |
+| [ ] | `GET` | `/profile/contributions/ranking` | 기여도 랭킹 | 근엽 |
