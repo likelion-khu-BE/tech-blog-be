@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.study.qna.application.dto.response.comment.CommentResponse;
+import org.springframework.http.HttpStatus;
 import java.util.List;
 import com.study.auth.infrastructure.security.CurrentUser;
 import com.study.auth.infrastructure.security.CustomUserDetails;
 import jakarta.validation.Valid;
+
 
 @RestController("qnaCommentController")
 @RequiredArgsConstructor
@@ -27,6 +29,6 @@ public class CommentController {
             @PathVariable Long answerId,
             @RequestBody @Valid CommentCreateRequest request,
             @CurrentUser CustomUserDetails user) {
-        return ResponseEntity.status(201).body(commentService.createComment(answerId, request, user.userId()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.createComment(answerId, request, user.userId()));
     }
 }
