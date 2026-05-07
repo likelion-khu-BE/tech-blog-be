@@ -28,21 +28,24 @@ public class TechStackService {
 
     // 11. category 파라미터가 없으면(null 또는 빈 문자열) 전체 조회
     //     있으면 해당 카테고리로 필터링해서 조회
+    // 11. 전체 목록을 한 번에 조회한 뒤 Java에서 필터링
+    //     PostgreSQL 커스텀 ENUM 타입(tech_stack_category)을 WHERE 절에 직접 쓰면
+    //     타입 불일치 오류가 발생하므로 애플리케이션 레벨에서 필터링한다.
+    //     tech_stack 테이블은 마스터 데이터라 수백 건 이하이므로 성능 문제 없음.
     if (category == null || category.isBlank()) {
       list = techStackRepository.findAllByOrderByNameAsc().stream()
-          .map(TechStackResponse::from)  // 엔티티 → DTO 변환 (6번에서 만든 from() 사용)
+          .map(TechStackResponse::from)
           .toList();
     } else {
-      // 12. 클라이언트가 "Language" 또는 "LANGUAGE" 같은 대소문자 섞인 값을 보내도 처리되도록
-      //     toLowerCase()로 소문자로 바꾼 뒤 Enum으로 변환한다.
-      //     Enum에 없는 값이면 IllegalArgumentException → 400 Bad Request로 응답된다.
+      // 12. 잘못된 category 값이면 IllegalArgumentException → 400 Bad Request
       TechStackCategory cat;
       try {
         cat = TechStackCategory.valueOf(category.toLowerCase());
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("유효하지 않은 category 값입니다: " + category);
       }
-      list = techStackRepository.findAllByCategoryOrderByNameAsc(cat).stream()
+      list = techStackRepository.findAllByOrderByNameAsc().stream()
+          .filter(ts -> ts.getCategory() == cat)
           .map(TechStackResponse::from)
           .toList();
     }

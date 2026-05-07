@@ -63,7 +63,8 @@ public class SecurityConfig {
                         org.springframework.http.HttpMethod.GET,
                         "/api/blog/posts",
                         "/api/blog/posts/**",
-                        "/api/profile/tech-stacks")
+                        "/api/profile/tech-stacks",
+                        "/api/profile/tech-stacks/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
