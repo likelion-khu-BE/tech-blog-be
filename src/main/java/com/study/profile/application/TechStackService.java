@@ -26,8 +26,6 @@ public class TechStackService {
   public TechStackListResponse getTechStacks(String category) {
     List<TechStackResponse> list;
 
-    // 11. category 파라미터가 없으면(null 또는 빈 문자열) 전체 조회
-    //     있으면 해당 카테고리로 필터링해서 조회
     // 11. 전체 목록을 한 번에 조회한 뒤 Java에서 필터링
     //     PostgreSQL 커스텀 ENUM 타입(tech_stack_category)을 WHERE 절에 직접 쓰면
     //     타입 불일치 오류가 발생하므로 애플리케이션 레벨에서 필터링한다.

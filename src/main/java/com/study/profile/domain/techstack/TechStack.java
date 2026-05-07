@@ -46,7 +46,7 @@ public class TechStack {
   private String name; // 기술 스택 이름 (예: "Java", "React") — 중복 불가
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "category", nullable = false, columnDefinition = "tech_stack_category")
+  @Column(name = "category", nullable = false)
   private TechStackCategory category; // 분류 (language/framework/ai/design/tool/infra/etc)
 
   @Column(name = "logo_url")
