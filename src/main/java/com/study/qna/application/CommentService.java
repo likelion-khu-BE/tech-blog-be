@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("qnaCommentService")
 @RequiredArgsConstructor
 public class CommentService {
+
   private final CommentRepository commentRepository;
   private final AnswerRepository answerRepository;
 
