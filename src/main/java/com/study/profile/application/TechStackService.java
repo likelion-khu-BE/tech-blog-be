@@ -33,9 +33,10 @@ public class TechStackService {
     //     타입 불일치 오류가 발생하므로 애플리케이션 레벨에서 필터링한다.
     //     tech_stack 테이블은 마스터 데이터라 수백 건 이하이므로 성능 문제 없음.
     if (category == null || category.isBlank()) {
-      list = techStackRepository.findAllByOrderByNameAsc().stream()
-          .map(TechStackResponse::from)
-          .toList();
+      list =
+          techStackRepository.findAllByOrderByNameAsc().stream()
+              .map(TechStackResponse::from)
+              .toList();
     } else {
       // 12. 잘못된 category 값이면 IllegalArgumentException → 400 Bad Request
       TechStackCategory cat;
@@ -44,10 +45,11 @@ public class TechStackService {
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("유효하지 않은 category 값입니다: " + category);
       }
-      list = techStackRepository.findAllByOrderByNameAsc().stream()
-          .filter(ts -> ts.getCategory() == cat)
-          .map(TechStackResponse::from)
-          .toList();
+      list =
+          techStackRepository.findAllByOrderByNameAsc().stream()
+              .filter(ts -> ts.getCategory() == cat)
+              .map(TechStackResponse::from)
+              .toList();
     }
 
     return new TechStackListResponse(list);

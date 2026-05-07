@@ -11,5 +11,4 @@ public interface TechStackRepository extends JpaRepository<TechStack, Long> {
   //    OrderByNameAsc     → ORDER BY name ASC
   //    → 결과: 전체 스택을 이름 오름차순으로 조회
   List<TechStack> findAllByOrderByNameAsc();
-
 }

@@ -20,10 +20,7 @@ public class TechStackDto {
     //    사용 예: TechStackResponse.from(techStack)
     public static TechStackResponse from(TechStack techStack) {
       return new TechStackResponse(
-          techStack.getId(),
-          techStack.getName(),
-          techStack.getCategory(),
-          techStack.getLogoUrl());
+          techStack.getId(), techStack.getName(), techStack.getCategory(), techStack.getLogoUrl());
     }
   }
 

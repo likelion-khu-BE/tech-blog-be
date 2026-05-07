@@ -1,7 +1,7 @@
 package com.study.profile.presentation;
 
-import com.study.profile.application.dto.TechStackDto.TechStackListResponse;
 import com.study.profile.application.TechStackService;
+import com.study.profile.application.dto.TechStackDto.TechStackListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 // 13. Controller — HTTP 요청의 진입점
 //     클라이언트(프론트엔드)가 보낸 요청을 받아서 Service에 넘기고,
 //     Service가 돌려준 결과를 HTTP 응답으로 내보내는 역할만 한다.
-@RestController  // @Controller + @ResponseBody. 반환값을 JSON으로 자동 변환한다.
-@RequestMapping("/api/profile/tech-stacks")  // 이 컨트롤러가 처리할 URL prefix
+@RestController // @Controller + @ResponseBody. 반환값을 JSON으로 자동 변환한다.
+@RequestMapping("/api/profile/tech-stacks") // 이 컨트롤러가 처리할 URL prefix
 @RequiredArgsConstructor
 public class TechStackController {
 
