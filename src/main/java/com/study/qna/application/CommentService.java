@@ -30,6 +30,7 @@ public class CommentService {
     public CommentResponse createComment(Long answerId, CommentCreateRequest request, Long userId) {
         Answer answer = answerRepository.findById(answerId)
                 .orElseThrow(() -> new AnswerNotFoundException(answerId));
+
         Comment comment = Comment.createForAnswer(userId, answer, request.content());
         answer.incrementCommentCount();
         Comment saved = commentRepository.save(comment);
