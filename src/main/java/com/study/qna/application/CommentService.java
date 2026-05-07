@@ -14,7 +14,7 @@ import com.study.qna.domain.Answer;
 import com.study.qna.infrastructure.AnswerRepository;
 
 @Transactional(readOnly = true)
-@Service
+@Service("qnaCommentService")
 @RequiredArgsConstructor
 public class CommentService {
     private final CommentRepository commentRepository;

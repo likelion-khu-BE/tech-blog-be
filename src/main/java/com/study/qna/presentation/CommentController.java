@@ -11,7 +11,7 @@ import com.study.auth.infrastructure.security.CurrentUser;
 import com.study.auth.infrastructure.security.CustomUserDetails;
 import jakarta.validation.Valid;
 
-@RestController
+@RestController("qnaCommentController")
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/answers/{answerId}/comments")
 public class CommentController {
