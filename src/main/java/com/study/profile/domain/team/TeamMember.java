@@ -16,6 +16,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +68,7 @@ public class TeamMember {
   private boolean isLead = false; // 팀장 여부 (true면 팀장, false면 일반 팀원)
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "status", nullable = false)
   private TeamMemberStatus status; // 팀원 가입 상태 (pending/accepted/rejected/left/kicked)
 
