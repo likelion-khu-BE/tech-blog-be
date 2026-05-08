@@ -45,4 +45,7 @@ out/
 ### Environment ###
 .env
 .env.local
+
+### Local-only SQL ###
+src/main/resources/db/profile-ddl.sql
 .DS_Store
