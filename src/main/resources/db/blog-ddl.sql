@@ -23,7 +23,7 @@ CREATE TABLE blog_posts (
     status          blog_post_status  NOT NULL,
     generation      VARCHAR(10)       NOT NULL,
     repost_from_id  BIGINT,
-    author_email    VARCHAR(255),
+    author_name     VARCHAR(100),
     created_at      TIMESTAMP(6)      NOT NULL,
     updated_at      TIMESTAMP(6)      NOT NULL
 );

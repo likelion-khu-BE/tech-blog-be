@@ -51,8 +51,8 @@ public class Post {
   @Column(name = "repost_from_id")
   private Long repostFromId;
 
-  @Column(name = "author_email", length = 255)
-  private String authorEmail;
+  @Column(name = "author_name", length = 100)
+  private String authorName;
 
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -65,7 +65,7 @@ public class Post {
   @Builder
   public Post(
       Long userId,
-      String authorEmail,
+      String authorName,
       String title,
       String content,
       String board,
@@ -74,7 +74,7 @@ public class Post {
       String generation,
       Long repostFromId) {
     this.userId = userId;
-    this.authorEmail = authorEmail;
+    this.authorName = authorName;
     this.title = title;
     this.content = content;
     this.board = board;
