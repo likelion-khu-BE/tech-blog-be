@@ -1004,7 +1004,7 @@ GET /profile/contributions/ranking
 | [ ] | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 시현 |
 | [ ] | `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | 시현 |
 | [ ] | `GET` | `/profile/teams` | 팀 목록 | 시현 |
-| [ ] | `POST` | `/profile/teams` | 팀 생성 | 시현 |
+| ✅ | `POST` | `/profile/teams` | 팀 생성 | 시현 |
 | [ ] | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
 | [ ] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
 | [ ] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
