@@ -80,7 +80,12 @@ public class EventPost {
   }
 
   public static EventPost of(
-      Member author, Generation generation, EventPostType type, String title, String body, String[] tags) {
+      Member author,
+      Generation generation,
+      EventPostType type,
+      String title,
+      String body,
+      String[] tags) {
     EventPost post = new EventPost();
     post.author = author;
     post.generation = generation;
