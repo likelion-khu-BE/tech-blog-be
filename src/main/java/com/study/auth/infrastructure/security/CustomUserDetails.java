@@ -11,4 +11,4 @@ import com.study.auth.domain.UserRole;
  * <p>Spring Security의 UserDetails를 구현하지 않는 이유 — JWT 기반 인증에서는 username/password/authorities가
  * principal 내부에 있을 필요 없다. authorities는 Authentication 객체에 별도로 세팅한다.
  */
-public record CustomUserDetails(Long userId, UserRole role, String email) {}
+public record CustomUserDetails(Long userId, UserRole role) {}
