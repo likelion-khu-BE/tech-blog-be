@@ -32,6 +32,10 @@ public class GenerationService {
     this.memberGenerationRepository = memberGenerationRepository;
   }
 
+  public Generation getGenerationByNumber(Integer number) {
+    return findById(number);
+  }
+
   public List<GenerationDto> getGenerations() {
     return generationRepository.findAllByOrderByNumberAsc().stream()
         .map(GenerationDto::from)

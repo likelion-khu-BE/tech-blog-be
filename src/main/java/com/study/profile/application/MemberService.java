@@ -12,6 +12,7 @@ import com.study.profile.domain.member.Member;
 import com.study.profile.domain.member.SessionType;
 import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,13 @@ public class MemberService {
     this.memberRepository = memberRepository;
     this.memberGenerationRepository = memberGenerationRepository;
     this.userRepository = userRepository;
+  }
+
+  public Member getMemberToUserId(Long userId) {
+    return memberRepository
+        .findByUserId(userId)
+        .orElseThrow(
+            () -> new EntityNotFoundException("해당 유저의 멤버 프로필을 찾을 수 없습니다. userId: " + userId));
   }
 
   /** 내부용: 이벤트 리스너에서 Member 엔티티 직접 필요 시 사용 */
