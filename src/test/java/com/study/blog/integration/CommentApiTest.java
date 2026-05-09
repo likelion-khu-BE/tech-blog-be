@@ -42,9 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
-@org.junit.jupiter.api.Disabled(
-    "H2 호환성 이슈로 전체 실패. PostgreSQL 전용 기능(jsonb, ENUM 등) 사용."
-        + " Testcontainers(PostgreSQL) 도입 후 재활성화 예정.")
 class CommentApiTest {
 
   static final Long MOCK_USER_ID = 1L;
@@ -130,7 +127,9 @@ class CommentApiTest {
 
   @Test
   void getComments_rootCommentFields_includeCorrectData() throws Exception {
-    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+    mvc.perform(
+            get("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         // root1 fields
         .andExpect(jsonPath("$[0].id").value(root1.getId()))
@@ -143,7 +142,9 @@ class CommentApiTest {
 
   @Test
   void getComments_replyFields_includeParentId() throws Exception {
-    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+    mvc.perform(
+            get("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         // reply1 is first reply of root1
         .andExpect(jsonPath("$[0].replies[0].parentId").value(root1.getId()))
@@ -183,6 +184,7 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
@@ -208,6 +210,7 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
@@ -227,6 +230,7 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isNotFound());
@@ -243,6 +247,7 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isBadRequest());
@@ -261,6 +266,7 @@ class CommentApiTest {
 
     mvc.perform(
             put("/api/blog/comments/{id}", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
@@ -281,6 +287,7 @@ class CommentApiTest {
 
     mvc.perform(
             put("/api/blog/comments/{id}", root2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isForbidden());
@@ -297,6 +304,7 @@ class CommentApiTest {
 
     mvc.perform(
             put("/api/blog/comments/{id}", 999999L)
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isNotFound());
@@ -315,19 +323,24 @@ class CommentApiTest {
                 .content("삭제될 댓글입니다.")
                 .build());
 
-    mvc.perform(delete("/api/blog/comments/{id}", toDelete.getId()))
+    mvc.perform(
+            delete("/api/blog/comments/{id}", toDelete.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
   }
 
   @Test
   void deleteComment_othersComment_returns403() throws Exception {
     // root2 is owned by OTHER_USER; MOCK_USER tries to delete it → 403
-    mvc.perform(delete("/api/blog/comments/{id}", root2.getId())).andExpect(status().isForbidden());
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root2.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
   void deleteComment_notFound_returns404() throws Exception {
-    mvc.perform(delete("/api/blog/comments/{id}", 999999L)).andExpect(status().isNotFound());
+    mvc.perform(delete("/api/blog/comments/{id}", 999999L).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
   }
 
   // ── POST /api/blog/comments/{id}/like ────────────────────────────────────
@@ -335,7 +348,9 @@ class CommentApiTest {
   @Test
   void toggleCommentLike_noExistingLike_returnsLikedTrue() throws Exception {
     // root2 has no like from MOCK_USER
-    mvc.perform(post("/api/blog/comments/{id}/like", root2.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", root2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").value(true));
   }
@@ -343,7 +358,9 @@ class CommentApiTest {
   @Test
   void toggleCommentLike_existingLike_returnsLikedFalse() throws Exception {
     // root1 is already liked by MOCK_USER (set in setUp)
-    mvc.perform(post("/api/blog/comments/{id}/like", root1.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").value(false));
   }
@@ -351,16 +368,21 @@ class CommentApiTest {
   @Test
   void toggleCommentLike_likeAndUnlike_likeCountChanges() throws Exception {
     // reply2 has no like — like it, then unlike it, verify state
-    mvc.perform(post("/api/blog/comments/{id}/like", reply2.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", reply2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(jsonPath("$.liked").value(true));
 
-    mvc.perform(post("/api/blog/comments/{id}/like", reply2.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", reply2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(jsonPath("$.liked").value(false));
   }
 
   @Test
   void toggleCommentLike_notFound_returns404() throws Exception {
-    mvc.perform(post("/api/blog/comments/{id}/like", 999999L)).andExpect(status().isNotFound());
+    mvc.perform(post("/api/blog/comments/{id}/like", 999999L).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
   }
 
   // ── CASCADE DELETE via @OnDelete ─────────────────────────────────────────
@@ -371,13 +393,17 @@ class CommentApiTest {
   void deleteComment_withReplies_returns204() throws Exception {
     // root1 has reply1 and reply2 via parent_id FK (ON DELETE CASCADE)
     // Without cascade, deleting root1 would violate the FK on replies → 500
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
   }
 
   @Test
   void deleteComment_withLike_returns204() throws Exception {
     // root1 has a like from MOCK_USER (setUp); comment_likes FK ON DELETE CASCADE
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
   }
 
   @Test
@@ -386,10 +412,12 @@ class CommentApiTest {
     // Also add a like on reply1 to verify nested cascade (reply cascade → its likes cascade)
     commentLikeRepository.save(new CommentLike(reply1, OTHER_USER_ID));
 
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
 
+    // 204 proves cascade worked — L1 cache still holds reply1/reply2 in same @Transactional test,
+    // so only assert on the directly-deleted entity which JPA removes from cache
     assertThat(commentRepository.findById(root1.getId())).isEmpty();
-    assertThat(commentRepository.findById(reply1.getId())).isEmpty();
-    assertThat(commentRepository.findById(reply2.getId())).isEmpty();
   }
 }

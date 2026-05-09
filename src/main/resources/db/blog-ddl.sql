@@ -6,11 +6,6 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
--- BLOG_POST_STATUS ENUM
--- ------------------------------------------------------------
-CREATE TYPE blog_post_status AS ENUM ('DRAFT', 'PUBLISHED');
-
--- ------------------------------------------------------------
 -- BLOG_POSTS
 -- ------------------------------------------------------------
 CREATE TABLE blog_posts (
@@ -20,7 +15,7 @@ CREATE TABLE blog_posts (
     content         TEXT              NOT NULL,
     board           VARCHAR(20)       NOT NULL,
     category        VARCHAR(20)       NOT NULL,
-    status          blog_post_status  NOT NULL,
+    status          VARCHAR(20)       NOT NULL,
     generation      VARCHAR(10)       NOT NULL,
     repost_from_id  BIGINT,
     created_at      TIMESTAMP(6)      NOT NULL,

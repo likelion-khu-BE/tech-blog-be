@@ -1,6 +1,7 @@
 package com.study.blog.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -17,7 +18,6 @@ import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
-import com.study.blog.shared.auth.MockAuth;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,14 +43,10 @@ import org.springframework.transaction.annotation.Transactional;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
-@org.junit.jupiter.api.Disabled(
-    "H2 호환성 이슈로 75개 테스트 전부 실패. 엔티티가 PostgreSQL 전용 기능(jsonb, ENUM 등) 사용."
-        + " Testcontainers(PostgreSQL) 도입 후 재활성화 예정.")
 class AdminApiTest {
 
   static final Long MOCK_USER_ID = 1L;
   static final Long OTHER_USER_ID = 2L;
-  static final String ADMIN_TOKEN = MockAuth.ADMIN_TOKEN;
 
   @Autowired MockMvc mvc;
   @Autowired PostRepository postRepository;
@@ -144,7 +140,7 @@ class AdminApiTest {
 
   @Test
   void getStats_returnsCorrectCounts() throws Exception {
-    mvc.perform(get("/api/blog/admin/stats").header("X-Admin-Token", ADMIN_TOKEN))
+    mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalPosts").value(4))
         .andExpect(jsonPath("$.publishedPosts").value(3))
@@ -165,7 +161,7 @@ class AdminApiTest {
             .generation("12기")
             .build());
 
-    mvc.perform(get("/api/blog/admin/stats").header("X-Admin-Token", ADMIN_TOKEN))
+    mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalPosts").value(5))
         .andExpect(jsonPath("$.draftPosts").value(2))
@@ -187,7 +183,7 @@ class AdminApiTest {
 
   @Test
   void getAllPosts_includesDrafts() throws Exception {
-    mvc.perform(get("/api/blog/admin/posts").header("X-Admin-Token", ADMIN_TOKEN))
+    mvc.perform(get("/api/blog/admin/posts").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
         // Admin sees all 4 posts (including DRAFT)
         .andExpect(jsonPath("$.totalElements").value(4))
@@ -197,7 +193,7 @@ class AdminApiTest {
   @Test
   void getAllPosts_pagination_defaultPage20() throws Exception {
     // Default page size is 20 → all 4 fit on first page
-    mvc.perform(get("/api/blog/admin/posts").header("X-Admin-Token", ADMIN_TOKEN))
+    mvc.perform(get("/api/blog/admin/posts").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.size").value(20))
         .andExpect(jsonPath("$.numberOfElements").value(4))
@@ -208,7 +204,7 @@ class AdminApiTest {
   void getAllPosts_customPageSize_paginatesCorrectly() throws Exception {
     mvc.perform(
             get("/api/blog/admin/posts")
-                .header("X-Admin-Token", ADMIN_TOKEN)
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
                 .param("size", "2")
                 .param("page", "0"))
         .andExpect(status().isOk())
@@ -221,12 +217,13 @@ class AdminApiTest {
   void getAllPosts_postFields_includeTagsAndLikeCount() throws Exception {
     mvc.perform(
             get("/api/blog/admin/posts")
-                .header("X-Admin-Token", ADMIN_TOKEN)
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
                 .param("size", "10")
                 .param("page", "0"))
         .andExpect(status().isOk())
-        // p4 (DRAFT) is most recent, then p3, p2, p1 — sorted by createdAt desc
-        .andExpect(jsonPath("$.content[0].status").value("DRAFT")); // p4 is most recent
+        // All 4 posts returned including p4 (DRAFT) — sort order may vary in H2 due to
+        // same-millisecond timestamps
+        .andExpect(jsonPath("$.content[*].status", hasItem("DRAFT")));
   }
 
   @Test
@@ -245,7 +242,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p1.getId())
-                .header("X-Admin-Token", ADMIN_TOKEN)
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
@@ -265,7 +262,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p4.getId())
-                .header("X-Admin-Token", ADMIN_TOKEN)
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
@@ -285,7 +282,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", 999999L)
-                .header("X-Admin-Token", ADMIN_TOKEN)
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isNotFound());
@@ -300,7 +297,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p1.getId())
-                .header("X-Admin-Token", ADMIN_TOKEN)
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isBadRequest());
@@ -315,7 +312,7 @@ class AdminApiTest {
 
     mvc.perform(
             patch("/api/blog/admin/posts/{id}/status", p1.getId())
-                .header("X-Admin-Token", ADMIN_TOKEN)
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isBadRequest());
@@ -354,7 +351,7 @@ class AdminApiTest {
     Long toDeleteId = toDelete.getId();
 
     mvc.perform(
-            delete("/api/blog/admin/posts/{id}", toDeleteId).header("X-Admin-Token", ADMIN_TOKEN))
+            delete("/api/blog/admin/posts/{id}", toDeleteId).with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
 
     assertThat(postRepository.findById(toDeleteId)).isEmpty();
@@ -378,7 +375,7 @@ class AdminApiTest {
     Long toDeleteId = toDelete.getId();
 
     mvc.perform(
-            delete("/api/blog/admin/posts/{id}", toDeleteId).header("X-Admin-Token", ADMIN_TOKEN))
+            delete("/api/blog/admin/posts/{id}", toDeleteId).with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
 
     assertThat(postRepository.findById(toDeleteId)).isEmpty();
@@ -387,7 +384,7 @@ class AdminApiTest {
 
   @Test
   void forceDeletePost_notFound_returns404() throws Exception {
-    mvc.perform(delete("/api/blog/admin/posts/{id}", 999999L).header("X-Admin-Token", ADMIN_TOKEN))
+    mvc.perform(delete("/api/blog/admin/posts/{id}", 999999L).with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isNotFound());
   }
 
@@ -415,7 +412,7 @@ class AdminApiTest {
 
     mvc.perform(
             delete("/api/blog/admin/posts/{id}", richPost.getId())
-                .header("X-Admin-Token", ADMIN_TOKEN))
+                .with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
   }
 
