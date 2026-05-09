@@ -90,16 +90,15 @@ public class PostService {
   }
 
   @Transactional
-  public PostResponse createPost(PostCreateRequest req, Long userId, String authorEmail) {
+  public PostResponse createPost(PostCreateRequest req, Long userId) {
     Post post =
         Post.builder()
             .userId(userId)
-            .authorEmail(authorEmail)
             .title(req.title())
             .content(req.content())
             .board(req.board())
             .category(req.category())
-            .status(PostStatus.DRAFT)
+            .status(req.status())
             .generation(req.generation())
             .repostFromId(req.repostFromId())
             .build();
@@ -116,7 +115,7 @@ public class PostService {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 
-    post.update(req.title(), req.content(), req.board(), req.category(), post.getStatus());
+    post.update(req.title(), req.content(), req.board(), req.category(), req.status());
 
     postTagRepository.deleteByPost(post);
     saveTags(post, req.tags());
