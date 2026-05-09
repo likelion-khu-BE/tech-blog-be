@@ -387,7 +387,7 @@ class CommentApiTest {
   // ── SOFT DELETE ──────────────────────────────────────────────────────────
 
   @Test
-  void deleteComment_softDeletes_showsPlaceholder() throws Exception {
+  void deleteComment_softDeletes_rootShowsPlaceholderAndRepliesSurvive() throws Exception {
     mvc.perform(
             delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
@@ -398,28 +398,82 @@ class CommentApiTest {
         .andExpect(jsonPath("$[0].userId").doesNotExist())
         .andExpect(jsonPath("$[0].likeCount").value(0))
         .andExpect(jsonPath("$[0].liked").value(false))
-        // replies survive
         .andExpect(jsonPath("$[0].replies.length()").value(2));
   }
 
   @Test
-  void deleteComment_withReplies_returns204() throws Exception {
+  void deleteComment_softDeletes_replyShowsPlaceholderInTree() throws Exception {
+    // reply1 (OTHER_USER) is soft-deleted; root1 still shows with 1 remaining reply
     mvc.perform(
-            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+            delete("/api/blog/comments/{id}", reply1.getId())
+                .with(TestAuth.asMember(OTHER_USER_ID)))
         .andExpect(status().isNoContent());
+
+    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].replies.length()").value(2))
+        .andExpect(jsonPath("$[0].replies[0].content").value("삭제된 댓글입니다."))
+        .andExpect(jsonPath("$[0].replies[0].userId").doesNotExist())
+        .andExpect(
+            jsonPath("$[0].replies[1].content")
+                .value("Runner는 self-hosted 대신 ubuntu-latest 사용하면 편해요!"));
   }
 
   @Test
-  void deleteComment_withLike_returns204() throws Exception {
+  void updateComment_deletedComment_returns404() throws Exception {
+    root1.softDelete();
+
+    String body =
+        """
+        { "content": "삭제된 댓글 수정 시도" }
+        """;
+
     mvc.perform(
-            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
-        .andExpect(status().isNoContent());
+            put("/api/blog/comments/{id}", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isNotFound());
   }
 
   @Test
-  void deleteComment_withRepliesAndLike_returns204() throws Exception {
+  void deleteComment_alreadyDeleted_returns404() throws Exception {
+    root1.softDelete();
+
     mvc.perform(
             delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
-        .andExpect(status().isNoContent());
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void toggleCommentLike_deletedComment_returns404() throws Exception {
+    root1.softDelete();
+
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void createComment_replyToDeletedParent_returns404() throws Exception {
+    root1.softDelete();
+
+    String body =
+        String.format(
+            """
+            {
+              "content": "삭제된 댓글에 대댓글 시도",
+              "parentId": %d
+            }
+            """,
+            root1.getId());
+
+    mvc.perform(
+            post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isNotFound());
   }
 }
