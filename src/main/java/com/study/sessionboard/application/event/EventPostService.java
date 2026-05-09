@@ -79,38 +79,28 @@ public class EventPostService {
     List<EventPostImage> images =
         eventPostImageRepository.findAllByPostIdOrderByOrderAsc(eventPostId);
 
-    return EventPostResponse.builder()
-        .id(post.getId())
-        .type(post.getType().name())
-        .status(post.getStatus())
-        .title(post.getTitle())
-        .author(
-            EventPostResponse.AuthorResponse.builder()
-                .id(post.getAuthor().getId())
-                .name(post.getAuthor().getName())
-                .initial(
-                    post.getAuthor()
-                        .getName()
-                        .substring(0, Math.min(post.getAuthor().getName().length(), 2)))
-                .build())
-        .createdAt(post.getCreatedAt())
-        .updatedAt(post.getUpdatedAt())
-        .excerpt(post.getExcerpt())
-        .body(post.getBody())
-        .tags(List.of(post.getTags()))
-        .images(
-            images.stream()
-                .map(
-                    img ->
-                        EventPostResponse.ImageResponse.builder()
-                            .order(img.getOrder())
-                            .url(img.getUrl())
-                            .build())
-                .collect(Collectors.toList()))
-        .likeCount(post.getLikeCount())
-        .likedByMe(false)
-        .commentCount(post.getCommentCount())
-        .build();
+    return new EventPostResponse(
+        post.getId(),
+        post.getType().name(),
+        post.getStatus(),
+        post.getTitle(),
+        new EventPostResponse.AuthorResponse(
+            post.getAuthor().getId(),
+            post.getAuthor().getName(),
+            post.getAuthor()
+                .getName()
+                .substring(0, Math.min(post.getAuthor().getName().length(), 2))),
+        post.getCreatedAt(),
+        post.getUpdatedAt(),
+        post.getExcerpt(),
+        post.getBody(),
+        List.of(post.getTags()),
+        images.stream()
+            .map(img -> new EventPostResponse.ImageResponse(img.getOrder(), img.getUrl()))
+            .collect(Collectors.toList()),
+        post.getLikeCount(),
+        false,
+        post.getCommentCount());
   }
 
   @Transactional
@@ -131,10 +121,10 @@ public class EventPostService {
         EventPost.of(
             author,
             generation,
-            EventPostType.valueOf(request.getType()),
-            request.getTitle(),
-            request.getBody(),
-            request.getTags() != null ? request.getTags().toArray(new String[0]) : null);
+            EventPostType.valueOf(request.type()),
+            request.title(),
+            request.body(),
+            request.tags() != null ? request.tags().toArray(new String[0]) : null);
 
     return eventPostRepository.save(post).getId();
   }
@@ -151,10 +141,10 @@ public class EventPostService {
     }
 
     post.update(
-        EventPostType.valueOf(request.getType()),
-        request.getTitle(),
-        request.getBody(),
-        request.getTags() != null ? request.getTags().toArray(new String[0]) : null);
+        EventPostType.valueOf(request.type()),
+        request.title(),
+        request.body(),
+        request.tags() != null ? request.tags().toArray(new String[0]) : null);
   }
 
   @Transactional
