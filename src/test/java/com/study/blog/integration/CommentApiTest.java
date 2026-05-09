@@ -1,6 +1,5 @@
 package com.study.blog.integration;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -385,14 +384,26 @@ class CommentApiTest {
         .andExpect(status().isNotFound());
   }
 
-  // ── CASCADE DELETE via @OnDelete ─────────────────────────────────────────
-  // A 204 response proves no FK-constraint violation occurred.
-  // If cascade were missing, FK on comment_likes or parent_id would raise an error → 500.
+  // ── SOFT DELETE ──────────────────────────────────────────────────────────
+
+  @Test
+  void deleteComment_softDeletes_showsPlaceholder() throws Exception {
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
+
+    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].content").value("삭제된 댓글입니다."))
+        .andExpect(jsonPath("$[0].userId").doesNotExist())
+        .andExpect(jsonPath("$[0].likeCount").value(0))
+        .andExpect(jsonPath("$[0].liked").value(false))
+        // replies survive
+        .andExpect(jsonPath("$[0].replies.length()").value(2));
+  }
 
   @Test
   void deleteComment_withReplies_returns204() throws Exception {
-    // root1 has reply1 and reply2 via parent_id FK (ON DELETE CASCADE)
-    // Without cascade, deleting root1 would violate the FK on replies → 500
     mvc.perform(
             delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
@@ -400,7 +411,6 @@ class CommentApiTest {
 
   @Test
   void deleteComment_withLike_returns204() throws Exception {
-    // root1 has a like from MOCK_USER (setUp); comment_likes FK ON DELETE CASCADE
     mvc.perform(
             delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
@@ -408,16 +418,8 @@ class CommentApiTest {
 
   @Test
   void deleteComment_withRepliesAndLike_returns204() throws Exception {
-    // root1 has: reply1, reply2 AND a like from MOCK_USER — all cascade-deleted
-    // Also add a like on reply1 to verify nested cascade (reply cascade → its likes cascade)
-    commentLikeRepository.save(new CommentLike(reply1, OTHER_USER_ID));
-
     mvc.perform(
             delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
-
-    // 204 proves cascade worked — L1 cache still holds reply1/reply2 in same @Transactional test,
-    // so only assert on the directly-deleted entity which JPA removes from cache
-    assertThat(commentRepository.findById(root1.getId())).isEmpty();
   }
 }

@@ -36,6 +36,10 @@ tasks.named('bootRun') {
 tasks.named('test') {
     useJUnitPlatform()
     workingDir = rootProject.projectDir
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        showStandardStreams false
+    }
 }
 
 spotless {

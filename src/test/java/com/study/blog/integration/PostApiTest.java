@@ -631,7 +631,5 @@ class PostApiTest {
 
     assertThat(postRepository.findById(richId)).isEmpty();
     assertThat(postTagRepository.findByPost(rich)).isEmpty();
-    // comment is cascade-deleted at DB level; L1 cache still holds it in same @Transactional test
-    // 204 status above already proves cascade worked (FK violation → 500)
   }
 }

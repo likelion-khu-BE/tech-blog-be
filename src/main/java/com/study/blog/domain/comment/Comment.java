@@ -46,12 +46,23 @@ public class Comment {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
   @Builder
   public Comment(Long postId, Long userId, Comment parent, String content) {
     this.postId = postId;
     this.userId = userId;
     this.parent = parent;
     this.content = content;
+  }
+
+  public boolean isDeleted() {
+    return deletedAt != null;
+  }
+
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
   }
 
   public Long getParentId() {

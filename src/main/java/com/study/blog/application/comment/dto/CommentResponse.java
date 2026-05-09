@@ -16,6 +16,17 @@ public record CommentResponse(
 
   public static CommentResponse of(
       Comment comment, long likeCount, boolean liked, List<CommentResponse> replies) {
+    if (comment.isDeleted()) {
+      return new CommentResponse(
+          comment.getId(),
+          "삭제된 댓글입니다.",
+          null,
+          comment.getParentId(),
+          0,
+          false,
+          comment.getCreatedAt(),
+          List.copyOf(replies));
+    }
     return new CommentResponse(
         comment.getId(),
         comment.getContent(),
