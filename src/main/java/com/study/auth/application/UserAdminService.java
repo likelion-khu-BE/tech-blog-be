@@ -6,8 +6,10 @@ import com.study.auth.infrastructure.UserRepository;
 import com.study.auth.presentation.dto.UserResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -17,12 +19,19 @@ public class UserAdminService {
 
   @Transactional(readOnly = true)
   public List<UserResponse> getUsers(String status) {
-    List<User> users =
-        status != null
-            ? userRepository.findAllByStatusOrderBySignupRequestedAtDesc(
-                UserStatus.valueOf(status.toUpperCase()))
-            : userRepository.findAllByOrderBySignupRequestedAtDesc();
-    return users.stream().map(this::toResponse).toList();
+    if (status == null || status.isBlank()) {
+      return userRepository.findAllByOrderBySignupRequestedAtDesc().stream()
+          .map(this::toResponse)
+          .toList();
+    }
+    try {
+      UserStatus userStatus = UserStatus.valueOf(status.trim().toUpperCase());
+      return userRepository.findAllByStatusOrderBySignupRequestedAtDesc(userStatus).stream()
+          .map(this::toResponse)
+          .toList();
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("유효하지 않은 status 값입니다. 허용 값: PENDING, ACTIVE, REJECTED");
+    }
   }
 
   @Transactional
@@ -42,7 +51,8 @@ public class UserAdminService {
   private User findOrThrow(Long userId) {
     return userRepository
         .findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다: " + userId));
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다: " + userId));
   }
 
   private UserResponse toResponse(User user) {
