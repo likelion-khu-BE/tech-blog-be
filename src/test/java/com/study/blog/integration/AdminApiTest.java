@@ -19,6 +19,7 @@ import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
+@DisplayName("어드민 API")
 class AdminApiTest {
 
   static final Long MOCK_USER_ID = 1L;
@@ -139,6 +141,7 @@ class AdminApiTest {
   // ── GET /api/blog/admin/stats ────────────────────────────────────────────
 
   @Test
+  @DisplayName("GET /admin/stats - 정확한 카운트 반환")
   void getStats_returnsCorrectCounts() throws Exception {
     mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
@@ -149,6 +152,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("GET /admin/stats - 임시저장 추가 후 카운트 증가")
   void getStats_afterAddingDraft_incrementsDraftCount() throws Exception {
     postRepository.save(
         Post.builder()
@@ -169,19 +173,47 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("GET /admin/stats - 토큰 없음 401")
   void getStats_noToken_returns401() throws Exception {
     mvc.perform(get("/api/blog/admin/stats")).andExpect(status().isUnauthorized());
   }
 
   @Test
+  @DisplayName("GET /admin/stats - 잘못된 토큰 401")
   void getStats_wrongToken_returns401() throws Exception {
     mvc.perform(get("/api/blog/admin/stats").header("X-Admin-Token", "wrong-token"))
         .andExpect(status().isUnauthorized());
   }
 
+  @Test
+  @DisplayName("GET /admin/stats - 일반 유저 토큰 403")
+  void getStats_withMemberToken_returns403() throws Exception {
+    mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("GET /admin/stats - 소프트 삭제 댓글도 집계에 포함")
+  void getStats_softDeletedComment_isCountedInTotalComments() throws Exception {
+    Comment extra =
+        commentRepository.save(
+            Comment.builder()
+                .postId(p1.getId())
+                .userId(MOCK_USER_ID)
+                .content("소프트 삭제될 댓글")
+                .build());
+    extra.softDelete();
+
+    // commentRepository.count() has no deleted_at filter → soft-deleted rows included
+    mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asAdmin(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalComments").value(4)); // 3 from setUp + 1 soft-deleted
+  }
+
   // ── GET /api/blog/admin/posts ────────────────────────────────────────────
 
   @Test
+  @DisplayName("GET /admin/posts - 임시저장 포함 전체 조회")
   void getAllPosts_includesDrafts() throws Exception {
     mvc.perform(get("/api/blog/admin/posts").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
@@ -191,6 +223,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("GET /admin/posts - 기본 페이지 크기 20")
   void getAllPosts_pagination_defaultPage20() throws Exception {
     // Default page size is 20 → all 4 fit on first page
     mvc.perform(get("/api/blog/admin/posts").with(TestAuth.asAdmin(MOCK_USER_ID)))
@@ -201,6 +234,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("GET /admin/posts - 커스텀 페이지 크기")
   void getAllPosts_customPageSize_paginatesCorrectly() throws Exception {
     mvc.perform(
             get("/api/blog/admin/posts")
@@ -214,6 +248,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("GET /admin/posts - 포스트 필드 검증 (임시저장 상태 포함)")
   void getAllPosts_postFields_includeTagsAndLikeCount() throws Exception {
     mvc.perform(
             get("/api/blog/admin/posts")
@@ -227,13 +262,22 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("GET /admin/posts - 토큰 없음 401")
   void getAllPosts_noToken_returns401() throws Exception {
     mvc.perform(get("/api/blog/admin/posts")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("GET /admin/posts - 일반 유저 토큰 403")
+  void getAllPosts_withMemberToken_returns403() throws Exception {
+    mvc.perform(get("/api/blog/admin/posts").with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isForbidden());
   }
 
   // ── PATCH /api/blog/admin/posts/{id}/status ──────────────────────────────
 
   @Test
+  @DisplayName("PATCH /admin/posts/status - 게시→임시저장")
   void changePostStatus_publishedToDraft_succeeds() throws Exception {
     String body =
         """
@@ -254,6 +298,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("PATCH /admin/posts/status - 임시저장→게시")
   void changePostStatus_draftToPublished_succeeds() throws Exception {
     String body =
         """
@@ -274,6 +319,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("PATCH /admin/posts/status - 존재하지 않는 포스트 404")
   void changePostStatus_notFound_returns404() throws Exception {
     String body =
         """
@@ -289,6 +335,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("PATCH /admin/posts/status - null 상태값 400")
   void changePostStatus_nullStatus_returns400() throws Exception {
     String body =
         """
@@ -304,6 +351,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("PATCH /admin/posts/status - 유효하지 않은 상태값 400")
   void changePostStatus_invalidStatusValue_returns400() throws Exception {
     String body =
         """
@@ -319,6 +367,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("PATCH /admin/posts/status - 토큰 없음 401")
   void changePostStatus_noToken_returns401() throws Exception {
     String body =
         """
@@ -332,9 +381,25 @@ class AdminApiTest {
         .andExpect(status().isUnauthorized());
   }
 
+  @Test
+  @DisplayName("PATCH /admin/posts/status - 일반 유저 토큰 403")
+  void changePostStatus_withMemberToken_returns403() throws Exception {
+    String body =
+        """
+        {"status": "DRAFT"}
+        """;
+    mvc.perform(
+            patch("/api/blog/admin/posts/{id}/status", p1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isForbidden());
+  }
+
   // ── DELETE /api/blog/admin/posts/{id} ────────────────────────────────────
 
   @Test
+  @DisplayName("DELETE /admin/posts - 의존 데이터 없음 204")
   void forceDeletePost_noDependents_returns204AndRemovesPost() throws Exception {
     // Create a fresh post with no tags, likes, or comments
     Post toDelete =
@@ -358,6 +423,7 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("DELETE /admin/posts - 태그 있는 포스트 204")
   void forceDeletePost_withTags_deleteTagsAndPost() throws Exception {
     Post toDelete =
         postRepository.save(
@@ -383,12 +449,14 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("DELETE /admin/posts - 존재하지 않는 포스트 404")
   void forceDeletePost_notFound_returns404() throws Exception {
     mvc.perform(delete("/api/blog/admin/posts/{id}", 999999L).with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isNotFound());
   }
 
   @Test
+  @DisplayName("DELETE /admin/posts - 좋아요·댓글 있는 포스트 204")
   void forceDeletePost_withLikesAndComments_returns204() throws Exception {
     Post richPost =
         postRepository.save(
@@ -417,8 +485,17 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("DELETE /admin/posts - 토큰 없음 401")
   void forceDeletePost_noToken_returns401() throws Exception {
     mvc.perform(delete("/api/blog/admin/posts/{id}", p1.getId()))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("DELETE /admin/posts - 일반 유저 토큰 403")
+  void forceDeletePost_withMemberToken_returns403() throws Exception {
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", p1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isForbidden());
   }
 }
