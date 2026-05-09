@@ -1,5 +1,7 @@
 package com.study.sessionboard.application.event;
 
+import com.study.profile.application.GenerationService;
+import com.study.profile.application.MemberService;
 import com.study.profile.domain.generation.Generation;
 import com.study.profile.domain.member.Member;
 import com.study.sessionboard.application.event.dto.EventPostSummaryResponse;
@@ -13,7 +15,6 @@ import com.study.sessionboard.infrastructure.event.EventPostImageRepository;
 import com.study.sessionboard.infrastructure.event.EventPostRepository;
 import com.study.sessionboard.presentation.dto.EventPostCreateRequest;
 import com.study.sessionboard.presentation.dto.EventPostResponse;
-import jakarta.persistence.EntityManager;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,8 @@ public class EventPostService {
   private final EventPostRepository eventPostRepository;
   private final EventPostImageRepository eventPostImageRepository;
   private final EventPostCommentRepository eventPostCommentRepository;
-  private final EntityManager entityManager;
+  private final MemberService memberService;
+  private final GenerationService generationService;
 
   public PageWrapper<EventPostSummaryResponse> getEventPosts(
       Integer generationNumber, EventPostType type, Pageable pageable) { // generation number로 시현 수정
@@ -106,16 +108,8 @@ public class EventPostService {
   @Transactional
   public Long createEventPost(
       Long userId, Integer generationNumber, EventPostCreateRequest request) {
-    Member author =
-        entityManager
-            .createQuery("SELECT m FROM Member m WHERE m.user.id = :userId", Member.class)
-            .setParameter("userId", userId)
-            .getSingleResult();
-
-    Generation generation = entityManager.find(Generation.class, generationNumber);
-    if (generation == null) {
-      throw new IllegalArgumentException("해당 기수를 찾을 수 없습니다.");
-    }
+    Member author = memberService.getMemberToUserId(userId);
+    Generation generation = generationService.getGenerationByNumber(generationNumber);
 
     EventPost post =
         EventPost.of(
