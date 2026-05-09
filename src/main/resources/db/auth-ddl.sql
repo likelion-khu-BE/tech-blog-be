@@ -8,12 +8,15 @@
 -- ------------------------------------------------------------
 -- USERS
 -- ------------------------------------------------------------
+CREATE TYPE user_role   AS ENUM ('ADMIN', 'MEMBER');
+CREATE TYPE user_status AS ENUM ('PENDING', 'ACTIVE', 'REJECTED', 'EXPIRED');
+
 CREATE TABLE users (
     id                   BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     login_email          TEXT        NOT NULL UNIQUE,
     password_hash        TEXT        NOT NULL,
-    role                 VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
-    status               VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    role                 user_role   NOT NULL DEFAULT 'MEMBER',
+    status               user_status NOT NULL DEFAULT 'PENDING',
     signup_requested_at  TIMESTAMPTZ NOT NULL,
     approved_at          TIMESTAMPTZ,
     approved_by          BIGINT      REFERENCES users(id) ON DELETE SET NULL,
@@ -29,14 +32,16 @@ CREATE        INDEX idx_user_status      ON users(status);
 -- ------------------------------------------------------------
 -- REFRESH_TOKENS
 -- ------------------------------------------------------------
+CREATE TYPE refresh_token_status AS ENUM ('ACTIVE', 'USED', 'REVOKED');
+
 CREATE TABLE refresh_tokens (
-    id          BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token_hash  TEXT        NOT NULL UNIQUE,
-    family_id   UUID        NOT NULL,
-    status      VARCHAR(20) NOT NULL,
-    expires_at  TIMESTAMPTZ NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL
+    id          BIGINT               GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id     BIGINT               NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT                 NOT NULL UNIQUE,
+    family_id   UUID                 NOT NULL,
+    status      refresh_token_status NOT NULL,
+    expires_at  TIMESTAMPTZ          NOT NULL,
+    created_at  TIMESTAMPTZ          NOT NULL
 );
 
 CREATE UNIQUE INDEX idx_refresh_token_hash   ON refresh_tokens(token_hash);
