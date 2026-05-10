@@ -444,7 +444,9 @@ class CommentApiTest {
   @Test
   @DisplayName("소프트 삭제 - 삭제된 댓글 수정 404")
   void updateComment_deletedComment_returns404() throws Exception {
-    root1.softDelete();
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
 
     String body =
         """
@@ -462,7 +464,9 @@ class CommentApiTest {
   @Test
   @DisplayName("소프트 삭제 - 이미 삭제된 댓글 재삭제 404")
   void deleteComment_alreadyDeleted_returns404() throws Exception {
-    root1.softDelete();
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
 
     mvc.perform(
             delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
@@ -472,7 +476,9 @@ class CommentApiTest {
   @Test
   @DisplayName("소프트 삭제 - 삭제된 댓글 좋아요 404")
   void toggleCommentLike_deletedComment_returns404() throws Exception {
-    root1.softDelete();
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
 
     mvc.perform(
             post("/api/blog/comments/{id}/like", root1.getId())
@@ -483,7 +489,9 @@ class CommentApiTest {
   @Test
   @DisplayName("소프트 삭제 - 삭제된 댓글에 대댓글 404")
   void createComment_replyToDeletedParent_returns404() throws Exception {
-    root1.softDelete();
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
 
     String body =
         String.format(

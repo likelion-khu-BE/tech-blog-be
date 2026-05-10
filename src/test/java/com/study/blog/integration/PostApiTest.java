@@ -326,8 +326,8 @@ class PostApiTest {
   // ── POST /api/blog/posts ─────────────────────────────────────────────────
 
   @Test
-  @DisplayName("POST /posts - 게시+태그 201")
-  void createPost_publishedWithTags_returns201() throws Exception {
+  @DisplayName("POST /posts - 태그 포함 임시저장 201")
+  void createPost_withTags_returnsDraft201() throws Exception {
     String body =
         """
         {
@@ -335,7 +335,6 @@ class PostApiTest {
           "content": "Fetch Join과 @EntityGraph를 사용해 N+1 문제를 해결하는 방법을 정리했습니다. 각 전략의 장단점도 분석합니다.",
           "board": "백엔드",
           "category": "JPA",
-          "status": "PUBLISHED",
           "generation": "13기",
           "tags": ["JPA", "Hibernate", "Performance", "Spring Data"]
         }
@@ -348,7 +347,7 @@ class PostApiTest {
                 .content(body))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.title").value("JPA N+1 문제 완벽 해결 가이드"))
-        .andExpect(jsonPath("$.status").value("PUBLISHED"))
+        .andExpect(jsonPath("$.status").value("DRAFT"))
         .andExpect(jsonPath("$.tags.length()").value(4))
         .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID))
         .andExpect(jsonPath("$.id").isNumber())
@@ -472,16 +471,15 @@ class PostApiTest {
   }
 
   @Test
-  @DisplayName("PUT /posts/{id} - 임시저장→게시 상태 변경")
-  void updatePost_draftToPublished_changesStatus() throws Exception {
+  @DisplayName("PUT /posts/{id} - status 필드 무시, 기존 상태 유지")
+  void updatePost_statusIgnored_retainsExistingStatus() throws Exception {
     String body =
         """
         {
           "title": "Docker Compose 기반 로컬 개발환경 세팅 가이드 (완성)",
           "content": "작성을 완료하고 발행합니다.",
           "board": "백엔드",
-          "category": "DevOps",
-          "status": "PUBLISHED"
+          "category": "DevOps"
         }
         """;
 
@@ -491,7 +489,7 @@ class PostApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value("PUBLISHED"));
+        .andExpect(jsonPath("$.status").value("DRAFT"));
   }
 
   @Test

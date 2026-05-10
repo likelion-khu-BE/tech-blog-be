@@ -70,7 +70,8 @@ CREATE TABLE blog_comments (
     user_id     BIGINT       NOT NULL,
     parent_id   BIGINT       REFERENCES blog_comments(id) ON DELETE CASCADE,
     content     TEXT         NOT NULL,
-    created_at  TIMESTAMP(6) NOT NULL
+    created_at  TIMESTAMP(6) NOT NULL,
+    deleted_at  TIMESTAMP(6)
 );
 
 CREATE INDEX idx_blog_comment_post    ON blog_comments (post_id);
