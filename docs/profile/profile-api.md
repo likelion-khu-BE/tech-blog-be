@@ -54,8 +54,13 @@
 
 ### ActivityType
 ```
-"blog_post" | "blog_comment" | "qna_question" | "qna_answer" | "qna_accepted" | "other"
+"blog_post" | "blog_comment" | "blog_post_like" | "blog_post_like_received" |
+"qna_question" | "qna_answer" | "qna_accepted" | "qna_comment" |
+"session_speak" | "session_event_post" | "session_event_comment" |
+"session_event_post_like" | "session_event_post_like_received"
 ```
+
+> 좋아요는 양방향 — 누른 사람(`*_like`) / 받은 사람(`*_like_received`) 별도.
 
 ### ContributionPeriodType
 ```
@@ -842,18 +847,25 @@ DELETE /profile/teams/{teamId}/members/me
 ## 6. 활동 기록 (Activities)
 > **담당: domain.activity**
 >
-> 활동 기록은 blog / qna 도메인에서 이벤트 방식으로 자동 적재된다. 이 섹션은 **읽기 전용** API만 제공한다.
+> 활동 기록은 blog / qna / sessionboard 도메인에서 이벤트 방식으로 자동 적재된다. 이 섹션은 **읽기 전용** API만 제공한다.
 
 ### 점수 기준
 
 | ActivityType | 점수 |
 |---|---|
-| `blog_post` | +10 |
-| `blog_comment` | +5 |
-| `qna_question` | +5 |
-| `qna_answer` | +5 |
-| `qna_accepted` | +10 |
-| `other` | 별도 지정 |
+| `blog_post` | +30 |
+| `blog_comment` | +3 |
+| `blog_post_like` | +1 |
+| `blog_post_like_received` | +1 |
+| `qna_question` | +10 |
+| `qna_answer` | +10 |
+| `qna_accepted` | +25 |
+| `qna_comment` | +3 |
+| `session_speak` | +50 |
+| `session_event_post` | +30 |
+| `session_event_comment` | +3 |
+| `session_event_post_like` | +1 |
+| `session_event_post_like_received` | +1 |
 
 ---
 
@@ -879,8 +891,7 @@ GET /profile/members/{memberId}/activities
       "id": 1,
       "type": "blog_post",
       "referenceId": 42,
-      "referenceType": "blog_post",
-      "score": 10,
+      "score": 30,
       "createdAt": "2025-05-01T10:00:00Z"
     }
   ],
@@ -914,14 +925,21 @@ GET /profile/members/{memberId}/contributions
   "memberId": 1,
   "name": "홍길동",
   "period": "month",
-  "totalScore": 55,
+  "totalScore": 214,
   "breakdown": {
-    "blog_post": 30,
-    "blog_comment": 5,
-    "qna_question": 5,
-    "qna_answer": 5,
-    "qna_accepted": 10,
-    "other": 0
+    "blog_post": 60,
+    "blog_comment": 3,
+    "blog_post_like": 3,
+    "blog_post_like_received": 12,
+    "qna_question": 10,
+    "qna_answer": 20,
+    "qna_accepted": 50,
+    "qna_comment": 3,
+    "session_speak": 50,
+    "session_event_post": 0,
+    "session_event_comment": 3,
+    "session_event_post_like": 0,
+    "session_event_post_like_received": 0
   }
 }
 ```
