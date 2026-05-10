@@ -61,6 +61,12 @@ public class TeamProfile {
   @Column(name = "github_url")
   private String githubUrl; // 프로젝트 GitHub (선택 입력)
 
+  @Column(name = "invite_code", nullable = false, unique = true)
+  private String inviteCode; // 팀 초대 코드 (서버가 랜덤 생성, 재생성 가능)
+
+  @Column(name = "invite_code_expires_at", nullable = false)
+  private Instant inviteCodeExpiresAt; // 초대 코드 만료 시각 (생성/재생성 시 현재 시각 + 3일)
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt; // 팀 생성 시각
 
@@ -111,14 +117,28 @@ public class TeamProfile {
   }
 
   public static TeamProfile create(
-      Generation generation, String name, String description, String projectUrl, String githubUrl) {
+      Generation generation,
+      String name,
+      String description,
+      String projectUrl,
+      String githubUrl,
+      String inviteCode,
+      Instant inviteCodeExpiresAt) {
     TeamProfile teamProfile = new TeamProfile();
     teamProfile.generation = generation;
     teamProfile.name = name;
     teamProfile.description = description;
     teamProfile.projectUrl = projectUrl;
     teamProfile.githubUrl = githubUrl;
+    teamProfile.inviteCode = inviteCode;
+    teamProfile.inviteCodeExpiresAt = inviteCodeExpiresAt;
     return teamProfile;
+  }
+
+  /** 초대 코드를 재생성한다. 기존 코드는 즉시 무효화되고 만료 시각은 현재 시각 + 3일로 갱신된다. */
+  public void regenerateInviteCode(String newCode) {
+    this.inviteCode = newCode;
+    this.inviteCodeExpiresAt = Instant.now().plus(3, java.time.temporal.ChronoUnit.DAYS);
   }
 
   public void update(

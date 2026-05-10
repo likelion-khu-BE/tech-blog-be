@@ -65,14 +65,16 @@ CREATE TABLE member_tech_stack (
 );
 
 CREATE TABLE team_profile (
-    id            BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    generation_id BIGINT REFERENCES generation(id) ON DELETE SET NULL,
-    name          TEXT NOT NULL,
-    description   TEXT,
-    project_url   TEXT,
-    github_url    TEXT,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                     BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    generation_id          BIGINT REFERENCES generation(id) ON DELETE SET NULL,
+    name                   TEXT NOT NULL,
+    description            TEXT,
+    project_url            TEXT,
+    github_url             TEXT,
+    invite_code            TEXT NOT NULL UNIQUE,
+    invite_code_expires_at TIMESTAMPTZ NOT NULL,
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE team_tech_stack (

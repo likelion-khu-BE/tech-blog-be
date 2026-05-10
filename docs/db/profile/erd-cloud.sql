@@ -75,14 +75,16 @@ CREATE TABLE member_tech_stack
 -- 6. 팀 프로필 테이블
 CREATE TABLE team_profile
 (
-    id            BIGINT       NOT NULL AUTO_INCREMENT,
-    generation_id BIGINT,
-    name          VARCHAR(255) NOT NULL,
-    description   TEXT,
-    project_url   TEXT,
-    github_url    TEXT,
-    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id                     BIGINT       NOT NULL AUTO_INCREMENT,
+    generation_id          BIGINT,
+    name                   VARCHAR(255) NOT NULL,
+    description            TEXT,
+    project_url            TEXT,
+    github_url             TEXT,
+    invite_code            VARCHAR(255) NOT NULL UNIQUE,
+    invite_code_expires_at DATETIME     NOT NULL,
+    created_at             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (generation_id) REFERENCES generation (id) ON DELETE SET NULL
 );
