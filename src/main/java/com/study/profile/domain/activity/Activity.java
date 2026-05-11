@@ -38,7 +38,6 @@ public class Activity {
   @Column(name = "type", nullable = false)
   private ActivityType type;
 
-  // 외부 BC가 관리하는 식별자 (post.id 등)
   @Column(name = "reference_id")
   private Long referenceId;
 
