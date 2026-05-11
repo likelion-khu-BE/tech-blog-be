@@ -38,8 +38,7 @@ public class TeamService {
     Member member =
         memberRepository
             .findByUserId(userId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
 
     // 2. generationId가 있으면 Generation 조회, 없으면 null
     Generation generation = null;
@@ -81,6 +80,7 @@ public class TeamService {
     TeamMember teamMember = TeamMember.create(team, member, null, true);
     teamMemberRepository.save(teamMember);
 
-    return new TeamCreateResponse(team.getId(), team.getInviteCode(), team.getInviteCodeExpiresAt());
+    return new TeamCreateResponse(
+        team.getId(), team.getInviteCode(), team.getInviteCodeExpiresAt());
   }
 }
