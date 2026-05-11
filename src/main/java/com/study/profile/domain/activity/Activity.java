@@ -41,17 +41,37 @@ public class Activity {
   @Column(name = "reference_id")
   private Long referenceId;
 
+  /**
+   * 활동을 일으킨 외부 행위자 (auth.User.id). 받은 좋아요({@code *_like_received}) 류에서 "누가 누른 좋아요로 인한 row인지" 식별에
+   * 사용. 그 외 type은 null.
+   */
+  @Column(name = "actor_id")
+  private Long actorId;
+
   @Column(name = "score", nullable = false)
   private Integer score = 0;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
+  /** 자기 행위 활동 생성 — 글/댓글/좋아요 누름/채택/발표 등. actor_id 없음. */
   public static Activity create(Member member, ActivityType type, Long referenceId, int score) {
+    return createInternal(member, type, referenceId, null, score);
+  }
+
+  /** 받은 좋아요({@code *_like_received}) 활동 생성. actorId(누가 누른 좋아요인지) 명시. */
+  public static Activity createReceived(
+      Member member, ActivityType type, Long referenceId, Long actorId, int score) {
+    return createInternal(member, type, referenceId, actorId, score);
+  }
+
+  private static Activity createInternal(
+      Member member, ActivityType type, Long referenceId, Long actorId, int score) {
     Activity activity = new Activity();
     activity.member = member;
     activity.type = type;
     activity.referenceId = referenceId;
+    activity.actorId = actorId;
     activity.score = score;
     return activity;
   }
