@@ -25,9 +25,8 @@ CREATE TABLE member (
 );
 
 CREATE TABLE generation (
-    id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    number     INT PRIMARY KEY,
     label      TEXT NOT NULL,
-    number     INT NOT NULL UNIQUE,
     start_date DATE NOT NULL,
     end_date   DATE,
     is_current BOOLEAN NOT NULL DEFAULT FALSE,
@@ -39,12 +38,12 @@ CREATE UNIQUE INDEX uq_generation_is_current ON generation (is_current) WHERE is
 
 -- 3. 관계 및 활동 테이블
 CREATE TABLE member_generation (
-    id            BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    member_id     BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    generation_id BIGINT NOT NULL REFERENCES generation(id) ON DELETE CASCADE,
-    role_in_gen   generation_role NOT NULL DEFAULT 'member',
-    joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_member_generation UNIQUE (member_id, generation_id)
+    id                BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    member_id         BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    generation_number INT NOT NULL REFERENCES generation(number) ON DELETE CASCADE,
+    role_in_gen       generation_role NOT NULL DEFAULT 'member',
+    joined_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_member_generation UNIQUE (member_id, generation_number)
 );
 
 CREATE TABLE tech_stack (
@@ -66,7 +65,7 @@ CREATE TABLE member_tech_stack (
 
 CREATE TABLE team_profile (
     id                     BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    generation_id          BIGINT REFERENCES generation(id) ON DELETE SET NULL,
+    generation_number      INT REFERENCES generation(number) ON DELETE SET NULL,
     name                   TEXT NOT NULL,
     description            TEXT,
     project_url            TEXT,
