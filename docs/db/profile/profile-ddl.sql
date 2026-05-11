@@ -110,6 +110,31 @@ CREATE TABLE activity (
     member_id    BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     type         activity_type NOT NULL,
     reference_id BIGINT,
+    actor_id     BIGINT,
     score        INT NOT NULL DEFAULT 0,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 멱등성 보장: 같은 활동을 두 번 기록 차단.
+-- received류는 actor_id(누가 누른 좋아요인지)까지 포함해 unique.
+-- 그 외 type은 (member, type, reference)만으로 unique.
+CREATE UNIQUE INDEX uq_activity_received
+    ON activity (member_id, type, reference_id, actor_id)
+    WHERE type IN ('blog_post_like_received', 'session_event_post_like_received');
+
+CREATE UNIQUE INDEX uq_activity_normal
+    ON activity (member_id, type, reference_id)
+    WHERE type NOT IN ('blog_post_like_received', 'session_event_post_like_received');
+
+-- 활동 기록 실패 영구 로그. ADR 0003 §처리 실패 시 복구 전략의 DB 백업.
+-- 운영자가 SQL 조회로 누락 발견 + payload_json 보고 수동 보정.
+CREATE TABLE activity_failure (
+    id           BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    event_type   TEXT NOT NULL,
+    payload_json JSONB NOT NULL,
+    error_class  TEXT NOT NULL,
+    error_msg    TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_activity_failure_created ON activity_failure (created_at DESC);

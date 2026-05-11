@@ -142,8 +142,21 @@ CREATE TABLE activity
     member_id    BIGINT   NOT NULL,
     type         ENUM ('blog_post','blog_comment','blog_post_like','blog_post_like_received','qna_question','qna_answer','qna_accepted','qna_comment','session_speak','session_event_post','session_event_comment','session_event_post_like','session_event_post_like_received') NOT NULL,
     reference_id BIGINT,
+    actor_id     BIGINT,
     score        INT      NOT NULL DEFAULT 0,
     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (member_id) REFERENCES member (id) ON DELETE CASCADE
+);
+
+-- 활동 기록 실패 영구 로그
+CREATE TABLE activity_failure
+(
+    id           BIGINT   NOT NULL AUTO_INCREMENT,
+    event_type   VARCHAR(255) NOT NULL,
+    payload_json JSON NOT NULL,
+    error_class  VARCHAR(255) NOT NULL,
+    error_msg    TEXT,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
 );
