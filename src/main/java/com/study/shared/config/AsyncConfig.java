@@ -15,8 +15,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
  *
  * <p>{@code TaskExecutor}는 Spring Boot 자동 구성 사용. 트래픽·튜닝 필요 시점에 명시 빈 추가.
  *
- * <p>uncaught handler: async listener에서 throw된 예외는 호출자에 전파되지 않으므로 여기서 ERROR 로그로 잡는다. ADR 0003
- * §처리 실패 시 복구 전략의 "단순 throw + ERROR 로그 + alert"의 로그 부분.
+ * <p>uncaught handler: async listener에서 throw된 예외는 호출자에 전파되지 않으므로 여기서 ERROR 로그로 잡는다. ADR 0003 §처리
+ * 실패 시 복구 전략의 "단순 throw + ERROR 로그 + alert"의 로그 부분.
  */
 @Configuration
 @EnableAsync

@@ -3,7 +3,7 @@ package com.study.profile.domain.activity;
 /**
  * 활동 종류. 점수 매핑은 ActivityRecorder.scoreOf 참조.
  *
- * 좋아요는 양방향 — 누른 사람({@code *_like})·받은 사람({@code *_like_received}) 별도 type.
+ * <p>좋아요는 양방향 — 누른 사람({@code *_like})·받은 사람({@code *_like_received}) 별도 type.
  */
 public enum ActivityType {
   blog_post,
