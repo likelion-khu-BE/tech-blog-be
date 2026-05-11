@@ -46,7 +46,7 @@ public class TeamProfile {
 
   // 이 팀이 속한 기수 — ON DELETE SET NULL이므로 기수가 삭제돼도 팀은 남고 generation만 null이 된다.
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_id")
+  @JoinColumn(name = "generation_number")
   private Generation generation;
 
   @Column(name = "name", nullable = false)

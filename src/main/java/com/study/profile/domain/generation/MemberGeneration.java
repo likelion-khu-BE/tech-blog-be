@@ -54,7 +54,7 @@ public class MemberGeneration {
   private Member member; // 참여한 멤버
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_id", nullable = false)
+  @JoinColumn(name = "generation_number", nullable = false)
   private Generation generation; // 참여한 기수
 
   @Enumerated(EnumType.STRING)
