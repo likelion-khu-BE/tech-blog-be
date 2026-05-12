@@ -13,6 +13,7 @@ import com.study.auth.infrastructure.UserRepository;
 import com.study.auth.presentation.dto.LoginRequest;
 import com.study.auth.presentation.dto.SignupRequest;
 import com.study.config.TestcontainersConfig;
+import com.study.profile.infrastructure.MemberRepository;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,17 +50,20 @@ class AuthIntegrationTest {
   @Autowired private ObjectMapper objectMapper;
   @Autowired private UserRepository userRepository;
   @Autowired private RefreshTokenRepository refreshTokenRepository;
+  @Autowired private MemberRepository memberRepository;
   @Autowired private PasswordEncoder passwordEncoder;
 
   @BeforeEach
   void cleanUp() {
     // 테스트에서 사용하는 이메일 유저만 정리 — 공용 RDS의 다른 데이터를 건드리지 않는다.
+    // Member는 user_id FK를 가지므로 User 삭제 전에 먼저 삭제한다.
     TEST_EMAILS.forEach(
         email ->
             userRepository
                 .findByLoginEmail(email)
                 .ifPresent(
                     user -> {
+                      memberRepository.findByUserId(user.getId()).ifPresent(memberRepository::delete);
                       refreshTokenRepository.deleteByUserId(user.getId());
                       userRepository.delete(user);
                     }));
@@ -92,7 +96,7 @@ class AuthIntegrationTest {
     @Test
     @DisplayName("정상 가입 → PENDING 상태로 생성")
     void signup_success() throws Exception {
-      SignupRequest request = new SignupRequest("test@khu.ac.kr", "password123");
+      SignupRequest request = new SignupRequest("test@khu.ac.kr", "password123", "테스트유저", "backend");
 
       mockMvc
           .perform(
@@ -115,7 +119,7 @@ class AuthIntegrationTest {
     void signup_duplicateEmail() throws Exception {
       createActiveUser("dup@khu.ac.kr", "password123");
 
-      SignupRequest request = new SignupRequest("dup@khu.ac.kr", "password123");
+      SignupRequest request = new SignupRequest("dup@khu.ac.kr", "password123", "중복유저", "frontend");
 
       mockMvc
           .perform(
@@ -128,7 +132,7 @@ class AuthIntegrationTest {
     @Test
     @DisplayName("비밀번호 8자 미만 → 400 Bad Request")
     void signup_shortPassword() throws Exception {
-      SignupRequest request = new SignupRequest("test@khu.ac.kr", "short");
+      SignupRequest request = new SignupRequest("test@khu.ac.kr", "short", "테스트", "backend");
 
       mockMvc
           .perform(
@@ -141,7 +145,7 @@ class AuthIntegrationTest {
     @Test
     @DisplayName("잘못된 이메일 형식 → 400 Bad Request")
     void signup_invalidEmail() throws Exception {
-      SignupRequest request = new SignupRequest("not-an-email", "password123");
+      SignupRequest request = new SignupRequest("not-an-email", "password123", "테스트", "backend");
 
       mockMvc
           .perform(
@@ -217,7 +221,7 @@ class AuthIntegrationTest {
     @DisplayName("PENDING 유저 로그인 시도 → 403")
     void login_pendingUser() throws Exception {
       // signup API로 PENDING 유저 생성
-      SignupRequest signup = new SignupRequest("pending@khu.ac.kr", "password123");
+      SignupRequest signup = new SignupRequest("pending@khu.ac.kr", "password123", "대기유저", "backend");
       mockMvc.perform(
           post(SIGNUP_URL)
               .contentType(MediaType.APPLICATION_JSON)
