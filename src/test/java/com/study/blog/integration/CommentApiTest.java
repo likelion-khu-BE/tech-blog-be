@@ -1,6 +1,5 @@
 package com.study.blog.integration;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,6 +16,7 @@ import com.study.blog.infrastructure.comment.CommentLikeRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,9 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
-@org.junit.jupiter.api.Disabled(
-    "H2 호환성 이슈로 전체 실패. PostgreSQL 전용 기능(jsonb, ENUM 등) 사용."
-        + " Testcontainers(PostgreSQL) 도입 후 재활성화 예정.")
+@DisplayName("댓글 API")
 class CommentApiTest {
 
   static final Long MOCK_USER_ID = 1L;
@@ -117,6 +115,7 @@ class CommentApiTest {
   // ── GET /api/blog/posts/{postId}/comments ───────────────────────────────
 
   @Test
+  @DisplayName("GET /comments - 트리 구조 반환")
   void getComments_returnsTreeStructure() throws Exception {
     mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
         .andExpect(status().isOk())
@@ -129,8 +128,11 @@ class CommentApiTest {
   }
 
   @Test
+  @DisplayName("GET /comments - 루트 댓글 필드 정확성")
   void getComments_rootCommentFields_includeCorrectData() throws Exception {
-    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+    mvc.perform(
+            get("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         // root1 fields
         .andExpect(jsonPath("$[0].id").value(root1.getId()))
@@ -142,8 +144,11 @@ class CommentApiTest {
   }
 
   @Test
+  @DisplayName("GET /comments - 대댓글 parentId 포함")
   void getComments_replyFields_includeParentId() throws Exception {
-    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+    mvc.perform(
+            get("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         // reply1 is first reply of root1
         .andExpect(jsonPath("$[0].replies[0].parentId").value(root1.getId()))
@@ -152,6 +157,7 @@ class CommentApiTest {
   }
 
   @Test
+  @DisplayName("GET /comments - 댓글 없는 포스트 빈 배열")
   void getComments_emptyPost_returnsEmptyList() throws Exception {
     Post emptyPost =
         postRepository.save(
@@ -173,6 +179,7 @@ class CommentApiTest {
   // ── POST /api/blog/posts/{postId}/comments ───────────────────────────────
 
   @Test
+  @DisplayName("POST /comments - 루트 댓글 생성 201")
   void createComment_rootComment_returns201() throws Exception {
     String body =
         """
@@ -183,6 +190,7 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
@@ -195,6 +203,7 @@ class CommentApiTest {
   }
 
   @Test
+  @DisplayName("POST /comments - 대댓글 생성 201")
   void createComment_reply_returns201WithParentId() throws Exception {
     String body =
         String.format(
@@ -208,6 +217,7 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
@@ -216,6 +226,7 @@ class CommentApiTest {
   }
 
   @Test
+  @DisplayName("POST /comments - 존재하지 않는 부모 댓글 404")
   void createComment_invalidParentId_returns404() throws Exception {
     String body =
         """
@@ -227,12 +238,14 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isNotFound());
   }
 
   @Test
+  @DisplayName("POST /comments - 내용 공백 400")
   void createComment_blankContent_returns400() throws Exception {
     String body =
         """
@@ -243,6 +256,7 @@ class CommentApiTest {
 
     mvc.perform(
             post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isBadRequest());
@@ -251,6 +265,7 @@ class CommentApiTest {
   // ── PUT /api/blog/comments/{id} ──────────────────────────────────────────
 
   @Test
+  @DisplayName("PUT /comments - 본인 댓글 수정 성공")
   void updateComment_ownComment_returnsUpdated() throws Exception {
     String body =
         """
@@ -261,6 +276,7 @@ class CommentApiTest {
 
     mvc.perform(
             put("/api/blog/comments/{id}", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
@@ -270,6 +286,7 @@ class CommentApiTest {
   }
 
   @Test
+  @DisplayName("PUT /comments - 타인 댓글 수정 403")
   void updateComment_othersComment_returns403() throws Exception {
     // root2 is owned by OTHER_USER; MOCK_USER tries to update it → 403
     String body =
@@ -281,12 +298,14 @@ class CommentApiTest {
 
     mvc.perform(
             put("/api/blog/comments/{id}", root2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isForbidden());
   }
 
   @Test
+  @DisplayName("PUT /comments - 존재하지 않는 댓글 404")
   void updateComment_notFound_returns404() throws Exception {
     String body =
         """
@@ -297,6 +316,7 @@ class CommentApiTest {
 
     mvc.perform(
             put("/api/blog/comments/{id}", 999999L)
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isNotFound());
@@ -305,6 +325,7 @@ class CommentApiTest {
   // ── DELETE /api/blog/comments/{id} ───────────────────────────────────────
 
   @Test
+  @DisplayName("DELETE /comments - 본인 리프 댓글 204")
   void deleteComment_ownLeafComment_returns204() throws Exception {
     // Create a fresh root comment with no replies or likes — safe to delete
     Comment toDelete =
@@ -315,81 +336,178 @@ class CommentApiTest {
                 .content("삭제될 댓글입니다.")
                 .build());
 
-    mvc.perform(delete("/api/blog/comments/{id}", toDelete.getId()))
+    mvc.perform(
+            delete("/api/blog/comments/{id}", toDelete.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
   }
 
   @Test
+  @DisplayName("DELETE /comments - 타인 댓글 403")
   void deleteComment_othersComment_returns403() throws Exception {
     // root2 is owned by OTHER_USER; MOCK_USER tries to delete it → 403
-    mvc.perform(delete("/api/blog/comments/{id}", root2.getId())).andExpect(status().isForbidden());
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root2.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
+  @DisplayName("DELETE /comments - 존재하지 않는 댓글 404")
   void deleteComment_notFound_returns404() throws Exception {
-    mvc.perform(delete("/api/blog/comments/{id}", 999999L)).andExpect(status().isNotFound());
+    mvc.perform(delete("/api/blog/comments/{id}", 999999L).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
   }
 
   // ── POST /api/blog/comments/{id}/like ────────────────────────────────────
 
   @Test
+  @DisplayName("POST /comments/like - 좋아요 없는 상태 liked=true")
   void toggleCommentLike_noExistingLike_returnsLikedTrue() throws Exception {
     // root2 has no like from MOCK_USER
-    mvc.perform(post("/api/blog/comments/{id}/like", root2.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", root2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").value(true));
   }
 
   @Test
+  @DisplayName("POST /comments/like - 좋아요 있는 상태 liked=false")
   void toggleCommentLike_existingLike_returnsLikedFalse() throws Exception {
     // root1 is already liked by MOCK_USER (set in setUp)
-    mvc.perform(post("/api/blog/comments/{id}/like", root1.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").value(false));
   }
 
   @Test
+  @DisplayName("POST /comments/like - 좋아요/취소 반복")
   void toggleCommentLike_likeAndUnlike_likeCountChanges() throws Exception {
     // reply2 has no like — like it, then unlike it, verify state
-    mvc.perform(post("/api/blog/comments/{id}/like", reply2.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", reply2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(jsonPath("$.liked").value(true));
 
-    mvc.perform(post("/api/blog/comments/{id}/like", reply2.getId()))
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", reply2.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(jsonPath("$.liked").value(false));
   }
 
   @Test
+  @DisplayName("POST /comments/like - 존재하지 않는 댓글 404")
   void toggleCommentLike_notFound_returns404() throws Exception {
-    mvc.perform(post("/api/blog/comments/{id}/like", 999999L)).andExpect(status().isNotFound());
+    mvc.perform(post("/api/blog/comments/{id}/like", 999999L).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
   }
 
-  // ── CASCADE DELETE via @OnDelete ─────────────────────────────────────────
-  // A 204 response proves no FK-constraint violation occurred.
-  // If cascade were missing, FK on comment_likes or parent_id would raise an error → 500.
+  // ── SOFT DELETE ──────────────────────────────────────────────────────────
 
   @Test
-  void deleteComment_withReplies_returns204() throws Exception {
-    // root1 has reply1 and reply2 via parent_id FK (ON DELETE CASCADE)
-    // Without cascade, deleting root1 would violate the FK on replies → 500
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
+  @DisplayName("소프트 삭제 - 루트 삭제 시 플레이스홀더 표시, 대댓글 유지")
+  void deleteComment_softDeletes_rootShowsPlaceholderAndRepliesSurvive() throws Exception {
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
+
+    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].content").value("삭제된 댓글입니다."))
+        .andExpect(jsonPath("$[0].userId").doesNotExist())
+        .andExpect(jsonPath("$[0].likeCount").value(0))
+        .andExpect(jsonPath("$[0].liked").value(false))
+        .andExpect(jsonPath("$[0].replies.length()").value(2));
   }
 
   @Test
-  void deleteComment_withLike_returns204() throws Exception {
-    // root1 has a like from MOCK_USER (setUp); comment_likes FK ON DELETE CASCADE
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
+  @DisplayName("소프트 삭제 - 대댓글 삭제 시 트리에 플레이스홀더")
+  void deleteComment_softDeletes_replyShowsPlaceholderInTree() throws Exception {
+    // reply1 (OTHER_USER) is soft-deleted; root1 still shows with 1 remaining reply
+    mvc.perform(
+            delete("/api/blog/comments/{id}", reply1.getId())
+                .with(TestAuth.asMember(OTHER_USER_ID)))
+        .andExpect(status().isNoContent());
+
+    mvc.perform(get("/api/blog/posts/{postId}/comments", postA.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].replies.length()").value(2))
+        .andExpect(jsonPath("$[0].replies[0].content").value("삭제된 댓글입니다."))
+        .andExpect(jsonPath("$[0].replies[0].userId").doesNotExist())
+        .andExpect(
+            jsonPath("$[0].replies[1].content")
+                .value("Runner는 self-hosted 대신 ubuntu-latest 사용하면 편해요!"));
   }
 
   @Test
-  void deleteComment_withRepliesAndLike_returns204() throws Exception {
-    // root1 has: reply1, reply2 AND a like from MOCK_USER — all cascade-deleted
-    // Also add a like on reply1 to verify nested cascade (reply cascade → its likes cascade)
-    commentLikeRepository.save(new CommentLike(reply1, OTHER_USER_ID));
+  @DisplayName("소프트 삭제 - 삭제된 댓글 수정 404")
+  void updateComment_deletedComment_returns404() throws Exception {
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
 
-    mvc.perform(delete("/api/blog/comments/{id}", root1.getId())).andExpect(status().isNoContent());
+    String body =
+        """
+        { "content": "삭제된 댓글 수정 시도" }
+        """;
 
-    assertThat(commentRepository.findById(root1.getId())).isEmpty();
-    assertThat(commentRepository.findById(reply1.getId())).isEmpty();
-    assertThat(commentRepository.findById(reply2.getId())).isEmpty();
+    mvc.perform(
+            put("/api/blog/comments/{id}", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("소프트 삭제 - 이미 삭제된 댓글 재삭제 404")
+  void deleteComment_alreadyDeleted_returns404() throws Exception {
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
+
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("소프트 삭제 - 삭제된 댓글 좋아요 404")
+  void toggleCommentLike_deletedComment_returns404() throws Exception {
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
+
+    mvc.perform(
+            post("/api/blog/comments/{id}/like", root1.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("소프트 삭제 - 삭제된 댓글에 대댓글 404")
+  void createComment_replyToDeletedParent_returns404() throws Exception {
+    mvc.perform(
+            delete("/api/blog/comments/{id}", root1.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
+
+    String body =
+        String.format(
+            """
+            {
+              "content": "삭제된 댓글에 대댓글 시도",
+              "parentId": %d
+            }
+            """,
+            root1.getId());
+
+    mvc.perform(
+            post("/api/blog/posts/{postId}/comments", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isNotFound());
   }
 }

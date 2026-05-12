@@ -66,6 +66,7 @@ public class CommentService {
       parent =
           commentRepository
               .findById(req.parentId())
+              .filter(c -> !c.isDeleted())
               .orElseThrow(() -> new BlogException(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
       if (!parent.getPostId().equals(postId)) {
         throw new BlogException(BlogErrorCode.PARENT_COMMENT_NOT_FOUND);
@@ -102,7 +103,7 @@ public class CommentService {
     if (!comment.getUserId().equals(userId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
-    commentRepository.delete(comment);
+    comment.softDelete();
   }
 
   @Transactional
@@ -148,6 +149,7 @@ public class CommentService {
   private Comment findById(Long commentId) {
     return commentRepository
         .findById(commentId)
+        .filter(c -> !c.isDeleted())
         .orElseThrow(() -> new BlogException(BlogErrorCode.COMMENT_NOT_FOUND));
   }
 }

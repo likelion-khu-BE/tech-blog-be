@@ -36,6 +36,10 @@ tasks.named('bootRun') {
 tasks.named('test') {
     useJUnitPlatform()
     workingDir = rootProject.projectDir
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        showStandardStreams false
+    }
 }
 
 spotless {
@@ -76,4 +80,5 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'com.h2database:h2'
 }

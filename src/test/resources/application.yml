@@ -8,6 +8,7 @@ spring:
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
+
       ddl-auto: create-drop
     open-in-view: false
     show-sql: false
@@ -16,6 +17,11 @@ spring:
         format_sql: false
   flyway:
     enabled: false
+
+jwt:
+  secret: dGVzdC1zZWNyZXQta2V5LWZvci1oMi10ZXN0LW9ubHktMzJieXRlcw==
+  access-expiration: 900000
+  refresh-expiration: 604800000
 
 logging:
   level:

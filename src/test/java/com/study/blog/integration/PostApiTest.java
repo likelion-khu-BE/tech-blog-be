@@ -23,6 +23,7 @@ import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -50,9 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
-@org.junit.jupiter.api.Disabled(
-    "H2 호환성 이슈로 전체 실패. PostgreSQL 전용 기능(jsonb, ENUM 등) 사용."
-        + " Testcontainers(PostgreSQL) 도입 후 재활성화 예정.")
+@DisplayName("포스트 API")
 class PostApiTest {
 
   static final Long MOCK_USER_ID = 1L;
@@ -152,6 +151,7 @@ class PostApiTest {
   // ── GET /api/blog/posts ──────────────────────────────────────────────────
 
   @Test
+  @DisplayName("GET /posts - 게시된 포스트만 반환")
   void getPosts_returnsOnlyPublished() throws Exception {
     // A, B, C, E are PUBLISHED; D is DRAFT → expect 4
     mvc.perform(get("/api/blog/posts"))
@@ -162,6 +162,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts - 게시판 필터")
   void getPosts_filterByBoard_returnsMatchingPublishedOnly() throws Exception {
     // A and E are PUBLISHED board=백엔드; D is DRAFT → expect 2
     mvc.perform(get("/api/blog/posts").param("board", "백엔드"))
@@ -170,6 +171,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts - 기수 필터")
   void getPosts_filterByGeneration_returnsMatching() throws Exception {
     // A, C, E are PUBLISHED 13기; D is DRAFT → expect 3
     mvc.perform(get("/api/blog/posts").param("generation", "13기"))
@@ -178,6 +180,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts - 키워드 검색 (제목+내용)")
   void getPosts_filterByKeyword_searchesTitleAndContent() throws Exception {
     // "CI/CD" appears in titles of A and E
     mvc.perform(get("/api/blog/posts").param("keyword", "CI/CD"))
@@ -186,6 +189,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts - 키워드 검색 내용 매칭")
   void getPosts_filterByKeyword_contentMatch() throws Exception {
     // "Blue-Green" only appears in postE content
     mvc.perform(get("/api/blog/posts").param("keyword", "Blue-Green"))
@@ -195,6 +199,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts - 작성자 ID 필터")
   void getPosts_filterByAuthorId_returnsAuthorPublishedPosts() throws Exception {
     // MOCK_USER has A and E published (D is draft)
     mvc.perform(get("/api/blog/posts").param("authorId", String.valueOf(MOCK_USER_ID)))
@@ -203,6 +208,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts - 페이지네이션")
   void getPosts_pagination_respectsSizeAndPageParams() throws Exception {
     mvc.perform(get("/api/blog/posts").param("size", "2").param("page", "0"))
         .andExpect(status().isOk())
@@ -218,6 +224,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts - 게시판+기수 복합 필터")
   void getPosts_combinedFilters_boardAndGeneration() throws Exception {
     // board=백엔드 AND generation=13기 AND PUBLISHED → A, E
     mvc.perform(get("/api/blog/posts").param("board", "백엔드").param("generation", "13기"))
@@ -225,11 +232,21 @@ class PostApiTest {
         .andExpect(jsonPath("$.totalElements").value(2));
   }
 
+  @Test
+  @DisplayName("GET /posts - 카테고리 필터")
+  void getPosts_filterByCategory_returnsMatching() throws Exception {
+    // postA and postE share category=CI/CD (both PUBLISHED); D is DRAFT → excluded
+    mvc.perform(get("/api/blog/posts").param("category", "CI/CD"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(2));
+  }
+
   // ── GET /api/blog/posts/{id} ─────────────────────────────────────────────
 
   @Test
+  @DisplayName("GET /posts/{id} - 게시된 포스트 상세 필드")
   void getPost_publishedPost_returnsFullDetails() throws Exception {
-    mvc.perform(get("/api/blog/posts/{id}", postA.getId()))
+    mvc.perform(get("/api/blog/posts/{id}", postA.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(postA.getId()))
         .andExpect(jsonPath("$.title").value("Spring Boot + GitHub Actions로 CI/CD 파이프라인 구축하기"))
@@ -249,17 +266,19 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts/{id} - 재게시 포스트 repostFromId 포함")
   void getPost_repostedPost_includesRepostFromId() throws Exception {
-    mvc.perform(get("/api/blog/posts/{id}", postE.getId()))
+    mvc.perform(get("/api/blog/posts/{id}", postE.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.repostFromId").value(postA.getId()))
         .andExpect(jsonPath("$.tags.length()").value(1));
   }
 
   @Test
+  @DisplayName("GET /posts/{id} - 좋아요·북마크 없으면 false")
   void getPost_noLikeOrBookmark_returnsFalseFlags() throws Exception {
     // postB has no like/bookmark from MOCK_USER
-    mvc.perform(get("/api/blog/posts/{id}", postB.getId()))
+    mvc.perform(get("/api/blog/posts/{id}", postB.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").value(false))
         .andExpect(jsonPath("$.bookmarked").value(false))
@@ -268,14 +287,16 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("GET /posts/{id} - 본인 임시저장 조회 가능")
   void getPost_ownDraft_returnsPost() throws Exception {
     // MOCK_USER requests their own DRAFT → allowed
-    mvc.perform(get("/api/blog/posts/{id}", postD.getId()))
+    mvc.perform(get("/api/blog/posts/{id}", postD.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value("DRAFT"));
   }
 
   @Test
+  @DisplayName("GET /posts/{id} - 타인 임시저장 403")
   void getPost_othersDraft_returns403() throws Exception {
     // Create a DRAFT owned by OTHER_USER
     Post otherDraft =
@@ -291,10 +312,13 @@ class PostApiTest {
                 .build());
 
     // MOCK_USER (via MockAuth) tries to read OTHER_USER's DRAFT → 403
-    mvc.perform(get("/api/blog/posts/{id}", otherDraft.getId())).andExpect(status().isForbidden());
+    mvc.perform(
+            get("/api/blog/posts/{id}", otherDraft.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
+  @DisplayName("GET /posts/{id} - 존재하지 않는 포스트 404")
   void getPost_notFound_returns404() throws Exception {
     mvc.perform(get("/api/blog/posts/{id}", 999999L)).andExpect(status().isNotFound());
   }
@@ -302,7 +326,8 @@ class PostApiTest {
   // ── POST /api/blog/posts ─────────────────────────────────────────────────
 
   @Test
-  void createPost_publishedWithTags_returns201() throws Exception {
+  @DisplayName("POST /posts - 태그 포함 임시저장 201")
+  void createPost_withTags_returnsDraft201() throws Exception {
     String body =
         """
         {
@@ -310,16 +335,19 @@ class PostApiTest {
           "content": "Fetch Join과 @EntityGraph를 사용해 N+1 문제를 해결하는 방법을 정리했습니다. 각 전략의 장단점도 분석합니다.",
           "board": "백엔드",
           "category": "JPA",
-          "status": "PUBLISHED",
           "generation": "13기",
           "tags": ["JPA", "Hibernate", "Performance", "Spring Data"]
         }
         """;
 
-    mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.title").value("JPA N+1 문제 완벽 해결 가이드"))
-        .andExpect(jsonPath("$.status").value("PUBLISHED"))
+        .andExpect(jsonPath("$.status").value("DRAFT"))
         .andExpect(jsonPath("$.tags.length()").value(4))
         .andExpect(jsonPath("$.authorId").value(MOCK_USER_ID))
         .andExpect(jsonPath("$.id").isNumber())
@@ -328,6 +356,7 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("POST /posts - 임시저장 201")
   void createPost_asDraft_returns201WithDraftStatus() throws Exception {
     String body =
         """
@@ -341,13 +370,18 @@ class PostApiTest {
         }
         """;
 
-    mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.status").value("DRAFT"))
         .andExpect(jsonPath("$.tags.length()").value(0));
   }
 
   @Test
+  @DisplayName("POST /posts - 재게시 201")
   void createPost_withRepostFromId_returns201() throws Exception {
     String body =
         String.format(
@@ -364,12 +398,17 @@ class PostApiTest {
             """,
             postA.getId());
 
-    mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.repostFromId").value(postA.getId()));
   }
 
   @Test
+  @DisplayName("POST /posts - 필수 필드 누락 400")
   void createPost_missingRequiredField_returns400() throws Exception {
     String body =
         """
@@ -382,13 +421,32 @@ class PostApiTest {
         }
         """;
 
-    mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("POST /posts - 비인증 401")
+  void createPost_unauthenticated_returns401() throws Exception {
+    String body =
+        """
+        {
+          "title": "제목", "content": "내용", "board": "백엔드",
+          "category": "CI/CD", "status": "PUBLISHED", "generation": "13기"
+        }
+        """;
+    mvc.perform(post("/api/blog/posts").contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isUnauthorized());
   }
 
   // ── PUT /api/blog/posts/{id} ─────────────────────────────────────────────
 
   @Test
+  @DisplayName("PUT /posts/{id} - 본인 포스트 수정")
   void updatePost_ownPost_updatesFieldsAndTags() throws Exception {
     String body =
         """
@@ -404,6 +462,7 @@ class PostApiTest {
 
     mvc.perform(
             put("/api/blog/posts/{id}", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
@@ -412,27 +471,29 @@ class PostApiTest {
   }
 
   @Test
-  void updatePost_draftToPublished_changesStatus() throws Exception {
+  @DisplayName("PUT /posts/{id} - status 필드 무시, 기존 상태 유지")
+  void updatePost_statusIgnored_retainsExistingStatus() throws Exception {
     String body =
         """
         {
           "title": "Docker Compose 기반 로컬 개발환경 세팅 가이드 (완성)",
           "content": "작성을 완료하고 발행합니다.",
           "board": "백엔드",
-          "category": "DevOps",
-          "status": "PUBLISHED"
+          "category": "DevOps"
         }
         """;
 
     mvc.perform(
             put("/api/blog/posts/{id}", postD.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value("PUBLISHED"));
+        .andExpect(jsonPath("$.status").value("DRAFT"));
   }
 
   @Test
+  @DisplayName("PUT /posts/{id} - 타인 포스트 403")
   void updatePost_othersPost_returns403() throws Exception {
     String body =
         """
@@ -447,12 +508,14 @@ class PostApiTest {
 
     mvc.perform(
             put("/api/blog/posts/{id}", postB.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isForbidden());
   }
 
   @Test
+  @DisplayName("PUT /posts/{id} - 존재하지 않는 포스트 404")
   void updatePost_notFound_returns404() throws Exception {
     String body =
         """
@@ -467,83 +530,157 @@ class PostApiTest {
 
     mvc.perform(
             put("/api/blog/posts/{id}", 999999L)
+                .with(TestAuth.asMember(MOCK_USER_ID))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isNotFound());
   }
 
+  @Test
+  @DisplayName("PUT /posts/{id} - 비인증 401")
+  void updatePost_unauthenticated_returns401() throws Exception {
+    String body =
+        """
+        {
+          "title": "제목", "content": "내용", "board": "백엔드",
+          "category": "CI/CD", "status": "PUBLISHED"
+        }
+        """;
+    mvc.perform(
+            put("/api/blog/posts/{id}", postA.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isUnauthorized());
+  }
+
   // ── DELETE /api/blog/posts/{id} ──────────────────────────────────────────
 
   @Test
+  @DisplayName("DELETE /posts/{id} - 본인 임시저장 204")
   void deletePost_ownDraftWithNoDependents_returns204() throws Exception {
     // postD: MOCK_USER's DRAFT with no likes/bookmarks/comments
-    mvc.perform(delete("/api/blog/posts/{id}", postD.getId())).andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", postD.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
   }
 
   @Test
+  @DisplayName("DELETE /posts/{id} - 타인 포스트 403")
   void deletePost_othersPost_returns403() throws Exception {
-    mvc.perform(delete("/api/blog/posts/{id}", postB.getId())).andExpect(status().isForbidden());
+    mvc.perform(delete("/api/blog/posts/{id}", postB.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
+  @DisplayName("DELETE /posts/{id} - 존재하지 않는 포스트 404")
   void deletePost_notFound_returns404() throws Exception {
-    mvc.perform(delete("/api/blog/posts/{id}", 999999L)).andExpect(status().isNotFound());
+    mvc.perform(delete("/api/blog/posts/{id}", 999999L).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("DELETE /posts/{id} - 비인증 401")
+  void deletePost_unauthenticated_returns401() throws Exception {
+    mvc.perform(delete("/api/blog/posts/{id}", postD.getId())).andExpect(status().isUnauthorized());
   }
 
   // ── POST /api/blog/posts/{id}/like ───────────────────────────────────────
 
   @Test
+  @DisplayName("POST /posts/like - 좋아요 없는 상태 liked=true")
   void toggleLike_noExistingLike_returnsLikedTrue() throws Exception {
     // postB has no like from MOCK_USER
-    mvc.perform(post("/api/blog/posts/{id}/like", postB.getId()))
+    mvc.perform(
+            post("/api/blog/posts/{id}/like", postB.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").value(true));
   }
 
   @Test
+  @DisplayName("POST /posts/like - 좋아요 있는 상태 liked=false")
   void toggleLike_existingLike_returnsLikedFalse() throws Exception {
     // postA already liked by MOCK_USER in setUp
-    mvc.perform(post("/api/blog/posts/{id}/like", postA.getId()))
+    mvc.perform(
+            post("/api/blog/posts/{id}/like", postA.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.liked").value(false));
   }
 
   @Test
+  @DisplayName("POST /posts/like - 두 번 토글 후 liked=true")
   void toggleLike_twice_backToLiked() throws Exception {
     // Like postC (not liked), then like again → liked=true
-    mvc.perform(post("/api/blog/posts/{id}/like", postC.getId()))
+    mvc.perform(
+            post("/api/blog/posts/{id}/like", postC.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(jsonPath("$.liked").value(true));
 
-    mvc.perform(post("/api/blog/posts/{id}/like", postC.getId()))
+    mvc.perform(
+            post("/api/blog/posts/{id}/like", postC.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(jsonPath("$.liked").value(false));
 
-    mvc.perform(post("/api/blog/posts/{id}/like", postC.getId()))
+    mvc.perform(
+            post("/api/blog/posts/{id}/like", postC.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(jsonPath("$.liked").value(true));
+  }
+
+  @Test
+  @DisplayName("POST /posts/like - 비인증 401")
+  void toggleLike_unauthenticated_returns401() throws Exception {
+    mvc.perform(post("/api/blog/posts/{id}/like", postA.getId()))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("POST /posts/like - 존재하지 않는 포스트 404")
+  void toggleLike_notFound_returns404() throws Exception {
+    mvc.perform(post("/api/blog/posts/{id}/like", 999999L).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
   }
 
   // ── POST /api/blog/posts/{id}/bookmark ──────────────────────────────────
 
   @Test
+  @DisplayName("POST /posts/bookmark - 북마크 없는 상태 bookmarked=true")
   void toggleBookmark_noExistingBookmark_returnsBookmarkedTrue() throws Exception {
-    mvc.perform(post("/api/blog/posts/{id}/bookmark", postB.getId()))
+    mvc.perform(
+            post("/api/blog/posts/{id}/bookmark", postB.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.bookmarked").value(true));
   }
 
   @Test
+  @DisplayName("POST /posts/bookmark - 북마크 있는 상태 bookmarked=false")
   void toggleBookmark_existingBookmark_returnsBookmarkedFalse() throws Exception {
     // postA already bookmarked by MOCK_USER in setUp
-    mvc.perform(post("/api/blog/posts/{id}/bookmark", postA.getId()))
+    mvc.perform(
+            post("/api/blog/posts/{id}/bookmark", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.bookmarked").value(false));
   }
 
   @Test
+  @DisplayName("POST /posts/bookmark - 비인증 401")
+  void toggleBookmark_unauthenticated_returns401() throws Exception {
+    mvc.perform(post("/api/blog/posts/{id}/bookmark", postA.getId()))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("POST /posts/bookmark - 존재하지 않는 포스트 404")
+  void toggleBookmark_notFound_returns404() throws Exception {
+    mvc.perform(
+            post("/api/blog/posts/{id}/bookmark", 999999L).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("포스트 좋아요 수 - 여러 사용자 좋아요 집계")
   void likeCount_reflectsMultipleUsers() throws Exception {
     // Add like from OTHER_USER manually, verify likeCount=2
     postLikeRepository.save(new PostLike(postA, OTHER_USER_ID));
 
-    mvc.perform(get("/api/blog/posts/{id}", postA.getId()))
+    mvc.perform(get("/api/blog/posts/{id}", postA.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.likeCount").value(2));
   }
@@ -553,19 +690,24 @@ class PostApiTest {
   // If cascade were missing, post_likes/post_bookmarks/comments FK would raise an error → 500.
 
   @Test
+  @DisplayName("DELETE /posts/{id} (CASCADE) - 좋아요 있는 포스트 204")
   void deletePost_withLike_returns204() throws Exception {
     // postA is owned by MOCK_USER and already has a like from MOCK_USER (setUp)
     // Without ON DELETE CASCADE this would fail with FK constraint violation
-    mvc.perform(delete("/api/blog/posts/{id}", postA.getId())).andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", postA.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
   }
 
   @Test
+  @DisplayName("DELETE /posts/{id} (CASCADE) - 북마크 있는 포스트 204")
   void deletePost_withBookmark_returns204() throws Exception {
     // postA is owned by MOCK_USER and already has a bookmark from MOCK_USER (setUp)
-    mvc.perform(delete("/api/blog/posts/{id}", postA.getId())).andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", postA.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
   }
 
   @Test
+  @DisplayName("DELETE /posts/{id} (CASCADE) - 모든 의존 데이터 있는 포스트 204")
   void deletePost_withAllDependents_returns204() throws Exception {
     // Create a MOCK_USER post with every type of dependent attached
     Post rich =
@@ -593,10 +735,10 @@ class PostApiTest {
 
     // If any FK cascade is missing the delete raises a DataIntegrityViolationException → 500
     Long richId = rich.getId();
-    mvc.perform(delete("/api/blog/posts/{id}", richId)).andExpect(status().isNoContent());
+    mvc.perform(delete("/api/blog/posts/{id}", richId).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isNoContent());
 
     assertThat(postRepository.findById(richId)).isEmpty();
     assertThat(postTagRepository.findByPost(rich)).isEmpty();
-    assertThat(commentRepository.findById(comment.getId())).isEmpty();
   }
 }

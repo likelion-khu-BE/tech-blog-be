@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/session-board/{generationId}/event-posts")
+@RequestMapping("/api/session-board/{generationNumber}/event-posts") // generation number로 시현 수정
 public class EventPostController {
 
   private final EventPostService eventPostService;
@@ -26,10 +26,10 @@ public class EventPostController {
 
   @GetMapping
   public ResponseEntity<PageWrapper<EventPostSummaryResponse>> getEventPosts(
-      @PathVariable Long generationId,
+      @PathVariable Integer generationNumber, // generation number로 시현 수정
       @RequestParam(required = false) EventPostType type,
       @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
           Pageable pageable) {
-    return ResponseEntity.ok(eventPostService.getEventPosts(generationId, type, pageable));
+    return ResponseEntity.ok(eventPostService.getEventPosts(generationNumber, type, pageable));
   }
 }

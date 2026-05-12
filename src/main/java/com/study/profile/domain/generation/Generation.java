@@ -2,10 +2,7 @@ package com.study.profile.domain.generation;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -22,26 +19,14 @@ import lombok.NoArgsConstructor;
  * <p>[DB 테이블: generation] 이 클래스의 필드 하나하나가 DB 테이블의 컬럼(열) 하나씩에 대응된다.
  */
 @Entity
-@Table(
-    name = "generation",
-    indexes = {
-      // number 컬럼에 인덱스를 걸어 기수 번호로 빠르게 검색하고, 중복 기수 번호를 방지한다.
-      @Index(name = "idx_generation_number", columnList = "number", unique = true)
-    })
+@Table(name = "generation")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Generation {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id")
-  private Long id; // DB가 자동으로 부여하는 고유 식별 번호
-
-  @Column(name = "label", nullable = false)
-  private String label; // 기수 표시명 (예: "13기", "14기")
-
-  @Column(name = "number", nullable = false, unique = true)
-  private Integer number; // 기수 번호 (예: 13, 14) — 중복 불가
+  @Column(name = "number", nullable = false)
+  private Integer number; // 기수 번호 (예: 13, 14) — PK
 
   @Column(name = "start_date", nullable = false)
   private LocalDate startDate; // 기수 활동 시작일 (날짜만, 시각 제외)
@@ -58,9 +43,8 @@ public class Generation {
 
   /** 새 기수를 생성할 때 호출하는 정적 팩토리 메서드. 처음 만들 때는 isCurrent = false로 시작하고, 필요 시 markAsCurrent()로 변경한다. */
   public static Generation create(
-      String label, Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
+      Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
     Generation generation = new Generation();
-    generation.label = label;
     generation.number = number;
     generation.startDate = startDate;
     generation.endDate = endDate;
@@ -68,9 +52,7 @@ public class Generation {
     return generation;
   }
 
-  public void update(
-      String label, Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
-    this.label = label;
+  public void update(Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
     this.number = number;
     this.startDate = startDate;
     this.endDate = endDate;
