@@ -34,11 +34,11 @@ public class EventPostService {
   }
 
   public PageWrapper<EventPostSummaryResponse> getEventPosts(
-      Long generationId, EventPostType type, Pageable pageable) {
+      Integer generationNumber, EventPostType type, Pageable pageable) { // generation number로 시현 수정
 
     Page<EventPost> posts =
         eventPostRepository.findAllWithFilters(
-            generationId, EventPostStatus.PUBLISHED, type, pageable);
+            generationNumber, EventPostStatus.PUBLISHED, type, pageable);
 
     List<Long> postIds = posts.map(EventPost::getId).toList();
 

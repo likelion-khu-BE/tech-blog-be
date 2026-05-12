@@ -2,7 +2,7 @@
 CREATE TYPE session_type AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'etc');
 CREATE TYPE generation_role AS ENUM ('member', 'operating');
 CREATE TYPE tech_stack_category AS ENUM ('language', 'framework', 'ai', 'design', 'tool', 'infra', 'etc');
-CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'qna_answer', 'qna_question', 'qna_accepted', 'other');
+CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'blog_post_like', 'blog_post_like_received', 'qna_question', 'qna_answer', 'qna_accepted', 'qna_comment', 'session_speak', 'session_event_post', 'session_event_comment', 'session_event_post_like', 'session_event_post_like_received');
 CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'all');
 CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc');
 CREATE TYPE team_member_status AS ENUM ('pending', 'accepted', 'rejected', 'left', 'kicked');
@@ -25,9 +25,7 @@ CREATE TABLE member (
 );
 
 CREATE TABLE generation (
-    id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    label      TEXT NOT NULL,
-    number     INT NOT NULL UNIQUE,
+    number     INT PRIMARY KEY,
     start_date DATE NOT NULL,
     end_date   DATE,
     is_current BOOLEAN NOT NULL DEFAULT FALSE,
@@ -39,12 +37,12 @@ CREATE UNIQUE INDEX uq_generation_is_current ON generation (is_current) WHERE is
 
 -- 3. 관계 및 활동 테이블
 CREATE TABLE member_generation (
-    id            BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    member_id     BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    generation_id BIGINT NOT NULL REFERENCES generation(id) ON DELETE CASCADE,
-    role_in_gen   generation_role NOT NULL DEFAULT 'member',
-    joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_member_generation UNIQUE (member_id, generation_id)
+    id                BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    member_id         BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    generation_number INT NOT NULL REFERENCES generation(number) ON DELETE CASCADE,
+    role_in_gen       generation_role NOT NULL DEFAULT 'member',
+    joined_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_member_generation UNIQUE (member_id, generation_number)
 );
 
 CREATE TABLE tech_stack (
@@ -66,7 +64,7 @@ CREATE TABLE member_tech_stack (
 
 CREATE TABLE team_profile (
     id                     BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    generation_id          BIGINT REFERENCES generation(id) ON DELETE SET NULL,
+    generation_number      INT REFERENCES generation(number) ON DELETE SET NULL,
     name                   TEXT NOT NULL,
     description            TEXT,
     project_url            TEXT,
@@ -108,11 +106,35 @@ CREATE TABLE team_image (
 );
 
 CREATE TABLE activity (
-    id             BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    member_id      BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    type           activity_type NOT NULL,
-    reference_id   BIGINT,
-    reference_type TEXT,
-    score          INT NOT NULL DEFAULT 0,
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    member_id    BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    type         activity_type NOT NULL,
+    reference_id BIGINT,
+    actor_id     BIGINT,
+    score        INT NOT NULL DEFAULT 0,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 멱등성 보장: 같은 활동을 두 번 기록 차단.
+-- received류는 actor_id(누가 누른 좋아요인지)까지 포함해 unique.
+-- 그 외 type은 (member, type, reference)만으로 unique.
+CREATE UNIQUE INDEX uq_activity_received
+    ON activity (member_id, type, reference_id, actor_id)
+    WHERE type IN ('blog_post_like_received', 'session_event_post_like_received');
+
+CREATE UNIQUE INDEX uq_activity_normal
+    ON activity (member_id, type, reference_id)
+    WHERE type NOT IN ('blog_post_like_received', 'session_event_post_like_received');
+
+-- 활동 기록 실패 영구 로그. ADR 0003 §처리 실패 시 복구 전략의 DB 백업.
+-- 운영자가 SQL 조회로 누락 발견 + payload_json 보고 수동 보정.
+CREATE TABLE activity_failure (
+    id           BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    event_type   TEXT NOT NULL,
+    payload_json JSONB NOT NULL,
+    error_class  TEXT NOT NULL,
+    error_msg    TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_activity_failure_created ON activity_failure (created_at DESC);

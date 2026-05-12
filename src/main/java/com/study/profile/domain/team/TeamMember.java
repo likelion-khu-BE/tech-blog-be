@@ -22,6 +22,8 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 팀-멤버 연결 엔티티 (중간 테이블).
@@ -66,6 +68,7 @@ public class TeamMember {
   private boolean isLead = false; // 팀장 여부 (true면 팀장, false면 일반 팀원)
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "status", nullable = false)
   private TeamMemberStatus status; // 팀원 가입 상태 (pending/accepted/rejected/left/kicked)
 

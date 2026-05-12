@@ -5,6 +5,13 @@ import com.study.auth.domain.exception.InvalidCredentialsException;
 import com.study.auth.domain.exception.InvalidTokenException;
 import com.study.auth.domain.exception.TokenReusedException;
 import com.study.auth.domain.exception.UserNotActiveException;
+import com.study.qna.domain.exception.AnswerNotFoundException;
+import com.study.qna.domain.exception.CommentNotFoundException;
+import com.study.qna.domain.exception.ForbiddenQnaActionException;
+import com.study.qna.domain.exception.QuestionAlreadyClosedException;
+import com.study.qna.domain.exception.QuestionNotFoundException;
+import com.study.qna.domain.exception.TagAlreadyExistsException;
+import com.study.qna.domain.exception.TagNotFoundException;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -48,6 +55,49 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidTokenException.class)
   public ResponseEntity<Map<String, Object>> handleInvalidToken(InvalidTokenException e) {
     return errorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+  }
+
+  @ExceptionHandler(QuestionNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleQuestionNotFound(QuestionNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(AnswerNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleAnswerNotFound(AnswerNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(CommentNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleCommentNotFound(CommentNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(TagNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleTagNotFound(TagNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(TagAlreadyExistsException.class)
+  public ResponseEntity<Map<String, Object>> handleTagAlreadyExists(TagAlreadyExistsException e) {
+    return errorResponse(HttpStatus.CONFLICT, e.getMessage());
+  }
+
+  @ExceptionHandler(ForbiddenQnaActionException.class)
+  public ResponseEntity<Map<String, Object>> handleForbiddenQnaAction(
+      ForbiddenQnaActionException e) {
+    return errorResponse(HttpStatus.FORBIDDEN, e.getMessage());
+  }
+
+  @ExceptionHandler(QuestionAlreadyClosedException.class)
+  public ResponseEntity<Map<String, Object>> handleQuestionAlreadyClosed(
+      QuestionAlreadyClosedException e) {
+    return errorResponse(HttpStatus.CONFLICT, e.getMessage());
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException e) {
+    log.warn("IllegalStateException: {}", e.getMessage(), e);
+    return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
