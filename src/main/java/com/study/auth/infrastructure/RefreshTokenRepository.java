@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
@@ -46,5 +47,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
   int revokeAllByUserId(@Param("userId") Long userId);
 
   /** 테스트 정리용 — 특정 유저의 토큰 행을 물리 삭제한다. */
-  void deleteByUserId(Long userId);
+  @Transactional
+  @Modifying
+  @Query("DELETE FROM RefreshToken r WHERE r.userId = :userId")
+  void deleteByUserId(@Param("userId") Long userId);
 }
