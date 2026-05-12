@@ -9,7 +9,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface QuestionRepository extends JpaRepository<Question, Long> {
+public interface QuestionRepository
+    extends JpaRepository<Question, Long>, QuestionRepositoryCustom {
 
   @Query(
       """
