@@ -21,7 +21,6 @@ CREATE TABLE member
 CREATE TABLE generation
 (
     number     INT          NOT NULL,
-    label      VARCHAR(255) NOT NULL,
     start_date DATE         NOT NULL,
     end_date   DATE,
     is_current BOOLEAN      NOT NULL DEFAULT FALSE,
