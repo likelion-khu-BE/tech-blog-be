@@ -6,8 +6,8 @@ sessionboard BC가 발행하는 도메인 사건 record.
 |---|---|---|
 | `SessionEventPostCreated` | EventPost 저장 직후 | `(userId, postId)` |
 | `SessionEventPostDeleted` | EventPost 삭제 직후 | `(userId, postId)` |
-| `SessionEventCommentCreated` | EventPostComment 저장 직후 | `(userId, commentId)` |
-| `SessionEventCommentDeleted` | EventPostComment 삭제 직후 | `(userId, commentId)` |
+| `SessionEventCommentCreated` | EventPostComment 저장 직후 | `(userId, postId, commentId)` |
+| `SessionEventCommentDeleted` | EventPostComment 삭제 직후 | `(userId, postId, commentId)` |
 | `SessionEventPostLiked` | 좋아요 켜질 때 | `(likerId, postId, postOwnerId)` |
 | `SessionEventPostUnliked` | 좋아요 꺼질 때 | `(likerId, postId, postOwnerId)` |
 | `SessionSpeakerRegistered` | 발표자 등록 시 | `(userId, sessionId)` |

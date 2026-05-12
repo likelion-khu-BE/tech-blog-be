@@ -4,6 +4,7 @@ package com.study.shared.extevent.blog;
  * 블로그 댓글 작성 사건.
  *
  * @param userId 작성자 (auth.User.id)
+ * @param postId 댓글이 달린 글 (consumer가 활동 응답 라우팅에 사용)
  * @param commentId 작성된 댓글
  */
-public record BlogCommentCreated(Long userId, Long commentId) {}
+public record BlogCommentCreated(Long userId, Long postId, Long commentId) {}

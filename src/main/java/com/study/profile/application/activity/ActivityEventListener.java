@@ -10,7 +10,11 @@ import com.study.shared.extevent.blog.BlogPostUnliked;
 import com.study.shared.extevent.qna.QnaAnswerAccepted;
 import com.study.shared.extevent.qna.QnaAnswerCreated;
 import com.study.shared.extevent.qna.QnaAnswerDeleted;
+import com.study.shared.extevent.qna.QnaAnswerDownvoteWithdrawn;
+import com.study.shared.extevent.qna.QnaAnswerDownvoted;
 import com.study.shared.extevent.qna.QnaAnswerUnaccepted;
+import com.study.shared.extevent.qna.QnaAnswerUpvoteWithdrawn;
+import com.study.shared.extevent.qna.QnaAnswerUpvoted;
 import com.study.shared.extevent.qna.QnaCommentCreated;
 import com.study.shared.extevent.qna.QnaCommentDeleted;
 import com.study.shared.extevent.qna.QnaQuestionCreated;
@@ -129,6 +133,18 @@ public class ActivityEventListener {
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void onQnaAnswerUpvoted(QnaAnswerUpvoted event) {
+    activityService.record(event.voterId(), ActivityType.qna_answer_upvote, event.answerId());
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void onQnaAnswerDownvoted(QnaAnswerDownvoted event) {
+    activityService.record(event.voterId(), ActivityType.qna_answer_downvote, event.answerId());
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaCommentCreated(QnaCommentCreated event) {
     activityService.record(event.userId(), ActivityType.qna_comment, event.commentId());
   }
@@ -145,12 +161,26 @@ public class ActivityEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaAnswerDeleted(QnaAnswerDeleted event) {
     activityService.revoke(ActivityType.qna_answer, event.answerId());
+    activityService.revoke(ActivityType.qna_answer_upvote, event.answerId());
+    activityService.revoke(ActivityType.qna_answer_downvote, event.answerId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaAnswerUnaccepted(QnaAnswerUnaccepted event) {
     activityService.revoke(ActivityType.qna_accepted, event.answerId());
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void onQnaAnswerUpvoteWithdrawn(QnaAnswerUpvoteWithdrawn event) {
+    activityService.revokeLike(ActivityType.qna_answer_upvote, event.answerId(), event.voterId());
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void onQnaAnswerDownvoteWithdrawn(QnaAnswerDownvoteWithdrawn event) {
+    activityService.revokeLike(ActivityType.qna_answer_downvote, event.answerId(), event.voterId());
   }
 
   @Async

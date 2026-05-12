@@ -55,12 +55,14 @@
 ### ActivityType
 ```
 "blog_post" | "blog_comment" | "blog_post_like" | "blog_post_like_received" |
-"qna_question" | "qna_answer" | "qna_accepted" | "qna_comment" |
+"qna_question" | "qna_answer" | "qna_accepted" | "qna_answer_upvote" |
+"qna_answer_downvote" | "qna_comment" |
 "session_speak" | "session_event_post" | "session_event_comment" |
 "session_event_post_like" | "session_event_post_like_received"
 ```
 
 > 좋아요는 양방향 — 누른 사람(`*_like`) / 받은 사람(`*_like_received`) 별도.
+> Q&A 답변 vote는 참여 자체로 활동(+1) — upvote/downvote 무관. 답변 받는 측엔 활동 X (채택 시스템이 별도 보상).
 
 ### ContributionPeriodType
 ```
@@ -862,6 +864,8 @@ DELETE /profile/teams/{teamId}/members/me
 | `qna_question` | +10 |
 | `qna_answer` | +10 |
 | `qna_accepted` | +25 |
+| `qna_answer_upvote` | +1 |
+| `qna_answer_downvote` | +1 |
 | `qna_comment` | +3 |
 | `session_speak` | +50 |
 | `session_event_post` | +30 |
