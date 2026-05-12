@@ -28,9 +28,6 @@ public class Generation {
   @Column(name = "number", nullable = false)
   private Integer number; // 기수 번호 (예: 13, 14) — PK
 
-  @Column(name = "label", nullable = false)
-  private String label; // 기수 표시명 (예: "13기", "14기")
-
   @Column(name = "start_date", nullable = false)
   private LocalDate startDate; // 기수 활동 시작일 (날짜만, 시각 제외)
 
@@ -46,10 +43,9 @@ public class Generation {
 
   /** 새 기수를 생성할 때 호출하는 정적 팩토리 메서드. 처음 만들 때는 isCurrent = false로 시작하고, 필요 시 markAsCurrent()로 변경한다. */
   public static Generation create(
-      Integer number, String label, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
+      Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
     Generation generation = new Generation();
     generation.number = number;
-    generation.label = label;
     generation.startDate = startDate;
     generation.endDate = endDate;
     generation.isCurrent = isCurrent != null ? isCurrent : false;
@@ -57,9 +53,8 @@ public class Generation {
   }
 
   public void update(
-      Integer number, String label, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
+      Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
     this.number = number;
-    this.label = label;
     this.startDate = startDate;
     this.endDate = endDate;
     this.isCurrent = isCurrent != null ? isCurrent : false;

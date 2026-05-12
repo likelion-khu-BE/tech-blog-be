@@ -15,13 +15,13 @@ public interface EventPostRepository extends JpaRepository<EventPost, Long> {
       """
       SELECT p FROM EventPost p
       JOIN FETCH p.author
-      WHERE p.generation.id = :generationId
+      WHERE p.generation.number = :generationNumber
         AND p.status = :status
         AND (:type IS NULL OR p.type = :type)
       ORDER BY p.createdAt DESC
       """)
   Page<EventPost> findAllWithFilters(
-      @Param("generationId") Long generationId,
+      @Param("generationNumber") Integer generationNumber, // generation number로 시현 수정
       @Param("status") EventPostStatus status,
       @Param("type") EventPostType type,
       Pageable pageable);

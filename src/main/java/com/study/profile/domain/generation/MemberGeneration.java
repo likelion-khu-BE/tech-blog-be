@@ -38,7 +38,7 @@ import lombok.NoArgsConstructor;
     uniqueConstraints =
         @UniqueConstraint(
             name = "uq_member_generation",
-            columnNames = {"member_id", "generation_id"}))
+            columnNames = {"member_id", "generation_number"})) // generation number로 시현 수정
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberGeneration {
