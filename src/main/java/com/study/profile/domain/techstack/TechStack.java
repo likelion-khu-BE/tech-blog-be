@@ -14,6 +14,8 @@ import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 기술 스택 엔티티.
@@ -46,6 +48,7 @@ public class TechStack {
   private String name; // 기술 스택 이름 (예: "Java", "React") — 중복 불가
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "category", nullable = false)
   private TechStackCategory category; // 분류 (language/framework/ai/design/tool/infra/etc)
 

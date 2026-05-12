@@ -10,6 +10,7 @@ import com.study.qna.domain.Question;
 import com.study.qna.domain.QuestionStatus;
 import com.study.qna.domain.exception.AnswerNotFoundException;
 import com.study.qna.domain.exception.ForbiddenQnaActionException;
+import com.study.qna.domain.exception.QuestionAlreadyClosedException;
 import com.study.qna.domain.exception.QuestionNotFoundException;
 import com.study.qna.infrastructure.AnswerRepository;
 import com.study.qna.infrastructure.QuestionRepository;
@@ -50,7 +51,7 @@ public class AnswerService {
             .orElseThrow(() -> new QuestionNotFoundException(questionId));
 
     if (question.getStatus() == QuestionStatus.CLOSED) {
-      throw new ForbiddenQnaActionException();
+      throw new QuestionAlreadyClosedException(questionId);
     }
 
     Answer answer = Answer.create(question, userId, request.content());

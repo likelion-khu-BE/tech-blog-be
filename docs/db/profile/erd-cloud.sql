@@ -20,14 +20,12 @@ CREATE TABLE member
 -- 2. 기수 테이블
 CREATE TABLE generation
 (
-    id         BIGINT       NOT NULL AUTO_INCREMENT,
-    label      VARCHAR(255) NOT NULL,
-    number     INT          NOT NULL UNIQUE,
+    number     INT          NOT NULL,
     start_date DATE         NOT NULL,
     end_date   DATE,
     is_current BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (number)
 );
 
 -- generation.is_current는 PostgreSQL의 partial unique index로 1개만 TRUE 보장
@@ -36,15 +34,15 @@ CREATE TABLE generation
 -- 3. 멤버-기수 연결 테이블
 CREATE TABLE member_generation
 (
-    id            BIGINT   NOT NULL AUTO_INCREMENT,
-    member_id     BIGINT   NOT NULL,
-    generation_id BIGINT   NOT NULL,
-    role_in_gen   ENUM ('member','operating') NOT NULL DEFAULT 'member',
-    joined_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id                BIGINT   NOT NULL AUTO_INCREMENT,
+    member_id         BIGINT   NOT NULL,
+    generation_number INT      NOT NULL,
+    role_in_gen       ENUM ('member','operating') NOT NULL DEFAULT 'member',
+    joined_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_member_generation (member_id, generation_id),
+    UNIQUE KEY uq_member_generation (member_id, generation_number),
     FOREIGN KEY (member_id) REFERENCES member (id) ON DELETE CASCADE,
-    FOREIGN KEY (generation_id) REFERENCES generation (id) ON DELETE CASCADE
+    FOREIGN KEY (generation_number) REFERENCES generation (number) ON DELETE CASCADE
 );
 
 -- 4. 공통 기술 스택 마스터 테이블
@@ -76,7 +74,7 @@ CREATE TABLE member_tech_stack
 CREATE TABLE team_profile
 (
     id                     BIGINT       NOT NULL AUTO_INCREMENT,
-    generation_id          BIGINT,
+    generation_number      INT,
     name                   VARCHAR(255) NOT NULL,
     description            TEXT,
     project_url            TEXT,
@@ -86,7 +84,7 @@ CREATE TABLE team_profile
     created_at             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    FOREIGN KEY (generation_id) REFERENCES generation (id) ON DELETE SET NULL
+    FOREIGN KEY (generation_number) REFERENCES generation (number) ON DELETE SET NULL
 );
 
 -- 7. 팀별 사용 기술 스택

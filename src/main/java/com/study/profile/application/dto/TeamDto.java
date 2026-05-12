@@ -10,7 +10,7 @@ public class TeamDto {
       String description,
       String projectUrl,
       String githubUrl,
-      Long generationId,
+      Integer generationNumber,
       List<String> imageUrls,
       List<Long> techStackIds) {}
 

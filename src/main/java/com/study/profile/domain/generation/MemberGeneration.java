@@ -18,6 +18,8 @@ import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 멤버-기수 연결 엔티티 (중간 테이블).
@@ -36,7 +38,7 @@ import lombok.NoArgsConstructor;
     uniqueConstraints =
         @UniqueConstraint(
             name = "uq_member_generation",
-            columnNames = {"member_id", "generation_id"}))
+            columnNames = {"member_id", "generation_number"})) // generation number로 시현 수정
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberGeneration {
@@ -52,10 +54,11 @@ public class MemberGeneration {
   private Member member; // 참여한 멤버
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_id", nullable = false)
+  @JoinColumn(name = "generation_number", nullable = false)
   private Generation generation; // 참여한 기수
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "role_in_gen", nullable = false)
   private GenerationRole roleInGen = GenerationRole.member; // 해당 기수에서의 역할 (일반멤버/운영진)
 

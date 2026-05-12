@@ -35,7 +35,7 @@ public class EventPost {
   private Member author;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_id", nullable = false)
+  @JoinColumn(name = "generation_number", nullable = false) // generation number로 시현 수정
   private Generation generation;
 
   @Enumerated(EnumType.STRING)

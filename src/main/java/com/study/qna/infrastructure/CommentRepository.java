@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository("qnaCommentRepository")
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+
   List<Comment> findByAnswer_IdOrderByCreatedAtAsc(Long answerId);
 }
