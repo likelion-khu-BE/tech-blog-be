@@ -14,6 +14,7 @@ import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostLike;
 import com.study.blog.domain.post.PostStatus;
 import com.study.blog.domain.post.PostTag;
+import com.study.config.TestcontainersConfig;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
+@Import(TestcontainersConfig.class)
 @DisplayName("어드민 API")
 class AdminApiTest {
 
