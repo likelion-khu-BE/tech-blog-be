@@ -57,7 +57,10 @@ public class SecurityConfig {
                         "/api/auth/refresh",
                         "/api/auth/logout",
                         "/api/health",
-                        "/api/health/**")
+                        "/api/health/**",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui.html")
                     .permitAll()
                     .requestMatchers(
                         org.springframework.http.HttpMethod.GET,
