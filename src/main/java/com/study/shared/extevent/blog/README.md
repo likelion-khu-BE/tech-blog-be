@@ -6,8 +6,8 @@
 |---|---|---|
 | `BlogPostCreated` | 글 저장 직후 | `(userId, postId)` |
 | `BlogPostDeleted` | 글 삭제 직후 | `(userId, postId)` |
-| `BlogCommentCreated` | 댓글 저장 직후 | `(userId, commentId)` |
-| `BlogCommentDeleted` | 댓글 삭제 직후 | `(userId, commentId)` |
+| `BlogCommentCreated` | 댓글 저장 직후 | `(userId, postId, commentId)` |
+| `BlogCommentDeleted` | 댓글 삭제 직후 | `(userId, postId, commentId)` |
 | `BlogPostLiked` | 좋아요 켜질 때 | `(likerId, postId, postOwnerId)` |
 | `BlogPostUnliked` | 좋아요 꺼질 때 | `(likerId, postId, postOwnerId)` |
 

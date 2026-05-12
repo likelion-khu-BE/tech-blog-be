@@ -13,7 +13,11 @@ import com.study.shared.extevent.blog.BlogPostUnliked;
 import com.study.shared.extevent.qna.QnaAnswerAccepted;
 import com.study.shared.extevent.qna.QnaAnswerCreated;
 import com.study.shared.extevent.qna.QnaAnswerDeleted;
+import com.study.shared.extevent.qna.QnaAnswerDownvoteWithdrawn;
+import com.study.shared.extevent.qna.QnaAnswerDownvoted;
 import com.study.shared.extevent.qna.QnaAnswerUnaccepted;
+import com.study.shared.extevent.qna.QnaAnswerUpvoteWithdrawn;
+import com.study.shared.extevent.qna.QnaAnswerUpvoted;
 import com.study.shared.extevent.qna.QnaCommentCreated;
 import com.study.shared.extevent.qna.QnaCommentDeleted;
 import com.study.shared.extevent.qna.QnaQuestionCreated;
@@ -56,7 +60,7 @@ class ActivityEventListenerTest {
     @Test
     @DisplayName("BlogCommentCreated → record(userId, blog_comment, commentId)")
     void onBlogCommentCreated() {
-      listener.onBlogCommentCreated(new BlogCommentCreated(1L, 7L));
+      listener.onBlogCommentCreated(new BlogCommentCreated(1L, 42L, 7L));
 
       then(activityService).should().record(1L, ActivityType.blog_comment, 7L);
     }
@@ -88,7 +92,7 @@ class ActivityEventListenerTest {
     @Test
     @DisplayName("BlogCommentDeleted → revoke(blog_comment, commentId)")
     void onBlogCommentDeleted() {
-      listener.onBlogCommentDeleted(new BlogCommentDeleted(1L, 7L));
+      listener.onBlogCommentDeleted(new BlogCommentDeleted(1L, 42L, 7L));
 
       then(activityService).should().revoke(ActivityType.blog_comment, 7L);
     }
@@ -120,7 +124,7 @@ class ActivityEventListenerTest {
     @Test
     @DisplayName("QnaAnswerCreated → record(userId, qna_answer, answerId)")
     void onQnaAnswerCreated() {
-      listener.onQnaAnswerCreated(new QnaAnswerCreated(1L, 20L));
+      listener.onQnaAnswerCreated(new QnaAnswerCreated(1L, 100L, 20L));
 
       then(activityService).should().record(1L, ActivityType.qna_answer, 20L);
     }
@@ -128,15 +132,31 @@ class ActivityEventListenerTest {
     @Test
     @DisplayName("QnaAnswerAccepted → record(답변자, qna_accepted, answerId)")
     void onQnaAnswerAccepted() {
-      listener.onQnaAnswerAccepted(new QnaAnswerAccepted(5L, 20L));
+      listener.onQnaAnswerAccepted(new QnaAnswerAccepted(5L, 100L, 20L));
 
       then(activityService).should().record(5L, ActivityType.qna_accepted, 20L);
     }
 
     @Test
+    @DisplayName("QnaAnswerUpvoted → record(voterId, qna_answer_upvote, answerId)")
+    void onQnaAnswerUpvoted() {
+      listener.onQnaAnswerUpvoted(new QnaAnswerUpvoted(99L, 100L, 20L));
+
+      then(activityService).should().record(99L, ActivityType.qna_answer_upvote, 20L);
+    }
+
+    @Test
+    @DisplayName("QnaAnswerDownvoted → record(voterId, qna_answer_downvote, answerId)")
+    void onQnaAnswerDownvoted() {
+      listener.onQnaAnswerDownvoted(new QnaAnswerDownvoted(99L, 100L, 20L));
+
+      then(activityService).should().record(99L, ActivityType.qna_answer_downvote, 20L);
+    }
+
+    @Test
     @DisplayName("QnaCommentCreated → record(userId, qna_comment, commentId)")
     void onQnaCommentCreated() {
-      listener.onQnaCommentCreated(new QnaCommentCreated(1L, 30L));
+      listener.onQnaCommentCreated(new QnaCommentCreated(1L, 10L, null, 30L));
 
       then(activityService).should().record(1L, ActivityType.qna_comment, 30L);
     }
@@ -155,25 +175,44 @@ class ActivityEventListenerTest {
     }
 
     @Test
-    @DisplayName("QnaAnswerDeleted → revoke(qna_answer, answerId)")
+    @DisplayName(
+        "QnaAnswerDeleted → revoke(qna_answer) + revoke(qna_answer_upvote) + revoke(qna_answer_downvote) cascade")
     void onQnaAnswerDeleted() {
-      listener.onQnaAnswerDeleted(new QnaAnswerDeleted(1L, 20L));
+      listener.onQnaAnswerDeleted(new QnaAnswerDeleted(1L, 100L, 20L));
 
       then(activityService).should().revoke(ActivityType.qna_answer, 20L);
+      then(activityService).should().revoke(ActivityType.qna_answer_upvote, 20L);
+      then(activityService).should().revoke(ActivityType.qna_answer_downvote, 20L);
     }
 
     @Test
     @DisplayName("QnaAnswerUnaccepted → revoke(qna_accepted, answerId)")
     void onQnaAnswerUnaccepted() {
-      listener.onQnaAnswerUnaccepted(new QnaAnswerUnaccepted(5L, 20L));
+      listener.onQnaAnswerUnaccepted(new QnaAnswerUnaccepted(5L, 100L, 20L));
 
       then(activityService).should().revoke(ActivityType.qna_accepted, 20L);
     }
 
     @Test
+    @DisplayName("QnaAnswerUpvoteWithdrawn → revokeLike(qna_answer_upvote, answerId, voterId)")
+    void onQnaAnswerUpvoteWithdrawn() {
+      listener.onQnaAnswerUpvoteWithdrawn(new QnaAnswerUpvoteWithdrawn(99L, 100L, 20L));
+
+      then(activityService).should().revokeLike(ActivityType.qna_answer_upvote, 20L, 99L);
+    }
+
+    @Test
+    @DisplayName("QnaAnswerDownvoteWithdrawn → revokeLike(qna_answer_downvote, answerId, voterId)")
+    void onQnaAnswerDownvoteWithdrawn() {
+      listener.onQnaAnswerDownvoteWithdrawn(new QnaAnswerDownvoteWithdrawn(99L, 100L, 20L));
+
+      then(activityService).should().revokeLike(ActivityType.qna_answer_downvote, 20L, 99L);
+    }
+
+    @Test
     @DisplayName("QnaCommentDeleted → revoke(qna_comment, commentId)")
     void onQnaCommentDeleted() {
-      listener.onQnaCommentDeleted(new QnaCommentDeleted(1L, 30L));
+      listener.onQnaCommentDeleted(new QnaCommentDeleted(1L, 10L, null, 30L));
 
       then(activityService).should().revoke(ActivityType.qna_comment, 30L);
     }
@@ -194,7 +233,7 @@ class ActivityEventListenerTest {
     @Test
     @DisplayName("SessionEventCommentCreated → record(userId, session_event_comment, commentId)")
     void onSessionEventCommentCreated() {
-      listener.onSessionEventCommentCreated(new SessionEventCommentCreated(1L, 60L));
+      listener.onSessionEventCommentCreated(new SessionEventCommentCreated(1L, 50L, 60L));
 
       then(activityService).should().record(1L, ActivityType.session_event_comment, 60L);
     }
@@ -234,7 +273,7 @@ class ActivityEventListenerTest {
     @Test
     @DisplayName("SessionEventCommentDeleted → revoke(session_event_comment, commentId)")
     void onSessionEventCommentDeleted() {
-      listener.onSessionEventCommentDeleted(new SessionEventCommentDeleted(1L, 60L));
+      listener.onSessionEventCommentDeleted(new SessionEventCommentDeleted(1L, 50L, 60L));
 
       then(activityService).should().revoke(ActivityType.session_event_comment, 60L);
     }

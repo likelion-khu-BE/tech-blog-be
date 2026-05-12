@@ -17,6 +17,8 @@ public enum ActivityType {
   qna_question(10),
   qna_answer(10),
   qna_accepted(25),
+  qna_answer_upvote(1),
+  qna_answer_downvote(1),
   qna_comment(3),
   session_speak(50),
   session_event_post(30),
