@@ -36,6 +36,9 @@ tasks.named('bootRun') {
 tasks.named('test') {
     useJUnitPlatform()
     workingDir = rootProject.projectDir
+    // docker-java 기본 API 버전(1.32)은 Docker 29.x에서 지원 안 됨(최소 v1.44 필요)
+    jvmArgs '-Dapi.version=1.44'
+    environment 'DOCKER_HOST', 'tcp://127.0.0.1:2375'
     testLogging {
         events 'passed', 'failed', 'skipped'
         showStandardStreams false
@@ -83,5 +86,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testRuntimeOnly 'com.h2database:h2'
+
+    // Testcontainers
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
 }
