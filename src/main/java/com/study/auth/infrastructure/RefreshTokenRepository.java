@@ -44,4 +44,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
           + " WHERE r.userId = :userId"
           + " AND r.status = com.study.auth.domain.RefreshTokenStatus.ACTIVE")
   int revokeAllByUserId(@Param("userId") Long userId);
+
+  /** 테스트 정리용 — 특정 유저의 토큰 행을 물리 삭제한다. */
+  void deleteByUserId(Long userId);
 }

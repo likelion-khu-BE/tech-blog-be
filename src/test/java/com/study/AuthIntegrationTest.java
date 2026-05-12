@@ -13,6 +13,7 @@ import com.study.auth.infrastructure.UserRepository;
 import com.study.auth.presentation.dto.LoginRequest;
 import com.study.auth.presentation.dto.SignupRequest;
 import jakarta.servlet.http.Cookie;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,6 +37,11 @@ import org.springframework.test.web.servlet.MvcResult;
 @AutoConfigureMockMvc
 class AuthIntegrationTest {
 
+  // 이 테스트에서 사용하는 이메일 목록 — cleanUp 시 해당 유저만 삭제한다.
+  // deleteAll()을 쓰면 공용 RDS의 실제 데이터가 전부 날아가므로 금지.
+  private static final List<String> TEST_EMAILS =
+      List.of("test@khu.ac.kr", "dup@khu.ac.kr", "user@khu.ac.kr", "pending@khu.ac.kr");
+
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
   @Autowired private UserRepository userRepository;
@@ -44,9 +50,16 @@ class AuthIntegrationTest {
 
   @BeforeEach
   void cleanUp() {
-    // RDS 사용 시 @Transactional 롤백이 MockMvc 요청 단위로 작동하지 않으므로 직접 정리
-    refreshTokenRepository.deleteAll();
-    userRepository.deleteAll();
+    // 테스트에서 사용하는 이메일 유저만 정리 — 공용 RDS의 다른 데이터를 건드리지 않는다.
+    TEST_EMAILS.forEach(
+        email ->
+            userRepository
+                .findByLoginEmail(email)
+                .ifPresent(
+                    user -> {
+                      refreshTokenRepository.deleteByUserId(user.getId());
+                      userRepository.delete(user);
+                    }));
   }
 
   private static final String SIGNUP_URL = "/api/auth/signup";
