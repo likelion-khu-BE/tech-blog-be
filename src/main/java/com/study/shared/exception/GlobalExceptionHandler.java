@@ -5,6 +5,7 @@ import com.study.auth.domain.exception.InvalidCredentialsException;
 import com.study.auth.domain.exception.InvalidTokenException;
 import com.study.auth.domain.exception.TokenReusedException;
 import com.study.auth.domain.exception.UserNotActiveException;
+import com.study.profile.domain.exception.MemberNotFoundException;
 import com.study.qna.domain.exception.AnswerNotFoundException;
 import com.study.qna.domain.exception.CommentNotFoundException;
 import com.study.qna.domain.exception.ForbiddenQnaActionException;
@@ -74,6 +75,11 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(TagNotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleTagNotFound(TagNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(MemberNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleMemberNotFound(MemberNotFoundException e) {
     return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
   }
 
