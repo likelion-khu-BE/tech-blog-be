@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 public record GenerationDto(
-    Long id,
+    Integer id,
     String label,
     Integer number,
     LocalDate startDate,
@@ -15,6 +15,12 @@ public record GenerationDto(
 
   public static GenerationDto from(Generation g) {
     return new GenerationDto(
-        g.getId(), g.getLabel(), g.getNumber(), g.getStartDate(), g.getEndDate(), g.getIsCurrent(), g.getCreatedAt());
+        g.getNumber(),
+        g.getNumber() + "기",
+        g.getNumber(),
+        g.getStartDate(),
+        g.getEndDate(),
+        g.getIsCurrent(),
+        g.getCreatedAt());
   }
 }

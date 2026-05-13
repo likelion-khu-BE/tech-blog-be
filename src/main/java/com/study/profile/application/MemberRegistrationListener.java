@@ -1,7 +1,12 @@
 package com.study.profile.application;
 
 import com.study.profile.application.dto.MemberCreateRequest;
+import com.study.profile.domain.generation.GenerationRole;
+import com.study.profile.domain.generation.MemberGeneration;
+import com.study.profile.domain.member.Member;
 import com.study.profile.domain.member.SessionType;
+import com.study.profile.infrastructure.GenerationRepository;
+import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.shared.extevent.auth.UserSignedUpEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
@@ -18,6 +23,8 @@ import org.springframework.stereotype.Component;
 public class MemberRegistrationListener {
 
   private final MemberService memberService;
+  private final GenerationRepository generationRepository;
+  private final MemberGenerationRepository memberGenerationRepository;
 
   @EventListener
   public void onUserSignedUp(UserSignedUpEvent event) {
@@ -32,6 +39,11 @@ public class MemberRegistrationListener {
 
     MemberCreateRequest req = new MemberCreateRequest(
         event.name(), sessionType, null, null, null, null, null, null);
-    memberService.createMember(event.userId(), req);
+    Member member = memberService.createMemberEntity(event.userId(), req);
+
+    generationRepository.findCurrentGeneration().ifPresent(generation -> {
+      MemberGeneration mg = MemberGeneration.create(member, generation, GenerationRole.member);
+      memberGenerationRepository.save(mg);
+    });
   }
 }

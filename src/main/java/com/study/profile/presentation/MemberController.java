@@ -45,7 +45,7 @@ public class MemberController {
 
   @GetMapping
   public ResponseEntity<List<MemberSummaryDto>> getMembers(
-      @RequestParam(required = false) Long generationId,
+      @RequestParam(required = false) Integer generationId,
       @RequestParam(required = false) SessionType sessionType) {
     return ResponseEntity.ok(memberService.getMembers(generationId, sessionType));
   }

@@ -20,12 +20,16 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
   @Query("SELECT COUNT(m) > 0 FROM Member m WHERE m.user.id = :userId")
   boolean existsByUserId(@Param("userId") Long userId);
 
-  @Query(
-      "SELECT m FROM Member m WHERE (:sessionType IS NULL OR m.sessionType = :sessionType) ORDER BY m.name ASC")
-  List<Member> findAllFiltered(@Param("sessionType") SessionType sessionType);
+  @Query("SELECT m FROM Member m ORDER BY m.name ASC")
+  List<Member> findAllSorted();
 
-  @Query(
-      "SELECT m FROM Member m WHERE m.id IN :ids AND (:sessionType IS NULL OR m.sessionType = :sessionType) ORDER BY m.name ASC")
-  List<Member> findAllByIdInFiltered(
+  @Query("SELECT m FROM Member m WHERE m.sessionType = :sessionType ORDER BY m.name ASC")
+  List<Member> findAllBySessionType(@Param("sessionType") SessionType sessionType);
+
+  @Query("SELECT m FROM Member m WHERE m.id IN :ids ORDER BY m.name ASC")
+  List<Member> findAllByIdIn(@Param("ids") Collection<Long> ids);
+
+  @Query("SELECT m FROM Member m WHERE m.id IN :ids AND m.sessionType = :sessionType ORDER BY m.name ASC")
+  List<Member> findAllByIdInAndSessionType(
       @Param("ids") Collection<Long> ids, @Param("sessionType") SessionType sessionType);
 }

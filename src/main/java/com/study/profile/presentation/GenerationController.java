@@ -42,27 +42,27 @@ public class GenerationController {
   }
 
   @GetMapping("/{generationId}")
-  public ResponseEntity<GenerationDto> getGeneration(@PathVariable Long generationId) {
+  public ResponseEntity<GenerationDto> getGeneration(@PathVariable Integer generationId) {
     return ResponseEntity.ok(generationService.getGeneration(generationId));
   }
 
   @PatchMapping("/{generationId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Long>> updateGeneration(
-      @PathVariable Long generationId, @Valid @RequestBody GenerationCreateRequest req) {
+  public ResponseEntity<Map<String, Integer>> updateGeneration(
+      @PathVariable Integer generationId, @Valid @RequestBody GenerationCreateRequest req) {
     return ResponseEntity.ok(generationService.updateGeneration(generationId, req));
   }
 
   @GetMapping("/{generationId}/members")
   public ResponseEntity<List<GenerationMemberDto>> getGenerationMembers(
-      @PathVariable Long generationId) {
+      @PathVariable Integer generationId) {
     return ResponseEntity.ok(generationService.getGenerationMembers(generationId));
   }
 
   @PostMapping("/{generationId}/members")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Long>> addMemberToGeneration(
-      @PathVariable Long generationId, @Valid @RequestBody GenerationMemberAddRequest req) {
+      @PathVariable Integer generationId, @Valid @RequestBody GenerationMemberAddRequest req) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(generationService.addMemberToGeneration(generationId, req));
   }

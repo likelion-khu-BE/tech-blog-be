@@ -38,30 +38,30 @@ public class GenerationService {
         .toList();
   }
 
-  public GenerationDto getGeneration(Long generationId) {
+  public GenerationDto getGeneration(Integer generationId) {
     return GenerationDto.from(findById(generationId));
   }
 
   @Transactional
-  public Map<String, Long> createGeneration(GenerationCreateRequest req) {
+  public Map<String, Integer> createGeneration(GenerationCreateRequest req) {
     if (Boolean.TRUE.equals(req.isCurrent())) {
       unmarkCurrentGeneration(null);
     }
-    Generation g = Generation.create(req.label(), req.number(), req.startDate(), req.endDate(), req.isCurrent());
-    return Map.of("id", generationRepository.save(g).getId());
+    Generation g = Generation.create(req.number(), req.startDate(), req.endDate(), req.isCurrent());
+    return Map.of("id", generationRepository.save(g).getNumber());
   }
 
   @Transactional
-  public Map<String, Long> updateGeneration(Long generationId, GenerationCreateRequest req) {
+  public Map<String, Integer> updateGeneration(Integer generationId, GenerationCreateRequest req) {
     Generation g = findById(generationId);
     if (Boolean.TRUE.equals(req.isCurrent())) {
       unmarkCurrentGeneration(generationId);
     }
-    g.update(req.label(), req.number(), req.startDate(), req.endDate(), req.isCurrent());
-    return Map.of("id", g.getId());
+    g.update(req.number(), req.startDate(), req.endDate(), req.isCurrent());
+    return Map.of("id", g.getNumber());
   }
 
-  public List<GenerationMemberDto> getGenerationMembers(Long generationId) {
+  public List<GenerationMemberDto> getGenerationMembers(Integer generationId) {
     findById(generationId);
     return memberGenerationRepository.findByGenerationId(generationId).stream()
         .map(GenerationMemberDto::from)
@@ -69,7 +69,7 @@ public class GenerationService {
   }
 
   @Transactional
-  public Map<String, Long> addMemberToGeneration(Long generationId, GenerationMemberAddRequest req) {
+  public Map<String, Long> addMemberToGeneration(Integer generationId, GenerationMemberAddRequest req) {
     Generation generation = findById(generationId);
     Member member =
         memberRepository
@@ -82,16 +82,16 @@ public class GenerationService {
     return Map.of("id", memberGenerationRepository.save(mg).getId());
   }
 
-  private Generation findById(Long generationId) {
+  private Generation findById(Integer generationId) {
     return generationRepository
         .findById(generationId)
         .orElseThrow(() -> new IllegalArgumentException("기수를 찾을 수 없습니다."));
   }
 
-  private void unmarkCurrentGeneration(Long excludeId) {
+  private void unmarkCurrentGeneration(Integer excludeId) {
     generationRepository
         .findCurrentGeneration()
-        .filter(g -> !g.getId().equals(excludeId))
-        .ifPresent(g -> g.update(g.getLabel(), g.getNumber(), g.getStartDate(), g.getEndDate(), false));
+        .filter(g -> !g.getNumber().equals(excludeId))
+        .ifPresent(g -> g.update(g.getNumber(), g.getStartDate(), g.getEndDate(), false));
   }
 }
