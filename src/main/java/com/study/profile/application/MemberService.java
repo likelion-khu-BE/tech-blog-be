@@ -33,9 +33,9 @@ public class MemberService {
     this.userRepository = userRepository;
   }
 
-  /** 내부용: User 승인 후 프로필 최초 생성 */
+  /** 내부용: 이벤트 리스너에서 Member 엔티티 직접 필요 시 사용 */
   @Transactional
-  public MemberDto createMember(Long userId, MemberCreateRequest req) {
+  public Member createMemberEntity(Long userId, MemberCreateRequest req) {
     if (memberRepository.existsByUserId(userId)) {
       throw new IllegalStateException("이미 프로필이 존재합니다.");
     }
@@ -54,7 +54,13 @@ public class MemberService {
             req.displayedEmail(),
             req.intro(),
             req.linksJson());
-    return MemberDto.from(memberRepository.save(member), List.of());
+    return memberRepository.save(member);
+  }
+
+  /** 내부용: User 승인 후 프로필 최초 생성 */
+  @Transactional
+  public MemberDto createMember(Long userId, MemberCreateRequest req) {
+    return MemberDto.from(createMemberEntity(userId, req), List.of());
   }
 
   public MemberDto getMyProfile(Long userId) {
@@ -81,13 +87,20 @@ public class MemberService {
     return MemberDto.from(member, generations);
   }
 
-  public List<MemberSummaryDto> getMembers(Long generationId, SessionType sessionType) {
+  public List<MemberSummaryDto> getMembers(Integer generationId, SessionType sessionType) {
     List<Member> members;
     if (generationId != null) {
       List<Long> memberIds = memberGenerationRepository.findMemberIdsByGenerationId(generationId);
-      members = memberRepository.findAllByIdInFiltered(memberIds, sessionType);
+      if (memberIds.isEmpty()) {
+        return List.of();
+      }
+      members = sessionType != null
+          ? memberRepository.findAllByIdInAndSessionType(memberIds, sessionType)
+          : memberRepository.findAllByIdIn(memberIds);
     } else {
-      members = memberRepository.findAllFiltered(sessionType);
+      members = sessionType != null
+          ? memberRepository.findAllBySessionType(sessionType)
+          : memberRepository.findAllSorted();
     }
     return members.stream().map(MemberSummaryDto::from).toList();
   }
