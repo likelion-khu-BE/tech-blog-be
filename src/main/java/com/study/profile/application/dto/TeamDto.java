@@ -15,4 +15,39 @@ public class TeamDto {
       List<Long> techStackIds) {}
 
   public record TeamCreateResponse(Long id, String inviteCode, Instant inviteCodeExpiresAt) {}
+
+  public record GenerationSummary(Integer number) {}
+
+  public record TechStackSummary(Long id, String name, String category, String logoUrl) {}
+
+  public record TeamListResponse(
+      Long id,
+      String name,
+      String description,
+      GenerationSummary generation,
+      List<TechStackSummary> techStacks,
+      int memberCount,
+      String thumbUrl) {}
+
+  public record TeamMemberSummary(
+      Long memberId,
+      String name,
+      String sessionType,
+      String profileImageUrl,
+      boolean isLead,
+      List<String> roles) {}
+
+  public record TeamDetailResponse(
+      Long id,
+      String name,
+      String description,
+      String projectUrl,
+      String githubUrl,
+      GenerationSummary generation,
+      List<TechStackSummary> techStacks,
+      List<String> imageUrls,
+      List<TeamMemberSummary> members,
+      String inviteCode,
+      Instant inviteCodeExpiresAt,
+      Instant updatedAt) {}
 }

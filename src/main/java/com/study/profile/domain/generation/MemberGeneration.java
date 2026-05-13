@@ -18,8 +18,6 @@ import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /**
  * 멤버-기수 연결 엔티티 (중간 테이블).
@@ -58,7 +56,6 @@ public class MemberGeneration {
   private Generation generation; // 참여한 기수
 
   @Enumerated(EnumType.STRING)
-  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "role_in_gen", nullable = false)
   private GenerationRole roleInGen = GenerationRole.member; // 해당 기수에서의 역할 (일반멤버/운영진)
 

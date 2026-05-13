@@ -552,7 +552,7 @@ GET /profile/teams
 
 | 파라미터 | 타입 | 필수 | 설명 |
 |----------|------|------|------|
-| `generationId` | `number` | 아니오 | 기수 필터 |
+| `generationNumber` | `number` | 아니오 | 기수 필터 |
 
 **Response `200 OK`**
 ```json
@@ -561,7 +561,7 @@ GET /profile/teams
     "id": 1,
     "name": "헬스케어팀",
     "description": "건강 관리 앱을 만드는 팀입니다.",
-    "generation": { "id": 1, "label": "13기", "number": 13 },
+    "generation": { "number": 13 },
     "techStacks": [
       { "id": 1, "name": "Java", "category": "language", "logoUrl": "https://..." }
     ],
@@ -592,7 +592,7 @@ POST /profile/teams
   "description": "건강 관리 앱을 만드는 팀입니다.",
   "projectUrl": "https://...",
   "githubUrl": "https://github.com/...",
-  "generationId": 1,
+  "generationNumber": 13,
   "imageUrls": ["https://...", "https://..."],
   "techStackIds": [1, 2, 3]
 }
@@ -604,7 +604,7 @@ POST /profile/teams
 | `description` | `string` | 아니오 | — |
 | `projectUrl` | `string` | 아니오 | — |
 | `githubUrl` | `string` | 아니오 | — |
-| `generationId` | `number` | 아니오 | 존재하는 generation id |
+| `generationNumber` | `number` | 아니오 | 존재하는 generation number |
 | `imageUrls` | `string[]` | 아니오 | — |
 | `techStackIds` | `number[]` | 아니오 | 존재하는 tech_stack id 목록 |
 
@@ -633,7 +633,7 @@ GET /profile/teams/{teamId}
   "description": "건강 관리 앱을 만드는 팀입니다.",
   "projectUrl": "https://...",
   "githubUrl": "https://github.com/...",
-  "generation": { "id": 1, "label": "13기", "number": 13 },
+  "generation": { "number": 13 },
   "imageUrls": ["https://...", "https://..."],
   "techStacks": [
     { "id": 1, "name": "Java", "category": "language", "logoUrl": "https://..." }
@@ -645,14 +645,16 @@ GET /profile/teams/{teamId}
       "sessionType": "backend",
       "profileImageUrl": "https://...",
       "isLead": true,
-      "roles": ["backend", "infra"],
-      "status": "accepted"
+      "roles": ["backend", "infra"]
     }
   ],
-  "createdAt": "2025-05-01T10:00:00Z",
+  "inviteCode": "A1B2C3D4",
+  "inviteCodeExpiresAt": "2025-05-10T10:00:00Z",
   "updatedAt": "2025-05-07T10:00:00Z"
 }
 ```
+
+> `inviteCode` / `inviteCodeExpiresAt` 는 요청자가 해당 팀의 팀원(`accepted`)인 경우에만 반환되며, 그 외에는 `null`.
 
 ---
 
@@ -1007,9 +1009,9 @@ GET /profile/contributions/ranking
 | [ ] | `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | 시현 |
 | [ ] | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 시현 |
 | [ ] | `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | 시현 |
-| [ ] | `GET` | `/profile/teams` | 팀 목록 | 시현 |
+| ✅ | `GET` | `/profile/teams` | 팀 목록 | 시현 |
 | ✅ | `POST` | `/profile/teams` | 팀 생성 | 시현 |
-| [ ] | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
+| ✅ | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
 | [ ] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
 | [ ] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
 | [ ] | `GET` | `/profile/teams/{teamId}/invite-code` | 초대 코드 조회 (팀장) | 시현 |
