@@ -18,7 +18,6 @@ import com.study.sessionboard.presentation.dto.EventPostResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,28 +80,7 @@ public class EventPostService {
     List<EventPostImage> images =
         eventPostImageRepository.findAllByPostIdOrderByOrderAsc(eventPostId);
 
-    return new EventPostResponse(
-        post.getId(),
-        post.getType().name(),
-        post.getStatus(),
-        post.getTitle(),
-        new EventPostResponse.AuthorResponse(
-            post.getAuthor().getId(),
-            post.getAuthor().getName(),
-            post.getAuthor()
-                .getName()
-                .substring(0, Math.min(post.getAuthor().getName().length(), 2))),
-        post.getCreatedAt(),
-        post.getUpdatedAt(),
-        post.getExcerpt(),
-        post.getBody(),
-        List.of(post.getTags()),
-        images.stream()
-            .map(img -> new EventPostResponse.ImageResponse(img.getOrder(), img.getUrl()))
-            .collect(Collectors.toList()),
-        post.getLikeCount(),
-        false,
-        post.getCommentCount());
+    return EventPostResponse.of(post, images);
   }
 
   @Transactional

@@ -103,12 +103,4 @@ public class EventPost {
     this.body = body;
     this.tags = tags != null ? tags : new String[0];
   }
-
-  public String getExcerpt() {
-    if (body == null || body.isEmpty()) {
-      return "";
-    }
-    String plainText = body.replaceAll("<[^>]*>", "");
-    return plainText.substring(0, Math.min(plainText.length(), 100));
-  }
 }
