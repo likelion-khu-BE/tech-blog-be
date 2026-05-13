@@ -17,8 +17,6 @@ import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /** 멤버 활동 이력 엔티티. 각 행 단위로 점수 부여 → 기여도 랭킹 산정에 활용. */
 @Entity
@@ -37,7 +35,6 @@ public class Activity {
   private Member member;
 
   @Enumerated(EnumType.STRING)
-  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "type", nullable = false)
   private ActivityType type;
 

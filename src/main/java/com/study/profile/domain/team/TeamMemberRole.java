@@ -14,8 +14,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /**
  * 팀원 역할 엔티티.
@@ -45,7 +43,6 @@ public class TeamMemberRole {
   private TeamMember teamMember;
 
   @Enumerated(EnumType.STRING)
-  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "role", nullable = false)
   private RoleInTeam role; // 역할 분야 (backend/frontend/design/ai/pm/infra/etc)
 

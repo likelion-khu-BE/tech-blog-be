@@ -25,8 +25,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /**
  * 멤버(프로필) 엔티티.
@@ -65,7 +63,6 @@ public class Member {
   private String department;
 
   @Enumerated(EnumType.STRING)
-  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "session_type", nullable = false)
   private SessionType sessionType;
 

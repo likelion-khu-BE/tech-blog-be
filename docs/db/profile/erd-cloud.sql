@@ -5,7 +5,7 @@ CREATE TABLE member
     user_id           BIGINT       NOT NULL UNIQUE,
     name              VARCHAR(255) NOT NULL,
     department        VARCHAR(255),
-    session_type      ENUM ('backend','frontend','design','ai','pm','etc') NOT NULL,
+    session_type      VARCHAR(50) NOT NULL,
     profile_image_url TEXT,
     github_url        TEXT,
     displayed_email   TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE member_generation
     id                BIGINT   NOT NULL AUTO_INCREMENT,
     member_id         BIGINT   NOT NULL,
     generation_number INT      NOT NULL,
-    role_in_gen       ENUM ('member','operating') NOT NULL DEFAULT 'member',
+    role_in_gen       VARCHAR(50) NOT NULL DEFAULT 'member',
     joined_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_member_generation (member_id, generation_number),
@@ -50,7 +50,7 @@ CREATE TABLE tech_stack
 (
     id         BIGINT       NOT NULL AUTO_INCREMENT,
     name       VARCHAR(255) NOT NULL UNIQUE,
-    category   ENUM ('language','framework','ai','design','tool','infra','etc') NOT NULL,
+    category   VARCHAR(50) NOT NULL,
     logo_url   TEXT,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
@@ -106,7 +106,7 @@ CREATE TABLE team_member
     team_id    BIGINT   NOT NULL,
     member_id  BIGINT   NOT NULL,
     is_lead    BOOLEAN  NOT NULL DEFAULT FALSE,
-    status     ENUM ('pending','accepted','rejected','left','kicked') NOT NULL DEFAULT 'pending',
+    status     VARCHAR(50) NOT NULL DEFAULT 'pending',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_team_member (team_id, member_id),
@@ -119,7 +119,7 @@ CREATE TABLE team_member_role
 (
     id             BIGINT NOT NULL AUTO_INCREMENT,
     team_member_id BIGINT NOT NULL,
-    role           ENUM ('backend','frontend','design','ai','pm','infra','etc') NOT NULL,
+    role           VARCHAR(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (team_member_id) REFERENCES team_member (id) ON DELETE CASCADE
 );
@@ -140,7 +140,7 @@ CREATE TABLE activity
 (
     id           BIGINT   NOT NULL AUTO_INCREMENT,
     member_id    BIGINT   NOT NULL,
-    type         ENUM ('blog_post','blog_comment','blog_post_like','blog_post_like_received','qna_question','qna_answer','qna_accepted','qna_comment','session_speak','session_event_post','session_event_comment','session_event_post_like','session_event_post_like_received') NOT NULL,
+    type         VARCHAR(50) NOT NULL,
     reference_id BIGINT,
     actor_id     BIGINT,
     score        INT      NOT NULL DEFAULT 0,
