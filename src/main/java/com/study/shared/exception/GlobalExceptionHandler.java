@@ -5,6 +5,7 @@ import com.study.auth.domain.exception.InvalidCredentialsException;
 import com.study.auth.domain.exception.InvalidTokenException;
 import com.study.auth.domain.exception.TokenReusedException;
 import com.study.auth.domain.exception.UserNotActiveException;
+import com.study.shared.s3.S3Exception;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -48,6 +49,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidTokenException.class)
   public ResponseEntity<Map<String, Object>> handleInvalidToken(InvalidTokenException e) {
     return errorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+  }
+
+  @ExceptionHandler(S3Exception.class)
+  public ResponseEntity<Map<String, Object>> handleS3Exception(S3Exception e) {
+    return errorResponse(e.getErrorCode().getStatus(), e.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

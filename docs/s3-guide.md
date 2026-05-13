@@ -4,50 +4,82 @@
 
 이미지 업로드는 **Presigned PUT URL** 방식을 사용한다. 서버가 파일을 중계하지 않고, 클라이언트가 S3에 직접 업로드한다.
 
-```
-클라이언트                백엔드                     S3
-    │                      │                          │
-    │  ① presigned URL 요청 │                          │
-    │──────────────────────▶│                          │
-    │                      │  (S3Presigner로 서명 생성) │
-    │  ② presignedUrl + key │                          │
-    │◀──────────────────────│                          │
-    │                                                  │
-    │  ③ PUT presignedUrl (이미지 파일 직접 업로드)       │
-    │──────────────────────────────────────────────────▶│
-    │                                                  │
-    │  ④ 게시글 저장 요청 (key 포함)                      │
-    │──────────────────────▶│                          │
-    │                      │  (key를 DB에 저장)         │
-```
-
 **왜 Presigned URL인가?**
-- 서버 메모리/대역폭을 소비하지 않음
+- 서버 메모리·대역폭을 소비하지 않음
 - 클라이언트 → S3 직접 전송이라 속도가 빠름
-- 서버는 key만 받아서 DB에 저장하면 됨
+- 서버는 `key`만 받아서 DB에 저장하면 됨
 
 ---
 
-## 버킷 & 엔드포인트 구성
+## 생성된 파일 목록 및 역할
 
-버킷은 도메인별로 분리되어 있으며, **모두 Public 버킷**이다 (조회 시 presigned GET URL 불필요).  
-presigned URL 발급 엔드포인트도 도메인별로 분리되어 있어, 클라이언트가 버킷 이름을 알 필요가 없다.
-
-| 엔드포인트 | 버킷 환경변수 | application.yml key |
+| 파일 | 위치 | 역할 |
 |---|---|---|
-| `GET /api/events/presigned-urls` | `S3_BUCKET_EVENT` | `s3.bucket.event` |
-| `GET /api/sessions/presigned-urls` | `S3_BUCKET_SESSION` | `s3.bucket.session` |
-| `GET /api/{domain}/presigned-urls` | `S3_BUCKET_{DOMAIN}` | `s3.bucket.{domain}` |
+| `S3Config` | `shared/config/S3Config.java` | `S3Client`, `S3Presigner` 빈 등록. `S3Properties` 활성화 |
+| `S3Properties` | `shared/s3/S3Properties.java` | `application.yml`의 S3 설정값을 타입 안전하게 바인딩 |
+| `S3Service` | `shared/s3/S3Service.java` | presigned URL 생성, 공개 URL 조회, HeadObject 검증, 파일 삭제 |
+| `S3UploadValidator` | `shared/s3/S3UploadValidator.java` | 파일명(확장자·수) 검증 + 업로드 후 HeadObject(Content-Type·크기) 검증 |
+| `S3ErrorCode` | `shared/s3/S3ErrorCode.java` | S3 관련 공통 에러 코드 enum |
+| `S3Exception` | `shared/s3/S3Exception.java` | S3ErrorCode를 wrapping하는 공통 예외 |
+| `PresignedUrlResponse` | `shared/s3/PresignedUrlResponse.java` | presigned URL 발급 응답 DTO (`presignedUrl`, `key`) |
+| `RateLimitService` | `shared/ratelimit/RateLimitService.java` | 유저별 API 요청 빈도 제한 (Bucket4j 인메모리) |
+| `AsyncConfig` | `shared/config/AsyncConfig.java` | `@EnableAsync` + `@EnableScheduling` 활성화 |
 
-새 도메인에 버킷이 필요하면 위 패턴으로 환경변수와 `application.yml` 항목을 추가하고, 해당 도메인에 컨트롤러를 추가한다.
+### S3Config
+
+`S3Client`(실제 S3 작업)와 `S3Presigner`(서명 URL 생성) 두 빈을 등록한다. `@EnableConfigurationProperties(S3Properties.class)`로 `S3Properties` 레코드를 활성화한다.
+
+### S3Properties
+
+```java
+@ConfigurationProperties(prefix = "spring.cloud.aws.s3")
+public record S3Properties(BucketProperties bucket, long presignedUrlExpiration) {
+  public record BucketProperties(String event, String session) {}
+}
+```
+
+`application.yml`의 `spring.cloud.aws.s3.bucket.event`, `spring.cloud.aws.s3.bucket.session` 값을 바인딩한다.  
+**새 버킷을 추가할 때는 `BucketProperties` 레코드에 필드를 추가한다.**
+
+### S3Service
+
+| 메서드 | 설명 |
+|---|---|
+| `generatePresignedPutUrls(bucket, filenames)` | 파일명 목록 → `List<PresignedUrlResponse>` 일괄 발급 |
+| `generatePresignedPutUrl(bucket, key, contentType, expirySeconds)` | 단건 발급. `contentType`을 고정하면 AWS가 헤더를 검증 |
+| `getFileUrl(bucket, key)` | `key` → `https://{bucket}.s3.{region}.amazonaws.com/{key}` |
+| `headObject(bucket, key)` | `HeadObjectResponse` 반환. 키 없으면 `NoSuchKeyException` |
+| `delete(bucket, key)` | S3 파일 삭제. 키가 없어도 예외 없음 |
+| `generateKey(filename)` | `images/{UUID}.{ext}` 형식 key 생성 |
+
+### RateLimitService
+
+```java
+boolean allowed = rateLimitService.tryConsume(userId);
+// true  → 요청 허용
+// false → 429 Too Many Requests 반환
+```
+
+기본값: **1분에 5회**. presigned URL 발급 엔드포인트에 반드시 적용한다.  
+서버 재시작 시 버킷이 초기화되며, Redis 전환 가이드는 클래스 Javadoc 참고.
 
 ---
 
-## 백엔드 사용법
+## 버킷 구성
 
-### 1. 버킷 이름 주입
+버킷은 도메인별로 분리되어 있으며 **Public 읽기 버킷**이다 (조회 시 presigned GET URL 불필요).
 
-각 도메인 서비스(또는 컨트롤러)는 자신이 사용할 버킷 이름만 `@Value`로 주입한다. **S3Service에 버킷 이름을 하드코딩하지 않는다.**
+| 엔드포인트 예시 | 환경변수 | `S3Properties` 접근 |
+|---|---|---|
+| `GET /api/events/presigned-urls` | `S3_BUCKET_EVENT` | `s3Properties.bucket().event()` |
+| `GET /api/sessions/presigned-urls` | `S3_BUCKET_SESSION` | `s3Properties.bucket().session()` |
+| `GET /api/{domain}/presigned-urls` | `S3_BUCKET_{DOMAIN}` | 신규 필드 추가 필요 |
+
+---
+
+## 백엔드 구현 가이드
+
+### 1. 의존성 주입
 
 ```java
 @Service
@@ -55,56 +87,146 @@ presigned URL 발급 엔드포인트도 도메인별로 분리되어 있어, 클
 public class YourDomainService {
 
     private final S3Service s3Service;
+    private final S3Properties s3Properties;
+    private final S3UploadValidator s3UploadValidator;
+    private final RateLimitService rateLimitService;
 
-    @Value("${s3.bucket.your-domain}")
-    private String bucket;
+    private String bucket() {
+        return s3Properties.bucket().yourDomain(); // 자신의 도메인 버킷만 사용
+    }
 }
 ```
 
-### 2. presigned PUT URL 발급
+### 2. presigned URL 발급 컨트롤러
 
-게시글 저장 직전에 발급한다. 업로드 후 `key`를 DB에 저장한다.
+**presigned URL 엔드포인트에는 반드시 Rate Limit + 파일명 검증을 함께 적용한다.**
 
 ```java
-// filenames: 클라이언트가 올릴 파일명 목록 (예: ["photo.jpg", "diagram.png"])
-List<PresignedUrlResponse> urls = s3Service.generatePresignedPutUrls(bucket, filenames);
+@RestController
+@RequestMapping("/api/your-domain")
+@RequiredArgsConstructor
+public class YourPresignedUrlController {
 
-// PresignedUrlResponse(String presignedUrl, String key)
-// presignedUrl → 클라이언트가 PUT 요청에 쓸 서명된 URL (만료 있음, 캐시 금지)
-// key          → DB에 저장할 경로 (예: "images/550e8400-e29b-41d4-a716-446655440000.jpg")
+    private final S3Service s3Service;
+    private final S3Properties s3Properties;
+    private final S3UploadValidator s3UploadValidator;
+    private final RateLimitService rateLimitService;
+
+    @GetMapping("/presigned-urls")
+    public List<PresignedUrlResponse> getPresignedUrls(
+            @RequestParam List<String> filenames,
+            @AuthenticationPrincipal Long userId) {
+
+        // ① Rate Limit: 유저당 분당 5회
+        if (!rateLimitService.tryConsume(userId)) {
+            throw new S3Exception(S3ErrorCode.UPLOAD_RATE_LIMITED);
+        }
+
+        // ② 파일명 검증: 허용 확장자·최대 파일 수 (application.yml upload 설정 기준)
+        s3UploadValidator.validateFilenames(filenames);
+
+        String bucket = s3Properties.bucket().yourDomain();
+        return s3Service.generatePresignedPutUrls(bucket, filenames);
+    }
+}
 ```
 
-### 3. 조회 시 URL 변환
+### 3. 게시글/자료 저장 — HeadObject 검증 후 key를 DB에 저장
 
-DB에 저장된 `key`를 응답 DTO로 조립할 때 전체 URL로 변환한다.
+클라이언트로부터 `imageKeys` 목록을 받을 때 **반드시 HeadObject 검증 후** DB에 저장한다.  
+검증 실패 시 해당 S3 파일은 `S3UploadValidator` 내부에서 자동 삭제된다.
 
 ```java
-// key → "https://{bucket}.s3.{region}.amazonaws.com/{key}"
-String url = s3Service.getFileUrl(bucket, key);
+@Transactional
+public void createPost(Long userId, CreatePostRequest request) {
+    String bucket = bucket();
+
+    List<YourImage> images = new ArrayList<>();
+    for (int i = 0; i < request.imageKeys().size(); i++) {
+        String key = request.imageKeys().get(i);
+
+        // Content-Type(image/*), 파일 크기(≤ maxFileSizeBytes) 이중 검증
+        // 검증 실패 시 S3Exception 발생 + S3 파일 즉시 삭제
+        s3UploadValidator.validateUpload(bucket, key);
+
+        String url = s3Service.getFileUrl(bucket, key);
+        images.add(YourImage.of(entity, url, key, i));
+    }
+    imageRepository.saveAll(images);
+}
 ```
 
-### 4. 삭제
+### 4. 조회 응답 — key → URL 변환
 
-게시글 삭제 시 연결된 이미지도 함께 삭제한다.
+DB에 `key`를 저장하고, 응답 DTO 조립 시 URL로 변환한다. 버킷이 Public이므로 presigned GET URL은 불필요하다.
 
 ```java
-// 연결된 이미지 목록을 순회하며 S3 파일 삭제
-images.forEach(image -> s3Service.delete(bucket, image.getKey()));
+String url = s3Service.getFileUrl(bucket, image.getImageKey());
+// → "https://{bucket}.s3.{region}.amazonaws.com/{key}"
+```
+
+### 5. 삭제 — S3와 DB 함께 처리
+
+게시글·자료 삭제 시 연결된 S3 파일도 반드시 함께 삭제한다.
+
+```java
+@Transactional
+public void deletePost(Long postId) {
+    YourPost post = postRepository.findById(postId).orElseThrow(...);
+    List<YourImage> images = imageRepository.findByPost(post);
+
+    // S3 파일 먼저 삭제 → DB 삭제 순서
+    images.forEach(img -> s3Service.delete(bucket(), img.getImageKey()));
+    imageRepository.deleteAll(images);
+    postRepository.delete(post);
+}
 ```
 
 ---
 
-## S3Service 메서드 레퍼런스
+## 팀별 적용 방법
 
-> 위치: `src/main/java/com/study/s3/application/S3Service.java`
+### sessionboard 팀
 
-| 메서드 | 설명 |
-|---|---|
-| `generatePresignedPutUrls(bucket, filenames)` | 파일명 목록으로 presigned PUT URL + key 발급 |
-| `getFileUrl(bucket, key)` | key → Public URL 변환 (조회 응답 DTO 조립용) |
-| `delete(bucket, key)` | S3 파일 삭제 |
+- 버킷: `s3Properties.bucket().session()`
+- presigned URL 엔드포인트: `GET /api/sessions/presigned-urls`
+- 참고 파일: `EventPresignedUrlController`, `EventPostService`
 
-**key 생성 규칙**: `images/{UUID}.{확장자}` — 확장자가 없으면 UUID만 사용
+```java
+// EventPresignedUrlController — 이미 구현된 패턴 참고
+String bucket = s3Properties.bucket().session(); // session 버킷 사용
+```
+
+### blog 팀
+
+- 버킷: `S3Properties.BucketProperties`에 `blog` 필드 추가 필요
+- `application.yml`에 `spring.cloud.aws.s3.bucket.blog: ${S3_BUCKET_BLOG}` 추가
+- `.env`에 `S3_BUCKET_BLOG=...` 추가
+- presigned URL 엔드포인트: `GET /api/posts/presigned-urls` (신규 구현)
+
+```java
+// S3Properties.BucketProperties에 추가
+public record BucketProperties(String event, String session, String blog) {}
+
+// blog 서비스에서 사용
+String bucket = s3Properties.bucket().blog();
+```
+
+### qna 팀
+
+- blog 팀과 동일한 패턴으로 `qna` 필드 추가
+- presigned URL 엔드포인트: `GET /api/questions/presigned-urls` (신규 구현)
+
+### profile 팀
+
+- 프로필 이미지는 단건 업로드이므로 `generatePresignedPutUrls` 대신 `generatePresignedPutUrl` 사용 가능
+- Content-Type을 `image/jpeg` 또는 `image/png`로 고정하면 AWS 레벨에서 타입 강제 가능
+
+```java
+String key = s3Service.generateKey("profile.jpg");
+String presignedUrl = s3Service.generatePresignedPutUrl(
+        bucket, key, "image/jpeg", s3Properties.presignedUrlExpiration());
+```
 
 ---
 
@@ -112,35 +234,25 @@ images.forEach(image -> s3Service.delete(bucket, image.getKey()));
 
 ### Step 1 — presigned URL 요청
 
-게시글 등록/임시저장 버튼 클릭 시 업로드할 파일 목록으로 presigned URL을 요청한다.  
-엔드포인트는 도메인마다 다르며, 버킷은 서버에서 자동으로 결정된다.
-
 ```
-GET /api/events/presigned-urls?filenames={파일명1}&filenames={파일명2}
-GET /api/sessions/presigned-urls?filenames={파일명1}&filenames={파일명2}
+GET /api/{domain}/presigned-urls?filenames=photo.jpg&filenames=diagram.png
 Authorization: Bearer {accessToken}
 ```
 
-**Response `200 OK`**
+**Response 200 OK**
 ```json
 [
   {
     "presignedUrl": "https://{bucket}.s3.ap-northeast-2.amazonaws.com/images/uuid.jpg?X-Amz-Signature=...",
     "key": "images/550e8400-e29b-41d4-a716-446655440000.jpg"
-  },
-  {
-    "presignedUrl": "https://...",
-    "key": "images/6ba7b810-9dad-11d1-80b4-00c04fd430c8.png"
   }
 ]
 ```
 
-### Step 2 — S3 직접 업로드
-
-응답받은 `presignedUrl`로 파일을 **PUT**으로 직접 업로드한다.
+### Step 2 — S3 직접 업로드 (PUT)
 
 ```ts
-// presignedUrl은 서명된 URL이므로 Authorization 헤더 없이 요청
+// presignedUrl에는 Authorization 헤더를 포함하지 않는다 (403 발생)
 await fetch(presignedUrl, {
   method: 'PUT',
   body: file,
@@ -148,55 +260,32 @@ await fetch(presignedUrl, {
 })
 ```
 
-> `Authorization` 헤더를 포함하면 S3 서명 불일치로 403이 발생한다.
-
-### Step 3 — 리소스 저장 요청
-
-업로드 완료 후 `key` 목록을 저장 요청에 포함한다.
+### Step 3 — key 포함해서 저장 요청
 
 ```ts
 const keys = presignedUrlResponses.map((r) => r.key)
-
-// 각 도메인 API 명세 참고
-await api.post('/your-domain/resources', {
-  // ...기타 필드,
-  imageKeys: keys,
-})
+await api.post('/your-domain/resources', { ...otherFields, imageKeys: keys })
 ```
 
-### 예시 코드 (React + TypeScript)
-
-**타입 정의**
+### 예시 유틸 (TypeScript)
 
 ```ts
-// src/types/s3.ts
+// src/lib/s3.ts
 export interface PresignedUrlResponse {
   presignedUrl: string
   key: string
 }
-```
-
-**API 유틸**
-
-```ts
-// src/lib/s3.ts
-import axios from 'axios'
-import type { PresignedUrlResponse } from '@/types/s3'
-
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL })
 
 export async function uploadImages(
   files: File[],
-  presignedUrlEndpoint: string,
+  endpoint: string,   // 예: '/api/events/presigned-urls'
 ): Promise<string[]> {
   const filenames = files.map((f) => f.name)
 
-  // ① presigned URL 요청 (bucket은 서버가 결정)
-  const { data } = await api.get<PresignedUrlResponse[]>(presignedUrlEndpoint, {
+  const { data } = await api.get<PresignedUrlResponse[]>(endpoint, {
     params: { filenames },
   })
 
-  // ② S3 직접 업로드 (병렬, Authorization 헤더 제외)
   await Promise.all(
     data.map(({ presignedUrl }, i) =>
       fetch(presignedUrl, {
@@ -207,86 +296,53 @@ export async function uploadImages(
     ),
   )
 
-  // ③ key 목록 반환 → 저장 요청에 포함
   return data.map((r) => r.key)
 }
 ```
 
-**컴포넌트에서 사용**
+---
 
-```tsx
-// src/components/EventPostForm.tsx
-import { useState } from 'react'
-import { uploadImages } from '@/lib/s3'
-
-export function EventPostForm() {
-  const [files, setFiles] = useState<File[]>([])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const imageKeys = files.length > 0
-      ? await uploadImages(files, '/api/events/presigned-urls')
-      : []
-
-    await api.post('/session-board/{generationId}/event-posts', {
-      title: '...',
-      body: '...',
-      imageKeys,
-    })
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-      />
-      <button type="submit">등록</button>
-    </form>
-  )
-}
-```
-
-**`vite.config.ts` 환경변수 설정**
+## .env 설정
 
 ```sh
-# .env.local
-VITE_API_URL=http://localhost:8080
+AWS_ACCESS_KEY=...
+AWS_SECRET_KEY=...
+AWS_REGION=ap-northeast-2
+
+S3_BUCKET_EVENT=...           # sessionboard 이벤트 게시글 이미지
+S3_BUCKET_SESSION=...         # sessionboard 세션보드 이미지
+# S3_BUCKET_BLOG=...          # blog 팀 추가 시
+# S3_BUCKET_QNA=...           # qna 팀 추가 시
+
+S3_PRESIGNED_URL_EXPIRATION=180   # 초 단위 (기본 3분, 미설정 시 application.yml 기본값 사용)
 ```
 
 ---
 
 ## 주의사항
 
-**presigned URL은 캐시하지 않는다**
-- 기본 만료 시간은 **10분** (`S3_PRESIGNED_URL_EXPIRATION=600`)
-- 조회 응답에 포함된 `images[].url`도 만료가 있으므로 클라이언트에서 장기 캐시 금지
+**presigned URL 캐시 금지**
+- 만료 시간은 `S3_PRESIGNED_URL_EXPIRATION` 값 (기본 180초 = 3분)
+- 클라이언트에서 presigned URL을 캐시하면 만료 후 업로드 실패
+
+**Rate Limit**
+- presigned URL 발급 엔드포인트는 반드시 `RateLimitService.tryConsume(userId)`를 호출한다
+- 기본 제한: 1분에 5회. 초과 시 429 반환
 
 **업로드 타이밍**
 - 게시글 저장 **직전**에 presigned URL을 발급하고 즉시 업로드한다
-- 미리 발급해두면 만료 전에 업로드 못 하는 상황이 생길 수 있음
+- 미리 발급해두면 만료 전에 못 올리는 상황이 생길 수 있음
 
-**고아 파일**
+**고아 파일 (Orphan Objects)**
 - 업로드 후 게시글 저장이 실패하면 S3에 파일이 남는다
-- 현재는 별도 정리 정책 없음 (추후 S3 Lifecycle 정책 적용 예정)
+- 현재 별도 정리 정책 없음. 추후 S3 Lifecycle 정책(예: `images/` 경로 7일 후 자동 삭제) 적용 예정
 
-**DELETE 시 S3도 함께 삭제**
-- 게시글/자료 삭제 시 연결된 S3 파일도 반드시 함께 삭제한다
-- DB에서만 지우고 S3를 안 지우면 스토리지 비용 누수가 발생함
+**삭제 시 S3도 함께**
+- 게시글·자료 삭제 시 연결된 S3 파일도 반드시 함께 삭제한다
+- DB만 지우고 S3를 안 지우면 스토리지 비용 누수
 
----
-
-## .env 설정
-
-```
-AWS_ACCESS_KEY=...
-AWS_SECRET_KEY=...
-AWS_REGION=ap-northeast-2
-S3_BUCKET_EVENT=...            # /api/events/presigned-urls
-S3_BUCKET_SESSION=...          # /api/sessions/presigned-urls
-# S3_BUCKET_{DOMAIN}=...       # 신규 도메인 추가 시
-S3_PRESIGNED_URL_EXPIRATION=600
-```
+**새 도메인 버킷 추가 절차**
+1. `S3Properties.BucketProperties`에 필드 추가
+2. `application.yml`에 `spring.cloud.aws.s3.bucket.{domain}: ${S3_BUCKET_{DOMAIN}}` 추가
+3. `.env`에 `S3_BUCKET_{DOMAIN}=...` 추가
+4. 도메인 컨트롤러에서 `s3Properties.bucket().{domain}()` 사용
