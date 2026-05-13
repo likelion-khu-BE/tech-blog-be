@@ -78,7 +78,6 @@ public class Member {
   @Column(name = "intro")
   private String intro;
 
-  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "links_json", columnDefinition = "jsonb")
   private String linksJson;
 
