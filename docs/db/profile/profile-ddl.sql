@@ -1,20 +1,11 @@
--- 1. ENUM 타입 설정 (DB 레벨의 예외 방지)
-CREATE TYPE session_type AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'etc');
-CREATE TYPE generation_role AS ENUM ('member', 'operating');
-CREATE TYPE tech_stack_category AS ENUM ('language', 'framework', 'ai', 'design', 'tool', 'infra', 'etc');
-CREATE TYPE activity_type AS ENUM ('blog_post', 'blog_comment', 'blog_post_like', 'blog_post_like_received', 'qna_question', 'qna_answer', 'qna_accepted', 'qna_comment', 'session_speak', 'session_event_post', 'session_event_comment', 'session_event_post_like', 'session_event_post_like_received');
-CREATE TYPE contribution_period_type AS ENUM ('month', 'three_month', 'year', 'all');
-CREATE TYPE role_in_team AS ENUM ('backend', 'frontend', 'design', 'ai', 'pm', 'infra', 'etc');
-CREATE TYPE team_member_status AS ENUM ('pending', 'accepted', 'rejected', 'left', 'kicked');
-
--- 2. 핵심 테이블 생성 (PK: BIGINT / Long)
+-- 1. 핵심 테이블 생성 (PK: BIGINT / Long)
 -- 전제: users 테이블은 auth 팀 DDL이 먼저 생성해야 한다.
 CREATE TABLE member (
     id                BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     user_id           BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     name              TEXT NOT NULL,
     department        TEXT,
-    session_type      session_type NOT NULL,
+    session_type      VARCHAR(50) NOT NULL,
     profile_image_url TEXT,
     github_url        TEXT,
     displayed_email   TEXT,
@@ -40,7 +31,7 @@ CREATE TABLE member_generation (
     id                BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     member_id         BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     generation_number INT NOT NULL REFERENCES generation(number) ON DELETE CASCADE,
-    role_in_gen       generation_role NOT NULL DEFAULT 'member',
+    role_in_gen       VARCHAR(50) NOT NULL DEFAULT 'member',
     joined_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT uq_member_generation UNIQUE (member_id, generation_number)
 );
@@ -48,7 +39,7 @@ CREATE TABLE member_generation (
 CREATE TABLE tech_stack (
     id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name       TEXT NOT NULL UNIQUE,
-    category   tech_stack_category NOT NULL,
+    category   VARCHAR(50) NOT NULL,
     logo_url   TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -87,7 +78,7 @@ CREATE TABLE team_member (
     team_id    BIGINT NOT NULL REFERENCES team_profile(id) ON DELETE CASCADE,
     member_id  BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     is_lead    BOOLEAN NOT NULL DEFAULT FALSE,
-    status     team_member_status NOT NULL DEFAULT 'pending',
+    status     VARCHAR(50) NOT NULL DEFAULT 'pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT uq_team_member UNIQUE (team_id, member_id)
 );
@@ -95,7 +86,7 @@ CREATE TABLE team_member (
 CREATE TABLE team_member_role (
     id             BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     team_member_id BIGINT NOT NULL REFERENCES team_member(id) ON DELETE CASCADE,
-    role           role_in_team NOT NULL
+    role           VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE team_image (
@@ -108,7 +99,7 @@ CREATE TABLE team_image (
 CREATE TABLE activity (
     id           BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     member_id    BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    type         activity_type NOT NULL,
+    type         VARCHAR(50) NOT NULL,
     reference_id BIGINT,
     actor_id     BIGINT,
     score        INT NOT NULL DEFAULT 0,
