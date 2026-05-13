@@ -32,6 +32,13 @@ public class EventPostImage {
   @Column(nullable = false)
   private String url;
 
+  @Column(name = "image_key")
+  private String imageKey;
+
+  @Column(name = "file_size")
+  private Long fileSize;
+
+
   @Column(name = "\"order\"", nullable = false)
   private int order = 0;
 
@@ -57,4 +64,5 @@ public class EventPostImage {
     image.order = order;
     return image;
   }
+
 }

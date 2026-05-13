@@ -9,8 +9,10 @@ import com.study.qna.domain.exception.AnswerNotFoundException;
 import com.study.qna.domain.exception.VoteAlreadyExistsException;
 import com.study.qna.domain.exception.VoteNotFoundException;
 import com.study.qna.domain.exception.VoteSelfNotAllowedException;
+import com.study.shared.s3.S3Exception;
 import java.util.Map;
 import org.springframework.dao.DataIntegrityViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * <p>인증/인가 예외를 일관된 JSON 형식으로 반환한다. Spring Security의 AuthenticationEntryPoint / AccessDeniedHandler는
  * 필터 체인 레벨에서 401/403을 처리하고, 여기서는 서비스 레이어에서 발생하는 비즈니스 예외를 처리한다.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -78,6 +81,17 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(
       DataIntegrityViolationException e) {
     return errorResponse(HttpStatus.CONFLICT, "이미 투표한 답변입니다.");
+  }
+
+  @ExceptionHandler(S3Exception.class)
+  public ResponseEntity<Map<String, Object>> handleS3Exception(S3Exception e) {
+    return errorResponse(e.getErrorCode().getStatus(), e.getMessage());
+  }
+
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e) {
+    log.warn("IllegalArgumentException: {}", e.getMessage(), e);
+    return errorResponse(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다");
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
