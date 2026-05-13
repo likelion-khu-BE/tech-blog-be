@@ -1,12 +1,27 @@
 package com.study.profile.application.activity;
 
+import com.study.profile.application.dto.ActivityDto.ActivityResponse;
+import com.study.profile.application.dto.ActivityDto.ContributionResponse;
+import com.study.profile.application.dto.ActivityDto.ContributionTypeSum;
+import com.study.profile.application.dto.ActivityDto.RankingItemResponse;
+import com.study.profile.application.dto.ActivityDto.RankingProjection;
+import com.study.profile.application.dto.PageWrapper;
 import com.study.profile.domain.activity.Activity;
 import com.study.profile.domain.activity.ActivityType;
+import com.study.profile.domain.activity.ContributionPeriodType;
+import com.study.profile.domain.exception.MemberNotFoundException;
 import com.study.profile.domain.member.Member;
 import com.study.profile.infrastructure.ActivityRepository;
 import com.study.profile.infrastructure.MemberRepository;
+import java.time.Instant;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,12 +118,92 @@ public class ActivityService {
         type, referenceId, ownerId, actorId);
   }
 
-  // ===== 읽기: 조회 API (후속 PR) =====
+  // ===== 읽기: 조회 API =====
 
-  // TODO: 후속 PR에서 추가
-  // - getActivities(memberId, type, pageable)
-  // - getContributions(memberId, period)
-  // - getRanking(period, generationId, limit)
+  /**
+   * §6-1 멤버 활동 목록 — 호출자 본인/타인에 따라 노출 분기.
+   *
+   * <p>본인 호출(토큰의 Member.id == path memberId): 모든 type 노출 (작성형 + 반응형).
+   *
+   * <p>타인 호출: 작성형(creation) type만 노출. 반응형(좋아요/댓글)은 UI상 "기타 활동" 영역 자체 안 보임.
+   *
+   * @throws MemberNotFoundException memberId가 존재하지 않을 때 → 404
+   */
+  @Transactional(readOnly = true)
+  public PageWrapper<ActivityResponse> getActivities(
+      Long memberId, Long viewerUserId, Pageable pageable) {
+    if (!memberRepository.existsById(memberId)) {
+      throw new MemberNotFoundException(memberId);
+    }
+
+    Long viewerMemberId =
+        memberRepository.findByUserId(viewerUserId).map(Member::getId).orElse(null);
+    boolean isOwner = memberId.equals(viewerMemberId);
+
+    Page<Activity> page =
+        isOwner
+            ? activityRepository.findByMember_Id(memberId, pageable)
+            : activityRepository.findByMember_IdAndTypeIn(
+                memberId, ActivityType.creationTypes(), pageable);
+
+    return PageWrapper.from(page.map(ActivityResponse::from));
+  }
+
+  /**
+   * §6-2 기여도 요약 — 기간 내 type별 점수 합산 + 전체 합. 응답 breakdown은 13개 {@link ActivityType} 모두 포함 (점수 0이면 0).
+   *
+   * @throws MemberNotFoundException memberId가 존재하지 않을 때 → 404
+   */
+  @Transactional(readOnly = true)
+  public ContributionResponse getContributions(Long memberId, ContributionPeriodType period) {
+    Member member =
+        memberRepository
+            .findById(memberId)
+            .orElseThrow(() -> new MemberNotFoundException(memberId));
+
+    Instant since = period.toStartInstant().orElse(null);
+    List<ContributionTypeSum> rows =
+        activityRepository.sumScoresByMemberIdGroupByType(memberId, since);
+
+    Map<ActivityType, Integer> breakdown = new EnumMap<>(ActivityType.class);
+    for (ActivityType type : ActivityType.values()) {
+      breakdown.put(type, 0);
+    }
+    for (ContributionTypeSum row : rows) {
+      breakdown.put(row.type(), row.totalScore() == null ? 0 : row.totalScore().intValue());
+    }
+    int totalScore = breakdown.values().stream().mapToInt(Integer::intValue).sum();
+
+    return new ContributionResponse(memberId, member.getName(), period, totalScore, breakdown);
+  }
+
+  /**
+   * §6-3 기여도 랭킹 — 모든 멤버 (활동 0인 멤버 포함). 정렬: score desc → activityCount desc → member.id asc.
+   *
+   * @param period 기간 필터 (null 허용 X — Controller에서 default 채움)
+   * @param generationId 기수 필터 (null이면 전체)
+   * @param limit 반환할 순위 수
+   */
+  @Transactional(readOnly = true)
+  public List<RankingItemResponse> getRanking(
+      ContributionPeriodType period, Long generationId, int limit) {
+    Instant since = period.toStartInstant().orElse(null);
+    List<RankingProjection> rows =
+        activityRepository.findRanking(since, generationId, PageRequest.of(0, limit));
+
+    return java.util.stream.IntStream.range(0, rows.size())
+        .mapToObj(
+            i -> {
+              RankingProjection r = rows.get(i);
+              return new RankingItemResponse(
+                  i + 1,
+                  r.memberId(),
+                  r.name(),
+                  r.profileImageUrl(),
+                  r.totalScore() == null ? 0 : r.totalScore().intValue());
+            })
+        .toList();
+  }
 
   // ===== 내부 helper =====
 

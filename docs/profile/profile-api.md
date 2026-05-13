@@ -595,7 +595,7 @@ POST /profile/teams
   "techStackIds": [1, 2, 3]
 }
 ```
-
+ 
 | 필드 | 타입 | 필수 | 제약 |
 |------|------|------|------|
 | `name` | `string` | 예 | — |
@@ -875,13 +875,19 @@ DELETE /profile/teams/{teamId}/members/me
 GET /profile/members/{memberId}/activities
 ```
 
+> **노출 범위 — 호출자 본인/타인에 따라 분기**:
+> - **본인 호출** (토큰 본인의 Member.id == path memberId): 모든 활동 (작성형 + 반응형)
+> - **타인 호출**: 작성형(`blog_post`, `qna_question`, `qna_answer`, `qna_accepted`, `session_speak`, `session_event_post`)만. 반응형(댓글/좋아요/vote)은 응답에서 제외.
+>
+> 즉 타인 화면엔 "기타 활동" 영역 자체가 보이지 않음 (응답 row 없음).
+
 **Query Parameters**
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `type` | `ActivityType` | 아니오 | — | 활동 종류 필터 |
 | `page` | `number` | 아니오 | `0` | 페이지 번호 (0-based) |
 | `size` | `number` | 아니오 | `20` | 페이지 크기 |
+| `sort` | `string` | 아니오 | `createdAt,desc` | 정렬 기준 (Spring Pageable 형식, 잘못된 필드는 400) |
 
 **Response `200 OK`**
 ```json
@@ -951,6 +957,11 @@ GET /profile/members/{memberId}/contributions
 ```
 GET /profile/contributions/ranking
 ```
+
+> **정렬 기준** (다음 순서로 정렬, 0점 멤버도 포함):
+> 1. `totalScore` 내림차순
+> 2. `activityCount` 내림차순 (활동량 많은 사람이 동률에서 위)
+> 3. `member.id` 오름차순 (가입 순)
 
 **Query Parameters**
 
