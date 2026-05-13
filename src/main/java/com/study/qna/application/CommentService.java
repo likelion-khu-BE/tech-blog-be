@@ -1,11 +1,14 @@
 package com.study.qna.application;
 
 import com.study.qna.application.dto.request.comment.CommentCreateRequest;
+import com.study.qna.application.dto.request.comment.CommentUpdateRequest;
 import com.study.qna.application.dto.response.comment.CommentResponse;
 import com.study.qna.application.dto.response.common.MemberSummaryResponse;
 import com.study.qna.domain.Answer;
 import com.study.qna.domain.Comment;
 import com.study.qna.domain.exception.AnswerNotFoundException;
+import com.study.qna.domain.exception.CommentNotFoundException;
+import com.study.qna.domain.exception.ForbiddenQnaActionException;
 import com.study.qna.infrastructure.AnswerRepository;
 import com.study.qna.infrastructure.CommentRepository;
 import java.util.List;
@@ -41,10 +44,43 @@ public class CommentService {
             .orElseThrow(() -> new AnswerNotFoundException(answerId));
 
     Comment comment = Comment.createForAnswer(userId, answer, request.content());
-    answer.incrementCommentCount();
+    answerRepository.incrementCommentCount(answerId);
     Comment saved = commentRepository.save(comment);
     MemberSummaryResponse author =
         MemberSummaryResponse.of(saved.getUserId(), String.valueOf(saved.getUserId()), 0);
     return CommentResponse.of(saved, author);
+  }
+
+  @Transactional
+  public CommentResponse updateComment(Long commentId, CommentUpdateRequest request, Long userId) {
+    Comment comment =
+        commentRepository
+            .findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException(commentId));
+
+    if (!comment.isAuthor(userId)) {
+      throw new ForbiddenQnaActionException();
+    }
+
+    comment.update(request.content());
+    MemberSummaryResponse author =
+        MemberSummaryResponse.of(comment.getUserId(), String.valueOf(comment.getUserId()), 0);
+    return CommentResponse.of(comment, author);
+  }
+
+  @Transactional
+  public void deleteComment(Long commentId, Long userId) {
+    Comment comment =
+        commentRepository
+            .findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException(commentId));
+
+    if (!comment.isAuthor(userId)) {
+      throw new ForbiddenQnaActionException();
+    }
+
+    Long answerId = comment.getAnswer().getId();
+    commentRepository.delete(comment);
+    answerRepository.decrementCommentCount(answerId);
   }
 }
