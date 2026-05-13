@@ -67,7 +67,9 @@ public class SecurityConfig {
                         "/api/blog/posts",
                         "/api/blog/posts/**",
                         "/api/profile/tech-stacks",
-                        "/api/profile/tech-stacks/**")
+                        "/api/profile/tech-stacks/**",
+                        "/api/profile/teams",
+                        "/api/profile/teams/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

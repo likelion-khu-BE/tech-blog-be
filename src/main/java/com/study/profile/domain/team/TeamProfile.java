@@ -76,6 +76,9 @@ public class TeamProfile {
   @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TeamImage> images = new ArrayList<>();
 
+  @OneToMany(mappedBy = "team")
+  private List<TeamMember> members = new ArrayList<>();
+
   /**
    * 이미지들을 추가하는 메서드
    *

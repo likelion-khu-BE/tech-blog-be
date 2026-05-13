@@ -1,10 +1,18 @@
 package com.study.profile.application;
 
+import com.study.profile.application.dto.TeamDto.GenerationSummary;
 import com.study.profile.application.dto.TeamDto.TeamCreateRequest;
 import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
+import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
+import com.study.profile.application.dto.TeamDto.TeamListResponse;
+import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
+import com.study.profile.application.dto.TeamDto.TechStackSummary;
+import com.study.profile.domain.techstack.TeamTechStack;
 import com.study.profile.domain.generation.Generation;
 import com.study.profile.domain.member.Member;
+import com.study.profile.domain.team.TeamImage;
 import com.study.profile.domain.team.TeamMember;
+import com.study.profile.domain.team.TeamMemberStatus;
 import com.study.profile.domain.team.TeamProfile;
 import com.study.profile.domain.techstack.TechStack;
 import com.study.profile.infrastructure.GenerationRepository;
@@ -82,5 +90,98 @@ public class TeamService {
 
     return new TeamCreateResponse(
         team.getId(), team.getInviteCode(), team.getInviteCodeExpiresAt());
+  }
+
+  @Transactional(readOnly = true)
+  public List<TeamListResponse> getTeams(Integer generationNumber) {
+    List<TeamProfile> teams =
+        generationNumber != null
+            ? teamRepository.findByGenerationNumber(generationNumber)
+            : teamRepository.findAll();
+
+    return teams.stream().map(this::toListResponse).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public TeamDetailResponse getTeamDetail(Long teamId, Long userId) {
+    TeamProfile team =
+        teamRepository
+            .findById(teamId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    List<TeamMember> acceptedMembers =
+        teamMemberRepository.findByTeamIdAndStatus(teamId, TeamMemberStatus.accepted);
+
+    boolean isTeamMember =
+        userId != null
+            && acceptedMembers.stream()
+                .anyMatch(tm -> tm.getMember().getUser().getId().equals(userId));
+
+    GenerationSummary generation =
+        team.getGeneration() != null
+            ? new GenerationSummary(team.getGeneration().getNumber())
+            : null;
+
+    List<TechStackSummary> techStacks =
+        team.getTechStacks().stream()
+            .map(TeamTechStack::getTechStack)
+            .map(
+                ts ->
+                    new TechStackSummary(
+                        ts.getId(), ts.getName(), ts.getCategory().name(), ts.getLogoUrl()))
+            .toList();
+
+    List<String> imageUrls =
+        team.getImages().stream().map(TeamImage::getImageUrl).toList();
+
+    List<TeamMemberSummary> members =
+        acceptedMembers.stream()
+            .map(
+                tm ->
+                    new TeamMemberSummary(
+                        tm.getMember().getId(),
+                        tm.getMember().getName(),
+                        tm.getMember().getSessionType().name(),
+                        tm.getMember().getProfileImageUrl(),
+                        tm.isLead(),
+                        tm.getRoles().stream().map(r -> r.getRole().name()).toList()))
+            .toList();
+
+    return new TeamDetailResponse(
+        team.getId(),
+        team.getName(),
+        team.getDescription(),
+        team.getProjectUrl(),
+        team.getGithubUrl(),
+        generation,
+        techStacks,
+        imageUrls,
+        members,
+        isTeamMember ? team.getInviteCode() : null,
+        isTeamMember ? team.getInviteCodeExpiresAt() : null,
+        team.getUpdatedAt());
+  }
+
+  private TeamListResponse toListResponse(TeamProfile team) {
+    GenerationSummary generation =
+        team.getGeneration() != null
+            ? new GenerationSummary(team.getGeneration().getNumber())
+            : null;
+
+    List<TechStackSummary> techStacks =
+        team.getTechStacks().stream()
+            .map(TeamTechStack::getTechStack)
+            .map(ts -> new TechStackSummary(ts.getId(), ts.getName(), ts.getCategory().name(), ts.getLogoUrl()))
+            .toList();
+
+    String thumbUrl =
+        team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
+
+    int memberCount = team.getMembers().size();
+
+    return new TeamListResponse(
+        team.getId(), team.getName(), team.getDescription(),
+        generation, techStacks, memberCount, thumbUrl);
   }
 }
