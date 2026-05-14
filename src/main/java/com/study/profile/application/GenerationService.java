@@ -46,6 +46,7 @@ public class GenerationService {
   public Map<String, Integer> createGeneration(GenerationCreateRequest req) {
     if (Boolean.TRUE.equals(req.isCurrent())) {
       unmarkCurrentGeneration(null);
+      generationRepository.flush();
     }
     Generation g = Generation.create(req.number(), req.startDate(), req.endDate(), req.isCurrent());
     return Map.of("id", generationRepository.save(g).getNumber());
@@ -56,6 +57,7 @@ public class GenerationService {
     Generation g = findById(generationId);
     if (Boolean.TRUE.equals(req.isCurrent())) {
       unmarkCurrentGeneration(generationId);
+      generationRepository.flush();
     }
     g.update(req.number(), req.startDate(), req.endDate(), req.isCurrent());
     return Map.of("id", g.getNumber());
