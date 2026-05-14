@@ -172,7 +172,7 @@ GET /profile/members
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `generationId` | `number` | 아니오 | — | 특정 기수 필터 |
+| `generationNumber` | `number` | 아니오 | — | 특정 기수 필터 |
 | `sessionType` | `SessionType` | 아니오 | — | 세션 트랙 필터 |
 
 **Response `200 OK`**
@@ -213,7 +213,7 @@ GET /profile/members/{memberId}
     { "techStackId": 1, "name": "Java", "category": "language", "logoUrl": "https://...", "proficiency": 4 }
   ],
   "generations": [
-    { "generationId": 1, "label": "13기", "number": 13, "roleInGen": "member" }
+    { "generationNumber": 13, "roleInGen": "member" }
   ],
   "createdAt": "2025-03-01T09:00:00Z"
 }
@@ -236,7 +236,7 @@ GET /profile/members/me/teams
     "id": 1,
     "name": "헬스케어팀",
     "description": "건강 관리 앱을 만드는 팀입니다.",
-    "generation": { "id": 1, "label": "13기", "number": 13 },
+    "generation": { "number": 13 },
     "techStacks": [
       { "id": 1, "name": "Java", "category": "language", "logoUrl": "https://..." }
     ],
@@ -267,8 +267,6 @@ GET /profile/generations
 ```json
 [
   {
-    "id": 1,
-    "label": "13기",
     "number": 13,
     "startDate": "2025-03-01",
     "endDate": null,
@@ -288,7 +286,6 @@ POST /profile/generations
 **Request Body**
 ```json
 {
-  "label": "13기",
   "number": 13,
   "startDate": "2025-03-01",
   "endDate": null,
@@ -298,7 +295,6 @@ POST /profile/generations
 
 | 필드 | 타입 | 필수 | 제약 |
 |------|------|------|------|
-| `label` | `string` | 예 | — |
 | `number` | `number` | 예 | 중복 불가 |
 | `startDate` | `string` | 예 | `yyyy-MM-dd` |
 | `endDate` | `string` | 아니오 | `yyyy-MM-dd`, 진행 중이면 null |
@@ -306,7 +302,7 @@ POST /profile/generations
 
 **Response `201 Created`**
 ```json
-{ "id": 1 }
+{ "number": 13 }
 ```
 
 ---
@@ -320,8 +316,6 @@ GET /profile/generations/{generationId}
 **Response `200 OK`**
 ```json
 {
-  "id": 1,
-  "label": "13기",
   "number": 13,
   "startDate": "2025-03-01",
   "endDate": null,
@@ -342,7 +336,7 @@ PATCH /profile/generations/{generationId}
 
 **Response `200 OK`**
 ```json
-{ "id": 1 }
+{ "number": 13 }
 ```
 
 ---
@@ -673,7 +667,7 @@ PATCH /profile/teams/{teamId}
   "description": "...",
   "projectUrl": "https://...",
   "githubUrl": "https://github.com/...",
-  "generationId": 1,
+  "generationNumber": 13,
   "imageUrls": ["https://..."],
   "techStackIds": [1, 3]
 }
@@ -963,7 +957,7 @@ GET /profile/contributions/ranking
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
 | `period` | `ContributionPeriodType` | 아니오 | `all` | 집계 기간 |
-| `generationId` | `number` | 아니오 | — | 특정 기수 필터 |
+| `generationNumber` | `number` | 아니오 | — | 특정 기수 필터 |
 | `limit` | `number` | 아니오 | `10` | 반환할 순위 수 |
 
 **Response `200 OK`**
@@ -992,17 +986,17 @@ GET /profile/contributions/ranking
 
 | 구현 | 메서드 | 경로 | 설명 | 담당 |
 |---|--------|------|------|------|
-| [ ] | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
-| [ ] | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
+| [x] | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
+| [x] | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
 | [ ] | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
-| [ ] | `GET` | `/profile/members` | 멤버 목록 | 세인 |
-| [ ] | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
-| [ ] | `GET` | `/profile/generations` | 기수 목록 | 세인 |
-| [ ] | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
-| [ ] | `GET` | `/profile/generations/{generationId}` | 기수 상세 | 세인 |
-| [ ] | `PATCH` | `/profile/generations/{generationId}` | 기수 수정 (관리자) | 세인 |
-| [ ] | `GET` | `/profile/generations/{generationId}/members` | 기수 멤버 목록 | 세인 |
-| [ ] | `POST` | `/profile/generations/{generationId}/members` | 기수에 멤버 등록 (관리자) | 세인 |
+| [x] | `GET` | `/profile/members` | 멤버 목록 | 세인 |
+| [x] | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
+| [x] | `GET` | `/profile/generations` | 기수 목록 | 세인 |
+| [x] | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
+| [x] | `GET` | `/profile/generations/{generationNumber}` | 기수 상세 | 세인 |
+| [x] | `PATCH` | `/profile/generations/{generationNumber}` | 기수 수정 (관리자) | 세인 |
+| [x] | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
+| [x] | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
 | ✅ | `GET` | `/profile/tech-stacks` | 기술 스택 목록 | 시현 |
 | [ ] | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 시현 |
 | [ ] | `PATCH` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 시현 |
