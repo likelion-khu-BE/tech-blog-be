@@ -72,7 +72,9 @@ public class QuestionController {
     return ResponseEntity.ok(questionService.updateQuestion(questionId, request, user.userId()));
   }
 
-  @Operation(summary = "질문 상태 변경", description = "작성자만 상태를 변경할 수 있습니다. OPEN → RESOLVED → CLOSED 순으로 전이됩니다.")
+  @Operation(
+      summary = "질문 상태 변경",
+      description = "작성자만 상태를 변경할 수 있습니다. OPEN → RESOLVED → CLOSED 순으로 전이됩니다.")
   @PatchMapping("/{questionId}/status")
   public ResponseEntity<QuestionDetailResponse> closeQuestion(
       @PathVariable Long questionId,

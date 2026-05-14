@@ -27,7 +27,9 @@ public class VoteController {
 
   private final VoteService voteService;
 
-  @Operation(summary = "투표 생성", description = "답변에 UPVOTE 또는 DOWNVOTE를 등록합니다. 본인 답변 투표 및 중복 투표는 불가합니다.")
+  @Operation(
+      summary = "투표 생성",
+      description = "답변에 UPVOTE 또는 DOWNVOTE를 등록합니다. 본인 답변 투표 및 중복 투표는 불가합니다.")
   @PostMapping("/answers/{answerId}/votes")
   public ResponseEntity<Void> createVote(
       @PathVariable Long answerId,
@@ -45,7 +47,9 @@ public class VoteController {
     return ResponseEntity.noContent().build();
   }
 
-  @Operation(summary = "내 투표 조회", description = "해당 답변에 대한 내 투표 타입을 조회합니다. 투표가 없으면 type이 null로 반환됩니다.")
+  @Operation(
+      summary = "내 투표 조회",
+      description = "해당 답변에 대한 내 투표 타입을 조회합니다. 투표가 없으면 type이 null로 반환됩니다.")
   @GetMapping("/answers/{answerId}/votes/me")
   public ResponseEntity<MyVoteResponse> getMyVote(
       @PathVariable Long answerId, @CurrentUser CustomUserDetails user) {
