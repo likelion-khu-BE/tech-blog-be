@@ -12,6 +12,19 @@ spring:
   flyway:
     enabled: false
 
+  cloud:
+    aws:
+      credentials:
+        access-key: test-access-key
+        secret-key: test-secret-key
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket:
+          event: test-event-bucket
+          session: test-session-bucket
+        presigned-url-expiration: 180
+
 jwt:
   secret: dGVzdC1zZWNyZXQta2V5LWZvci1oMi10ZXN0LW9ubHktMzJieXRlcw==
   access-expiration: 900000
