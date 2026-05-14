@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,6 +27,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * <p>jjwt 라이브러리 타입은 이 클래스에 노출되지 않는다 — JwtProvider.parseAccessToken()이 Optional로 감싸서 반환하므로 app 모듈은
  * jjwt에 의존하지 않는다 (의존성 역전).
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -42,20 +44,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String token = resolveToken(request);
 
     if (token != null) {
-      jwtProvider
-          .parseAccessToken(token)
-          .ifPresent(
-              info -> {
-                // ROLE_ prefix — Spring Security의 hasRole()이 자동으로 ROLE_ prefix를 기대
-                UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                        info.toUserDetails(),
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + info.role().name())));
-                authentication.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-              });
+      var parsed = jwtProvider.parseAccessToken(token);
+      if (parsed.isPresent()) {
+        var info = parsed.get();
+        // ROLE_ prefix — Spring Security의 hasRole()이 자동으로 ROLE_ prefix를 기대
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(
+                info.toUserDetails(),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + info.role().name())));
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+      } else {
+        log.debug(
+            "Bearer token present but parseAccessToken returned empty — "
+                + "possible causes: wrong token type (refresh), invalid signature, expired, or missing claims. "
+                + "path={} method={}",
+            request.getRequestURI(),
+            request.getMethod());
+      }
     }
 
     filterChain.doFilter(request, response);
