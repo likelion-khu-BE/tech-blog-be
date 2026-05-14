@@ -1,7 +1,7 @@
 package com.study.qna.infrastructure;
 
 import com.study.qna.domain.Answer;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -14,7 +14,7 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
       """
       SELECT a FROM QnaAnswer a
       WHERE a.question.id = :questionId
-      ORDER BY a.accepted DESC, a.voteCount DESC, a.createdAt ASC
+      ORDER BY a.createdAt ASC
       """)
   List<Answer> findByQuestionId(@Param("questionId") Long questionId);
 

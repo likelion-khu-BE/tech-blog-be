@@ -84,11 +84,23 @@ public class AnswerService {
             .findById(answerId)
             .orElseThrow(() -> new AnswerNotFoundException(answerId));
 
-    if (!answer.getQuestion().isAuthor(userId)) {
+    Question question = answer.getQuestion();
+
+    if (!question.isAuthor(userId)) {
       throw new ForbiddenQnaActionException();
     }
 
+    answerRepository.findByQuestionId(question.getId()).stream()
+        .filter(Answer::isAccepted)
+        .findFirst()
+        .ifPresent(Answer::cancelAccept);
+
     answer.accept();
+
+    if (question.getStatus() == QuestionStatus.OPEN) {
+      question.resolve();
+    }
+
     return AnswerDetailResponse.from(answer, tempAuthor(answer.getUserId()));
   }
 
