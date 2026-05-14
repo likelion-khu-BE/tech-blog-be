@@ -30,9 +30,9 @@ public class AnswerService {
   private final QuestionRepository questionRepository;
 
   public AnswerListResponse getAnswers(Long questionId) {
-    questionRepository
-        .findById(questionId)
-        .orElseThrow(() -> new QuestionNotFoundException(questionId));
+    if (!questionRepository.existsById(questionId)) {
+      throw new QuestionNotFoundException(questionId);
+    }
 
     List<AnswerDetailResponse> answers =
         answerRepository.findByQuestionId(questionId).stream()
@@ -55,7 +55,7 @@ public class AnswerService {
     }
 
     Answer answer = Answer.create(question, userId, request.content());
-    Answer saved = answerRepository.save(answer);
+      Answer saved = answerRepository.save(answer);
     questionRepository.incrementAnswerCount(questionId);
 
     return AnswerDetailResponse.from(saved, tempAuthor(userId));
