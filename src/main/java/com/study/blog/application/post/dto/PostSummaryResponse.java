@@ -13,7 +13,6 @@ public record PostSummaryResponse(
     String generation,
     PostStatus status,
     Long authorId,
-    String authorEmail,
     List<String> tags,
     long likeCount,
     LocalDateTime createdAt) {
@@ -27,7 +26,6 @@ public record PostSummaryResponse(
         post.getGeneration(),
         post.getStatus(),
         post.getUserId(),
-        post.getAuthorEmail(),
         tags,
         likeCount,
         post.getCreatedAt());
