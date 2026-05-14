@@ -90,11 +90,10 @@ public class PostService {
   }
 
   @Transactional
-  public PostResponse createPost(PostCreateRequest req, Long userId, String authorEmail) {
+  public PostResponse createPost(PostCreateRequest req, Long userId) {
     Post post =
         Post.builder()
             .userId(userId)
-            .authorEmail(authorEmail)
             .title(req.title())
             .content(req.content())
             .board(req.board())

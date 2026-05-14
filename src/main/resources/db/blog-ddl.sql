@@ -18,7 +18,6 @@ CREATE TABLE blog_posts (
     status          VARCHAR(20)       NOT NULL,
     generation      VARCHAR(10)       NOT NULL,
     repost_from_id  BIGINT,
-    author_email    VARCHAR(255),
     created_at      TIMESTAMP(6)      NOT NULL,
     updated_at      TIMESTAMP(6)      NOT NULL
 );
