@@ -37,7 +37,7 @@ class EventPostServiceTest {
 
   @Test
   void getEventPosts_returnsOnlyPublishedPosts() {
-    Long generationId = 1L;
+    Integer generationId = 1;
     Pageable pageable = PageRequest.of(0, 20);
 
     Member mockMember = org.mockito.Mockito.mock(Member.class);
@@ -74,7 +74,7 @@ class EventPostServiceTest {
 
   @Test
   void getEventPosts_withTypeFilter_passesTypeToRepository() {
-    Long generationId = 1L;
+    Integer generationId = 1;
     Pageable pageable = PageRequest.of(0, 20);
     EventPostType filterType = EventPostType.HACKATHON;
 
@@ -92,7 +92,7 @@ class EventPostServiceTest {
 
   @Test
   void getEventPosts_withThumbnail_includesThumbUrl() {
-    Long generationId = 1L;
+    Integer generationId = 1;
     Pageable pageable = PageRequest.of(0, 20);
     String expectedUrl = "https://example.com/thumb.jpg";
 
@@ -134,7 +134,7 @@ class EventPostServiceTest {
 
   @Test
   void getEventPosts_withComments_mapsCommentCountPerPost() {
-    Long generationId = 1L;
+    Integer generationId = 1;
     Pageable pageable = PageRequest.of(0, 20);
 
     Member mockMember = org.mockito.Mockito.mock(Member.class);
@@ -180,7 +180,7 @@ class EventPostServiceTest {
 
   @Test
   void getEventPosts_noPosts_returnsEmptyPage() {
-    Long generationId = 1L;
+    Integer generationId = 1;
     Pageable pageable = PageRequest.of(0, 20);
 
     given(eventPostRepository.findAllWithFilters(
