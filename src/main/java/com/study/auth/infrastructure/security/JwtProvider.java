@@ -38,13 +38,12 @@ public class JwtProvider {
     this.refreshTokenExpiration = refreshExpiration;
   }
 
-  /** access token 생성. role과 email을 클레임에 넣어 매 요청마다 DB 조회 없이 인가를 처리한다. */
-  public String generateAccessToken(Long userId, UserRole role, String email) {
+  /** access token 생성. role을 클레임에 넣어 매 요청마다 DB 조회 없이 인가를 처리한다. */
+  public String generateAccessToken(Long userId, UserRole role) {
     Date now = new Date();
     return Jwts.builder()
         .subject(userId.toString())
         .claim("role", role.name())
-        .claim("email", email)
         .claim("type", "access")
         .issuedAt(now)
         .expiration(new Date(now.getTime() + accessTokenExpiration))
@@ -110,11 +109,7 @@ public class JwtProvider {
       }
       Long userId = Long.valueOf(claims.getSubject());
       UserRole role = UserRole.valueOf(claims.get("role", String.class));
-      String email = claims.get("email", String.class);
-      if (email == null) {
-        return Optional.empty();
-      }
-      return Optional.of(new AccessTokenInfo(userId, role, email));
+      return Optional.of(new AccessTokenInfo(userId, role));
     } catch (JwtException | IllegalArgumentException e) {
       return Optional.empty();
     }
