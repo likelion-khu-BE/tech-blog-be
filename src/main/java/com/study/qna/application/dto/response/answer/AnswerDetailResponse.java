@@ -21,7 +21,7 @@ public record AnswerDetailResponse(
         answer.getId(),
         answer.getContent(),
         answer.isAccepted(),
-        answer.getVoteCount(),
+        0,
         0,
         answer.getCommentCount(),
         author,

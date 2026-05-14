@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,11 +29,13 @@ public class TagController {
     return ResponseEntity.ok(tagService.getTags());
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ResponseEntity<TagResponse> createTag(@Valid @RequestBody TagCreateRequest request) {
     return ResponseEntity.status(HttpStatus.CREATED).body(tagService.createTag(request));
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{tagId}")
   public ResponseEntity<Void> deleteTag(@PathVariable Long tagId) {
     tagService.deleteTag(tagId);
