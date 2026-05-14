@@ -5,7 +5,12 @@ import com.study.auth.domain.exception.InvalidCredentialsException;
 import com.study.auth.domain.exception.InvalidTokenException;
 import com.study.auth.domain.exception.TokenReusedException;
 import com.study.auth.domain.exception.UserNotActiveException;
+import com.study.qna.domain.exception.AnswerNotFoundException;
+import com.study.qna.domain.exception.VoteAlreadyExistsException;
+import com.study.qna.domain.exception.VoteNotFoundException;
+import com.study.qna.domain.exception.VoteSelfNotAllowedException;
 import java.util.Map;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -46,6 +51,34 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidTokenException.class)
   public ResponseEntity<Map<String, Object>> handleInvalidToken(InvalidTokenException e) {
     return errorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+  }
+
+  @ExceptionHandler(AnswerNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleAnswerNotFound(AnswerNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(VoteSelfNotAllowedException.class)
+  public ResponseEntity<Map<String, Object>> handleVoteSelfNotAllowed(
+      VoteSelfNotAllowedException e) {
+    return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+  }
+
+  @ExceptionHandler(VoteAlreadyExistsException.class)
+  public ResponseEntity<Map<String, Object>> handleVoteAlreadyExists(
+      VoteAlreadyExistsException e) {
+    return errorResponse(HttpStatus.CONFLICT, e.getMessage());
+  }
+
+  @ExceptionHandler(VoteNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleVoteNotFound(VoteNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(
+      DataIntegrityViolationException e) {
+    return errorResponse(HttpStatus.CONFLICT, "이미 투표한 답변입니다.");
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

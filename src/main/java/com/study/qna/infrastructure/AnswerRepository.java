@@ -28,4 +28,9 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
   @Query(
       "UPDATE QnaAnswer a SET a.commentCount = a.commentCount - 1 WHERE a.id = :id AND a.commentCount > 0")
   void decrementCommentCount(@Param("id") Long id);
+
+  @Modifying(clearAutomatically = true)
+  @Transactional
+  @Query("UPDATE QnaAnswer a SET a.voteCount = a.voteCount + :delta WHERE a.id = :answerId")
+  void updateVoteCount(@Param("answerId") Long answerId, @Param("delta") int delta);
 }
