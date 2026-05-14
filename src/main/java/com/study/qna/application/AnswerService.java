@@ -55,7 +55,7 @@ public class AnswerService {
     }
 
     Answer answer = Answer.create(question, userId, request.content());
-      Answer saved = answerRepository.save(answer);
+    Answer saved = answerRepository.save(answer);
     questionRepository.incrementAnswerCount(questionId);
 
     return AnswerDetailResponse.from(saved, tempAuthor(userId));
@@ -90,8 +90,12 @@ public class AnswerService {
       throw new ForbiddenQnaActionException();
     }
 
+    if (question.getStatus() == QuestionStatus.CLOSED) {
+      throw new QuestionAlreadyClosedException(question.getId());
+    }
+
     answerRepository.findByQuestionId(question.getId()).stream()
-        .filter(Answer::isAccepted)
+        .filter(a -> a.isAccepted() && !a.getId().equals(answerId))
         .findFirst()
         .ifPresent(Answer::cancelAccept);
 
