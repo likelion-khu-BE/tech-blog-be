@@ -26,7 +26,9 @@ public class VoteService {
   @Transactional
   public void createVote(Long answerId, VoteCreateRequest request, Long userId) {
     Answer answer =
-        answerRepository.findById(answerId).orElseThrow(() -> new AnswerNotFoundException(answerId));
+        answerRepository
+            .findById(answerId)
+            .orElseThrow(() -> new AnswerNotFoundException(answerId));
 
     if (answer.isAuthor(userId)) {
       throw new VoteSelfNotAllowedException();

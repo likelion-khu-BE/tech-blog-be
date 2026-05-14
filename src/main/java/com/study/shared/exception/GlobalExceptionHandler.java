@@ -65,8 +65,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(VoteAlreadyExistsException.class)
-  public ResponseEntity<Map<String, Object>> handleVoteAlreadyExists(
-      VoteAlreadyExistsException e) {
+  public ResponseEntity<Map<String, Object>> handleVoteAlreadyExists(VoteAlreadyExistsException e) {
     return errorResponse(HttpStatus.CONFLICT, e.getMessage());
   }
 
