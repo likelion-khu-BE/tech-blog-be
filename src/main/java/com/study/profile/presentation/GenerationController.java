@@ -36,7 +36,7 @@ public class GenerationController {
 
   @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Long>> createGeneration(
+  public ResponseEntity<Map<String, Integer>> createGeneration(
       @Valid @RequestBody GenerationCreateRequest req) {
     return ResponseEntity.status(HttpStatus.CREATED).body(generationService.createGeneration(req));
   }
@@ -61,7 +61,7 @@ public class GenerationController {
 
   @PostMapping("/{generationId}/members")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Long>> addMemberToGeneration(
+  public ResponseEntity<Map<String, Integer>> addMemberToGeneration(
       @PathVariable Integer generationId, @Valid @RequestBody GenerationMemberAddRequest req) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(generationService.addMemberToGeneration(generationId, req));
