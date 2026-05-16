@@ -38,7 +38,6 @@ public class EventPostImage {
   @Column(name = "file_size")
   private Long fileSize;
 
-
   @Column(name = "\"order\"", nullable = false)
   private int order = 0;
 
@@ -64,5 +63,4 @@ public class EventPostImage {
     image.order = order;
     return image;
   }
-
 }

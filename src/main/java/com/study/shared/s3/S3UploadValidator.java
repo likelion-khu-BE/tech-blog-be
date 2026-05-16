@@ -12,13 +12,14 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
  * S3 파일 업로드 공통 검증기.
  *
  * <p>두 시점에 검증을 수행한다:
+ *
  * <ol>
  *   <li>presigned URL 발급 전 — 파일명 기반 확장자 검증 및 파일 수 제한 ({@link #validateFilenames})
  *   <li>게시글/자료 저장 전 — HeadObject 기반 실제 Content-Type·크기 검증 ({@link #validateUpload})
  * </ol>
  *
- * <p>도메인 서비스는 이 클래스를 주입받아 각 시점에 호출한다. 검증 실패 시 {@link S3Exception}을
- * 던지며, {@code GlobalExceptionHandler}가 적절한 HTTP 응답으로 변환한다.
+ * <p>도메인 서비스는 이 클래스를 주입받아 각 시점에 호출한다. 검증 실패 시 {@link S3Exception}을 던지며, {@code
+ * GlobalExceptionHandler}가 적절한 HTTP 응답으로 변환한다.
  */
 @Component
 @RequiredArgsConstructor
@@ -55,14 +56,14 @@ public class S3UploadValidator {
    *
    * <ul>
    *   <li>키가 존재하지 않으면 {@link S3ErrorCode#FILE_NOT_UPLOADED}
-   *   <li>Content-Type이 {@code image/}로 시작하지 않으면 {@link S3ErrorCode#INVALID_CONTENT_TYPE}
-   *       → S3 파일 즉시 삭제
-   *   <li>파일 크기가 {@code upload.maxFileSizeBytes}를 초과하면 {@link S3ErrorCode#FILE_TOO_LARGE}
-   *       → S3 파일 즉시 삭제
+   *   <li>Content-Type이 {@code image/}로 시작하지 않으면 {@link S3ErrorCode#INVALID_CONTENT_TYPE} → S3 파일
+   *       즉시 삭제
+   *   <li>파일 크기가 {@code upload.maxFileSizeBytes}를 초과하면 {@link S3ErrorCode#FILE_TOO_LARGE} → S3 파일
+   *       즉시 삭제
    * </ul>
    *
    * @param bucket 검증할 파일이 위치한 버킷
-   * @param key    검증할 S3 객체 키
+   * @param key 검증할 S3 객체 키
    */
   public void validateUpload(String bucket, String key) {
     HeadObjectResponse head;

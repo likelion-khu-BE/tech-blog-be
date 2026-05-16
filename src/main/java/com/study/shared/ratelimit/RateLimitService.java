@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
  * <p>현재 구현: ConcurrentHashMap + Bucket4j (인메모리). 서버 재시작 시 버킷이 초기화된다.
  *
  * <p>운영 전환 시 Redis 백엔드로 교체:
+ *
  * <pre>
  * // 1. build.gradle: implementation 'com.bucket4j:bucket4j-redis:8.x.x'
  * // 2. RedisTemplate<String, byte[]> 빈 주입
@@ -41,10 +42,7 @@ public class RateLimitService {
   private Bucket newBucket(Long ignored) {
     return Bucket.builder()
         .addLimit(
-            Bandwidth.builder()
-                .capacity(CAPACITY)
-                .refillGreedy(CAPACITY, REFILL_PERIOD)
-                .build())
+            Bandwidth.builder().capacity(CAPACITY).refillGreedy(CAPACITY, REFILL_PERIOD).build())
         .build();
   }
 }

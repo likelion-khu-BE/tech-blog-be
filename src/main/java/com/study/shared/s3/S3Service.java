@@ -18,16 +18,17 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 /**
  * 프로젝트 전 도메인 공통 S3 유틸리티.
  *
- * <p>버킷 이름은 호출 측에서 주입한다 — 이 클래스는 어떤 버킷을 쓸지 알지 못한다.
- * 버킷 이름은 {@link S3Properties}를 통해 도메인 서비스에서 주입받아 사용한다.
+ * <p>버킷 이름은 호출 측에서 주입한다 — 이 클래스는 어떤 버킷을 쓸지 알지 못한다. 버킷 이름은 {@link S3Properties}를 통해 도메인 서비스에서 주입받아
+ * 사용한다.
  *
  * <p>제공 기능:
+ *
  * <ul>
- *   <li>presigned PUT URL 생성 (배치 / 단건 + Content-Type 고정)</li>
- *   <li>객체 공개 URL 조회</li>
- *   <li>객체 메타데이터 조회 (HeadObject)</li>
- *   <li>객체 삭제</li>
- *   <li>S3 키 생성 (images/{UUID}.{ext})</li>
+ *   <li>presigned PUT URL 생성 (배치 / 단건 + Content-Type 고정)
+ *   <li>객체 공개 URL 조회
+ *   <li>객체 메타데이터 조회 (HeadObject)
+ *   <li>객체 삭제
+ *   <li>S3 키 생성 (images/{UUID}.{ext})
  * </ul>
  */
 @Service
@@ -47,10 +48,7 @@ public class S3Service {
   // Presigned URL
   // ----------------------------------------------------------------
 
-  /**
-   * 파일명 목록으로 presigned PUT URL 일괄 생성.
-   * Content-Type 미고정 — 범용 업로드용.
-   */
+  /** 파일명 목록으로 presigned PUT URL 일괄 생성. Content-Type 미고정 — 범용 업로드용. */
   public List<PresignedUrlResponse> generatePresignedPutUrls(
       String bucket, List<String> filenames) {
     return filenames.stream()
@@ -66,8 +64,8 @@ public class S3Service {
   /**
    * 단건 presigned PUT URL 생성 (Content-Type 고정).
    *
-   * <p>Content-Type을 고정하면 AWS가 업로드 요청의 Content-Type 헤더를 검증한다.
-   * 클라이언트는 반드시 동일한 Content-Type 헤더를 포함해야 한다.
+   * <p>Content-Type을 고정하면 AWS가 업로드 요청의 Content-Type 헤더를 검증한다. 클라이언트는 반드시 동일한 Content-Type 헤더를 포함해야
+   * 한다.
    *
    * @param contentType 고정할 MIME 타입 (예: "image/jpeg")
    * @param expirySeconds URL 만료 시간(초)
@@ -89,8 +87,7 @@ public class S3Service {
   /**
    * S3 객체 메타데이터 조회 (HeadObject).
    *
-   * <p>반환값에서 contentType, contentLength, lastModified를 활용해
-   * 도메인 서비스에서 업로드 검증(타입·크기·시각)을 수행할 수 있다.
+   * <p>반환값에서 contentType, contentLength, lastModified를 활용해 도메인 서비스에서 업로드 검증(타입·크기·시각)을 수행할 수 있다.
    *
    * @throws software.amazon.awssdk.services.s3.model.NoSuchKeyException 키가 존재하지 않으면 발생
    */
@@ -125,8 +122,7 @@ public class S3Service {
   // Internal
   // ----------------------------------------------------------------
 
-  private String presignPutUrl(
-      String bucket, String key, String contentType, long expirySeconds) {
+  private String presignPutUrl(String bucket, String key, String contentType, long expirySeconds) {
     PutObjectPresignRequest presignRequest =
         PutObjectPresignRequest.builder()
             .signatureDuration(Duration.ofSeconds(expirySeconds))
