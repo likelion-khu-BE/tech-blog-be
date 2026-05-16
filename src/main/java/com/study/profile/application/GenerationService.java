@@ -71,7 +71,7 @@ public class GenerationService {
   }
 
   @Transactional
-  public Map<String, Long> addMemberToGeneration(Integer generationId, GenerationMemberAddRequest req) {
+  public Map<String, Integer> addMemberToGeneration(Integer generationId, GenerationMemberAddRequest req) {
     Generation generation = findById(generationId);
     Member member =
         memberRepository
@@ -81,7 +81,7 @@ public class GenerationService {
         .findByMemberIdAndGenerationId(req.memberId(), generationId)
         .ifPresent(mg -> { throw new IllegalStateException("이미 해당 기수에 등록된 멤버입니다."); });
     MemberGeneration mg = MemberGeneration.create(member, generation, req.roleInGen());
-    return Map.of("id", memberGenerationRepository.save(mg).getId());
+    return Map.of("id", memberGenerationRepository.save(mg).getId().intValue());
   }
 
   private Generation findById(Integer generationId) {
