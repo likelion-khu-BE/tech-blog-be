@@ -49,8 +49,7 @@ class CommentServiceTest {
     return c;
   }
 
-  private Comment replyWithId(
-      Long id, Long postId, Long userId, String content, Comment parent) {
+  private Comment replyWithId(Long id, Long postId, Long userId, String content, Comment parent) {
     Comment c =
         Comment.builder().postId(postId).userId(userId).parent(parent).content(content).build();
     ReflectionTestUtils.setField(c, "id", id);
@@ -85,8 +84,7 @@ class CommentServiceTest {
       Comment root = commentWithId(1L, POST_ID, USER_ID, "루트");
       setCreatedAt(root, LocalDateTime.now());
 
-      when(commentRepository.findAllByPostIdOrderByCreatedAtAsc(POST_ID))
-          .thenReturn(List.of(root));
+      when(commentRepository.findAllByPostIdOrderByCreatedAtAsc(POST_ID)).thenReturn(List.of(root));
       when(commentLikeRepository.countGroupedByCommentId(List.of(1L))).thenReturn(List.of());
 
       commentService.getComments(POST_ID, null);
@@ -161,8 +159,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.createComment(POST_ID, req, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
     }
 
     @Test
@@ -175,8 +175,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.createComment(POST_ID, req, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
     }
 
     @Test
@@ -188,8 +190,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.createComment(POST_ID, req, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.PARENT_COMMENT_NOT_FOUND));
     }
   }
 
@@ -223,10 +227,13 @@ class CommentServiceTest {
       Comment c = commentWithId(1L, POST_ID, OTHER_USER_ID, "내용");
       when(commentRepository.findById(1L)).thenReturn(Optional.of(c));
 
-      assertThatThrownBy(() -> commentService.updateComment(1L, new CommentUpdateRequest("x"), USER_ID))
+      assertThatThrownBy(
+              () -> commentService.updateComment(1L, new CommentUpdateRequest("x"), USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.FORBIDDEN));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
     }
 
     @Test
@@ -234,10 +241,13 @@ class CommentServiceTest {
     void notFound_throwsCommentNotFound() {
       when(commentRepository.findById(999L)).thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> commentService.updateComment(999L, new CommentUpdateRequest("x"), USER_ID))
+      assertThatThrownBy(
+              () -> commentService.updateComment(999L, new CommentUpdateRequest("x"), USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
     }
 
     @Test
@@ -247,10 +257,13 @@ class CommentServiceTest {
       c.softDelete();
       when(commentRepository.findById(1L)).thenReturn(Optional.of(c));
 
-      assertThatThrownBy(() -> commentService.updateComment(1L, new CommentUpdateRequest("x"), USER_ID))
+      assertThatThrownBy(
+              () -> commentService.updateComment(1L, new CommentUpdateRequest("x"), USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
     }
   }
 
@@ -279,8 +292,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.deleteComment(1L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.FORBIDDEN));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
     }
 
     @Test
@@ -290,8 +305,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.deleteComment(999L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
     }
 
     @Test
@@ -303,8 +320,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.deleteComment(1L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
     }
   }
 
@@ -350,8 +369,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.toggleLike(999L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
     }
 
     @Test
@@ -363,8 +384,10 @@ class CommentServiceTest {
 
       assertThatThrownBy(() -> commentService.toggleLike(1L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
     }
   }
 }

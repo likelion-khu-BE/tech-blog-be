@@ -118,8 +118,10 @@ class AdminServiceTest {
 
       assertThatThrownBy(() -> adminService.changePostStatus(999L, PostStatus.PUBLISHED))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
     }
   }
 
@@ -148,8 +150,10 @@ class AdminServiceTest {
 
       assertThatThrownBy(() -> adminService.forceDeletePost(999L))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
     }
   }
 }

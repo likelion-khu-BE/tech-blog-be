@@ -16,13 +16,13 @@ import com.study.blog.domain.post.PostBookmark;
 import com.study.blog.domain.post.PostLike;
 import com.study.blog.domain.post.PostStatus;
 import com.study.blog.domain.post.PostTag;
-import com.study.config.TestcontainersConfig;
 import com.study.blog.infrastructure.comment.CommentLikeRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.infrastructure.post.PostBookmarkRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
+import com.study.config.TestcontainersConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,8 +35,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Integration tests for POST API endpoints. Uses PostgreSQL Testcontainers.
- * Each test runs in its own transaction that is rolled back afterwards.
+ * Integration tests for POST API endpoints. Uses PostgreSQL Testcontainers. Each test runs in its
+ * own transaction that is rolled back afterwards.
  *
  * <p>Test data:
  *

@@ -1,4 +1,3 @@
-
 package com.study.blog.application.post;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,8 +117,10 @@ class PostServiceTest {
 
       assertThatThrownBy(() -> postService.getPost(POST_ID, OTHER_USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.FORBIDDEN));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
     }
 
     @Test
@@ -130,8 +131,10 @@ class PostServiceTest {
 
       assertThatThrownBy(() -> postService.getPost(POST_ID, null))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.FORBIDDEN));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
     }
 
     @Test
@@ -141,8 +144,10 @@ class PostServiceTest {
 
       assertThatThrownBy(() -> postService.getPost(999L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
     }
   }
 
@@ -170,8 +175,8 @@ class PostServiceTest {
     @DisplayName("태그 있으면 각 태그마다 save 호출")
     void withTags_savesEachTag() {
       PostCreateRequest req =
-          new PostCreateRequest("제목", "내용", "백엔드", "Spring", "13기",
-              List.of("spring", "java"), null);
+          new PostCreateRequest(
+              "제목", "내용", "백엔드", "Spring", "13기", List.of("spring", "java"), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       when(postTagRepository.save(any())).thenReturn(null);
@@ -186,8 +191,8 @@ class PostServiceTest {
     @DisplayName("중복 태그는 한 번만 저장")
     void withDuplicateTags_savesDistinct() {
       PostCreateRequest req =
-          new PostCreateRequest("제목", "내용", "백엔드", "Spring", "13기",
-              List.of("spring", "spring", "java"), null);
+          new PostCreateRequest(
+              "제목", "내용", "백엔드", "Spring", "13기", List.of("spring", "spring", "java"), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       when(postTagRepository.save(any())).thenReturn(null);
@@ -201,8 +206,7 @@ class PostServiceTest {
     @Test
     @DisplayName("태그 없으면 postTagRepository.save 미호출")
     void withNoTags_doesNotSaveTags() {
-      PostCreateRequest req =
-          new PostCreateRequest("제목", "내용", "백엔드", "Spring", "13기", null, null);
+      PostCreateRequest req = new PostCreateRequest("제목", "내용", "백엔드", "Spring", "13기", null, null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       stubToResponse(saved, USER_ID);
@@ -240,8 +244,7 @@ class PostServiceTest {
     @DisplayName("본인 포스트 수정 - status는 기존 값 유지")
     void owner_statusUnchanged() {
       Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
-      PostUpdateRequest req =
-          new PostUpdateRequest("새 제목", "내용", "백엔드", "Spring", List.of());
+      PostUpdateRequest req = new PostUpdateRequest("새 제목", "내용", "백엔드", "Spring", List.of());
       when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
       stubToResponse(post, USER_ID);
 
@@ -259,8 +262,10 @@ class PostServiceTest {
       PostUpdateRequest req = new PostUpdateRequest("x", "x", "x", "x", List.of());
       assertThatThrownBy(() -> postService.updatePost(POST_ID, req, OTHER_USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.FORBIDDEN));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
     }
 
     @Test
@@ -271,8 +276,10 @@ class PostServiceTest {
       PostUpdateRequest req = new PostUpdateRequest("x", "x", "x", "x", List.of());
       assertThatThrownBy(() -> postService.updatePost(999L, req, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
     }
   }
 
@@ -302,8 +309,10 @@ class PostServiceTest {
 
       assertThatThrownBy(() -> postService.deletePost(POST_ID, OTHER_USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.FORBIDDEN));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
       verify(postRepository, never()).delete(any(Post.class));
     }
 
@@ -314,8 +323,10 @@ class PostServiceTest {
 
       assertThatThrownBy(() -> postService.deletePost(999L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
     }
   }
 
@@ -361,8 +372,10 @@ class PostServiceTest {
 
       assertThatThrownBy(() -> postService.toggleLike(999L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
     }
   }
 
@@ -408,8 +421,10 @@ class PostServiceTest {
 
       assertThatThrownBy(() -> postService.toggleBookmark(999L, USER_ID))
           .isInstanceOf(BlogException.class)
-          .satisfies(e -> assertThat(((BlogException) e).getErrorCode())
-              .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
     }
   }
 }

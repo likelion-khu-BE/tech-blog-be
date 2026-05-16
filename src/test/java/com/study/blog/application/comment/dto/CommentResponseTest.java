@@ -51,8 +51,9 @@ class CommentResponseTest {
   @DisplayName("삭제된 댓글 — replies는 그대로 유지")
   void deletedComment_preservesReplies() {
     comment.softDelete();
-    CommentResponse reply = CommentResponse.of(
-        Comment.builder().postId(1L).userId(20L).content("대댓글").build(), 0, false, List.of());
+    CommentResponse reply =
+        CommentResponse.of(
+            Comment.builder().postId(1L).userId(20L).content("대댓글").build(), 0, false, List.of());
 
     CommentResponse res = CommentResponse.of(comment, 0, false, List.of(reply));
 

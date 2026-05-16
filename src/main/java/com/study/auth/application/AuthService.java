@@ -84,8 +84,7 @@ public class AuthService {
 
     // 새 토큰 family 시작
     UUID familyId = UUID.randomUUID();
-    String accessToken =
-        jwtProvider.generateAccessToken(user.getId(), user.getRole());
+    String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
     String rawRefreshToken = jwtProvider.generateRefreshToken(user.getId(), familyId);
 
     saveRefreshToken(user.getId(), rawRefreshToken, familyId);
@@ -142,8 +141,7 @@ public class AuthService {
     }
 
     // 같은 familyId로 새 토큰 발급 (체인 유지)
-    String newAccessToken =
-        jwtProvider.generateAccessToken(userId, user.getRole());
+    String newAccessToken = jwtProvider.generateAccessToken(userId, user.getRole());
     String newRawRefreshToken = jwtProvider.generateRefreshToken(userId, familyId);
 
     saveRefreshToken(userId, newRawRefreshToken, familyId);
