@@ -12,6 +12,8 @@ import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferResponse;
+import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateRequest;
+import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -78,6 +81,17 @@ public class TeamController {
       @PathVariable Long teamId, @CurrentUser CustomUserDetails user) {
     teamService.leaveTeam(teamId, user.userId());
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(summary = "팀원 역할 수정", description = "팀장만 호출 가능. 기존 역할 목록을 전체 교체합니다. 빈 배열이면 전체 삭제.")
+  @PutMapping("/{teamId}/members/{memberId}/roles")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<TeamMemberRoleUpdateResponse> updateMemberRoles(
+      @PathVariable Long teamId,
+      @PathVariable Long memberId,
+      @RequestBody TeamMemberRoleUpdateRequest req,
+      @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(teamService.updateMemberRoles(teamId, memberId, req, user.userId()));
   }
 
   @Operation(summary = "팀원 강퇴", description = "팀장만 호출 가능. 강퇴된 팀원의 status는 kicked로 변경됩니다. 팀장 본인은 강퇴할 수 없습니다.")

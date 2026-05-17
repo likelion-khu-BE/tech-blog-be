@@ -37,6 +37,10 @@ public class TeamDto {
 
   public record TeamLeadTransferResponse(Long teamId, Long newLeadMemberId) {}
 
+  public record TeamMemberRoleUpdateRequest(List<com.study.profile.domain.team.RoleInTeam> roles) {}
+
+  public record TeamMemberRoleUpdateResponse(Long memberId, List<String> roles) {}
+
   public record GenerationSummary(Integer number) {}
 
   public record TechStackSummary(Long id, String name, String category, String logoUrl) {}
