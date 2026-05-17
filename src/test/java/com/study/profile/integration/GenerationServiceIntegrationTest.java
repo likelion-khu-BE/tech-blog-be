@@ -3,6 +3,7 @@ package com.study.profile.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.study.config.TestcontainersConfig;
 import com.study.profile.application.GenerationService;
 import com.study.profile.domain.generation.Generation;
 import com.study.profile.infrastructure.GenerationRepository;
@@ -11,10 +12,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
+@Import(TestcontainersConfig.class)
 class GenerationServiceIntegrationTest {
 
   @Autowired private GenerationService generationService;
