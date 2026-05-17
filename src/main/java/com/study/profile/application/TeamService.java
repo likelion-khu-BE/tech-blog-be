@@ -147,6 +147,26 @@ public class TeamService {
     return new TeamUpdateResponse(team.getId(), team.getUpdatedAt());
   }
 
+  @Transactional
+  public void deleteTeam(Long teamId, Long userId) {
+    Member member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    TeamProfile team =
+        teamRepository
+            .findById(teamId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    if (!teamMemberRepository.existsByTeamIdAndMemberIdAndIsLeadTrue(teamId, member.getId())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 삭제할 수 있습니다.");
+    }
+
+    teamMemberRepository.deleteByTeamId(teamId);
+    teamRepository.delete(team);
+  }
+
   @Transactional(readOnly = true)
   public List<TeamListResponse> getTeams(Integer generationNumber) {
     List<TeamProfile> teams =
