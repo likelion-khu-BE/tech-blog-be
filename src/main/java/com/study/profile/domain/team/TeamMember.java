@@ -109,6 +109,11 @@ public class TeamMember {
     this.status = TeamMemberStatus.left;
   }
 
+  public void rejoin() {
+    this.status = TeamMemberStatus.accepted;
+    this.isLead = false;
+  }
+
   public void updateRoles(List<RoleInTeam> newRoles) {
     this.roles.clear();
     newRoles.stream().distinct().forEach(role -> this.roles.add(TeamMemberRole.create(this, role)));
