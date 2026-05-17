@@ -984,8 +984,8 @@ GET /profile/contributions/ranking
 
 ## 엔드포인트 요약
 
-| 구현 | 메서드 | 경로 | 설명 | 담당 |
-|---|--------|------|------|------|
+| 구현  | 메서드 | 경로 | 설명 | 담당 |
+|-----|--------|------|------|------|
 | [x] | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
 | [x] | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
 | [ ] | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
@@ -997,16 +997,16 @@ GET /profile/contributions/ranking
 | [x] | `PATCH` | `/profile/generations/{generationNumber}` | 기수 수정 (관리자) | 세인 |
 | [x] | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
 | [x] | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
-| ✅ | `GET` | `/profile/tech-stacks` | 기술 스택 목록 | 시현 |
+| ✅   | `GET` | `/profile/tech-stacks` | 기술 스택 목록 | 시현 |
 | [ ] | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 시현 |
 | [ ] | `PATCH` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 시현 |
 | [ ] | `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | 시현 |
 | [ ] | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 시현 |
 | [ ] | `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | 시현 |
-| ✅ | `GET` | `/profile/teams` | 팀 목록 | 시현 |
-| ✅ | `POST` | `/profile/teams` | 팀 생성 | 시현 |
-| ✅ | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
-| [ ] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
+| ✅   | `GET` | `/profile/teams` | 팀 목록 | 시현 |
+| ✅   | `POST` | `/profile/teams` | 팀 생성 | 시현 |
+| ✅   | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
+| [x] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
 | [ ] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
 | [ ] | `GET` | `/profile/teams/{teamId}/invite-code` | 초대 코드 조회 (팀장) | 시현 |
 | [ ] | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
