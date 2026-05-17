@@ -83,7 +83,7 @@ public class TeamController {
     return ResponseEntity.noContent().build();
   }
 
-  @Operation(summary = "팀원 역할 수정", description = "팀장만 호출 가능. 기존 역할 목록을 전체 교체합니다. 빈 배열이면 전체 삭제.")
+  @Operation(summary = "팀원 역할 수정", description = "팀장 또는 본인만 호출 가능. 기존 역할 목록을 전체 교체합니다. 빈 배열이면 전체 삭제.")
   @PutMapping("/{teamId}/members/{memberId}/roles")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<TeamMemberRoleUpdateResponse> updateMemberRoles(
