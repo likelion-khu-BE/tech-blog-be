@@ -191,9 +191,12 @@ public class TeamService {
         .findById(teamId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
 
-    teamMemberRepository
-        .findByTeamIdAndMemberIdAndIsLeadTrue(teamId, requestMember.getId())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 역할을 수정할 수 있습니다."));
+    boolean isLead = teamMemberRepository.existsByTeamIdAndMemberIdAndIsLeadTrue(teamId, requestMember.getId());
+    boolean isSelf = requestMember.getId().equals(targetMemberId);
+
+    if (!isLead && !isSelf) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장 또는 본인만 역할을 수정할 수 있습니다.");
+    }
 
     TeamMember target =
         teamMemberRepository
