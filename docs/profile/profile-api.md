@@ -694,25 +694,7 @@ DELETE /profile/teams/{teamId}
 
 ---
 
-### 5-6. 초대 코드 조회 (팀장만)
-
-```
-GET /profile/teams/{teamId}/invite-code
-```
-
-> 팀장만 조회 가능. 팀원 초대 시 이 코드를 공유한다.
-
-**Response `200 OK`**
-```json
-{
-  "inviteCode": "A1B2C3",
-  "inviteCodeExpiresAt": "2025-05-10T10:00:00Z"
-}
-```
-
----
-
-### 5-7. 초대 코드 재생성 (팀장만)
+### 5-6. 초대 코드 재생성 (팀장만)
 
 ```
 POST /profile/teams/{teamId}/invite-code/regenerate
@@ -731,7 +713,7 @@ POST /profile/teams/{teamId}/invite-code/regenerate
 
 ---
 
-### 5-8. 초대 코드로 팀 가입
+### 5-7. 초대 코드로 팀 가입
 
 ```
 POST /profile/teams/join
@@ -764,7 +746,7 @@ POST /profile/teams/join
 
 ---
 
-### 5-9. 팀장 양도 (팀장만)
+### 5-8. 팀장 양도 (팀장만)
 
 ```
 PATCH /profile/teams/{teamId}/lead
@@ -792,7 +774,7 @@ PATCH /profile/teams/{teamId}/lead
 
 ---
 
-### 5-10. 팀원 역할 수정 (팀장만)
+### 5-9. 팀원 역할 수정 (팀장만)
 
 ```
 PUT /profile/teams/{teamId}/members/{memberId}/roles
@@ -817,6 +799,7 @@ PUT /profile/teams/{teamId}/members/{memberId}/roles
 ---
 
 ### 5-10. 팀원 강퇴 (팀장만)
+
 
 ```
 DELETE /profile/teams/{teamId}/members/{memberId}
@@ -1008,7 +991,6 @@ GET /profile/contributions/ranking
 | ✅   | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
 | [x] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
 | [x] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
-| [ ] | `GET` | `/profile/teams/{teamId}/invite-code` | 초대 코드 조회 (팀장) | 시현 |
 | [ ] | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
 | [ ] | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |
 | [ ] | `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | 시현 |
