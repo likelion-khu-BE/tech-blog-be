@@ -996,7 +996,7 @@ GET /profile/contributions/ranking
 | [x] | `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | 시현 |
 | [ ] | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장) | 시현 |
 | [x] | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |
-| [ ] | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
+| [x] | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
 | [ ] | `GET` | `/profile/members/{memberId}/activities` | 멤버 활동 목록 | 근엽 |
 | [ ] | `GET` | `/profile/members/{memberId}/contributions` | 멤버 기여도 요약 | 근엽 |
 | [ ] | `GET` | `/profile/contributions/ranking` | 기여도 랭킹 | 근엽 |

@@ -178,6 +178,29 @@ public class TeamService {
   }
 
   @Transactional
+  public void leaveTeam(Long teamId, Long userId) {
+    Member member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    teamRepository
+        .findById(teamId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    TeamMember teamMember =
+        teamMemberRepository
+            .findByTeamIdAndMemberIdAndStatus(teamId, member.getId(), TeamMemberStatus.accepted)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 속해 있지 않습니다."));
+
+    if (teamMember.isLead()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "팀장은 탈퇴할 수 없습니다. 팀을 해산하려면 팀 삭제를 이용해주세요.");
+    }
+
+    teamMember.leave();
+  }
+
+  @Transactional
   public void kickMember(Long teamId, Long targetMemberId, Long userId) {
     Member requestMember =
         memberRepository
