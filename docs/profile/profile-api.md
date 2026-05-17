@@ -992,7 +992,7 @@ GET /profile/contributions/ranking
 | [x] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
 | [x] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
 | [x] | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
-| [ ] | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |
+| [x] | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |
 | [ ] | `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | 시현 |
 | [ ] | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장) | 시현 |
 | [ ] | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |

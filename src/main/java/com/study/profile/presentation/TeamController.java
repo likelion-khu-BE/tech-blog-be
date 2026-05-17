@@ -8,6 +8,8 @@ import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
 import com.study.profile.application.dto.TeamDto.TeamListResponse;
 import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
+import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
+import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,6 +59,14 @@ public class TeamController {
       @RequestBody TeamCreateRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(teamService.createTeam(req, user.userId()));
+  }
+
+  @Operation(summary = "초대 코드로 팀 가입", description = "초대 코드를 입력해 팀에 가입합니다. 가입 즉시 status = accepted로 확정됩니다.")
+  @PostMapping("/join")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<TeamJoinResponse> joinTeam(
+      @RequestBody TeamJoinRequest req, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(teamService.joinTeam(req, user.userId()));
   }
 
   @Operation(summary = "초대 코드 재생성", description = "팀장만 초대 코드를 재생성할 수 있습니다. 기존 코드는 즉시 무효화되고 만료 시각은 현재 시각 + 3일로 갱신됩니다.")
