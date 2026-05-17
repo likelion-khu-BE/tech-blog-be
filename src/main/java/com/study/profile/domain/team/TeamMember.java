@@ -101,6 +101,10 @@ public class TeamMember {
     this.isLead = isLead;
   }
 
+  public void kick() {
+    this.status = TeamMemberStatus.kicked;
+  }
+
   public static TeamMember createByInviteCode(TeamProfile team, Member member) {
     TeamMember teamMember = new TeamMember();
     teamMember.team = team;

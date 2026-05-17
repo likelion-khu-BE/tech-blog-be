@@ -178,6 +178,33 @@ public class TeamService {
   }
 
   @Transactional
+  public void kickMember(Long teamId, Long targetMemberId, Long userId) {
+    Member requestMember =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    teamRepository
+        .findById(teamId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    teamMemberRepository
+        .findByTeamIdAndMemberIdAndIsLeadTrue(teamId, requestMember.getId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 강퇴할 수 있습니다."));
+
+    if (requestMember.getId().equals(targetMemberId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "팀장 본인은 강퇴할 수 없습니다.");
+    }
+
+    TeamMember target =
+        teamMemberRepository
+            .findByTeamIdAndMemberIdAndStatus(teamId, targetMemberId, TeamMemberStatus.accepted)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 존재하지 않는 멤버입니다."));
+
+    target.kick();
+  }
+
+  @Transactional
   public TeamLeadTransferResponse transferLead(Long teamId, TeamLeadTransferRequest req, Long userId) {
     Member currentLeaderMember =
         memberRepository

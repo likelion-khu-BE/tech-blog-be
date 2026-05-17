@@ -71,6 +71,17 @@ public class TeamController {
     return ResponseEntity.ok(teamService.joinTeam(req, user.userId()));
   }
 
+  @Operation(summary = "팀원 강퇴", description = "팀장만 호출 가능. 강퇴된 팀원의 status는 kicked로 변경됩니다. 팀장 본인은 강퇴할 수 없습니다.")
+  @DeleteMapping("/{teamId}/members/{memberId}")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<Void> kickMember(
+      @PathVariable Long teamId,
+      @PathVariable Long memberId,
+      @CurrentUser CustomUserDetails user) {
+    teamService.kickMember(teamId, memberId, user.userId());
+    return ResponseEntity.noContent().build();
+  }
+
   @Operation(summary = "팀장 양도", description = "팀장만 호출 가능. 기존 팀장의 isLead는 false, 새 팀장의 isLead는 true로 변경됩니다. 대상 멤버는 accepted 상태여야 합니다.")
   @PatchMapping("/{teamId}/lead")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
