@@ -465,7 +465,10 @@ public class TeamService {
 
     String thumbUrl = team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
 
-    int memberCount = team.getMembers().size();
+    int memberCount =
+        (int) team.getMembers().stream()
+            .filter(m -> m.getStatus() == TeamMemberStatus.accepted)
+            .count();
 
     return new TeamListResponse(
         team.getId(),

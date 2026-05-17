@@ -774,13 +774,13 @@ PATCH /profile/teams/{teamId}/lead
 
 ---
 
-### 5-9. 팀원 역할 수정 (팀장만)
+### 5-9. 팀원 역할 수정 (팀장 또는 본인)
 
 ```
 PUT /profile/teams/{teamId}/members/{memberId}/roles
 ```
 
-> 팀장만 호출 가능. 기존 역할 목록을 전체 교체한다.
+> 팀장 또는 본인만 호출 가능. 기존 역할 목록을 전체 교체한다.
 
 **Request Body**
 ```json
@@ -994,7 +994,7 @@ GET /profile/contributions/ranking
 | [x] | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
 | [x] | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |
 | [x] | `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | 시현 |
-| [x] | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장) | 시현 |
+| [x] | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장 또는 본인) | 시현 |
 | [x] | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |
 | [x] | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
 | [ ] | `GET` | `/profile/members/{memberId}/activities` | 멤버 활동 목록 | 근엽 |
