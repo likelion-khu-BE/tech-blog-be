@@ -29,7 +29,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
   @Query("SELECT m FROM Member m WHERE m.id IN :ids ORDER BY m.name ASC")
   List<Member> findAllByIdIn(@Param("ids") Collection<Long> ids);
 
-  @Query("SELECT m FROM Member m WHERE m.id IN :ids AND m.sessionType = :sessionType ORDER BY m.name ASC")
+  @Query(
+      "SELECT m FROM Member m WHERE m.id IN :ids AND m.sessionType = :sessionType ORDER BY m.name ASC")
   List<Member> findAllByIdInAndSessionType(
       @Param("ids") Collection<Long> ids, @Param("sessionType") SessionType sessionType);
 }

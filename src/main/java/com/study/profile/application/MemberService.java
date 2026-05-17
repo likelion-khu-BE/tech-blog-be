@@ -94,13 +94,15 @@ public class MemberService {
       if (memberIds.isEmpty()) {
         return List.of();
       }
-      members = sessionType != null
-          ? memberRepository.findAllByIdInAndSessionType(memberIds, sessionType)
-          : memberRepository.findAllByIdIn(memberIds);
+      members =
+          sessionType != null
+              ? memberRepository.findAllByIdInAndSessionType(memberIds, sessionType)
+              : memberRepository.findAllByIdIn(memberIds);
     } else {
-      members = sessionType != null
-          ? memberRepository.findAllBySessionType(sessionType)
-          : memberRepository.findAllSorted();
+      members =
+          sessionType != null
+              ? memberRepository.findAllBySessionType(sessionType)
+              : memberRepository.findAllSorted();
     }
     return members.stream().map(MemberSummaryDto::from).toList();
   }

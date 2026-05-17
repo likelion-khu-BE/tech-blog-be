@@ -63,7 +63,9 @@ class AuthIntegrationTest {
                 .findByLoginEmail(email)
                 .ifPresent(
                     user -> {
-                      memberRepository.findByUserId(user.getId()).ifPresent(memberRepository::delete);
+                      memberRepository
+                          .findByUserId(user.getId())
+                          .ifPresent(memberRepository::delete);
                       refreshTokenRepository.deleteByUserId(user.getId());
                       userRepository.delete(user);
                     }));
@@ -96,7 +98,8 @@ class AuthIntegrationTest {
     @Test
     @DisplayName("정상 가입 → PENDING 상태로 생성")
     void signup_success() throws Exception {
-      SignupRequest request = new SignupRequest("test@khu.ac.kr", "password123", "테스트유저", "backend");
+      SignupRequest request =
+          new SignupRequest("test@khu.ac.kr", "password123", "테스트유저", "backend");
 
       mockMvc
           .perform(
@@ -221,7 +224,8 @@ class AuthIntegrationTest {
     @DisplayName("PENDING 유저 로그인 시도 → 403")
     void login_pendingUser() throws Exception {
       // signup API로 PENDING 유저 생성
-      SignupRequest signup = new SignupRequest("pending@khu.ac.kr", "password123", "대기유저", "backend");
+      SignupRequest signup =
+          new SignupRequest("pending@khu.ac.kr", "password123", "대기유저", "backend");
       mockMvc.perform(
           post(SIGNUP_URL)
               .contentType(MediaType.APPLICATION_JSON)

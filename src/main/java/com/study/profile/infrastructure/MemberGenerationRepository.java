@@ -13,7 +13,8 @@ public interface MemberGenerationRepository extends JpaRepository<MemberGenerati
       "SELECT mg FROM MemberGeneration mg JOIN FETCH mg.member WHERE mg.generation.number = :generationId ORDER BY mg.joinedAt ASC")
   List<MemberGeneration> findByGenerationId(@Param("generationId") Integer generationId);
 
-  @Query("SELECT mg FROM MemberGeneration mg JOIN FETCH mg.generation WHERE mg.member.id = :memberId")
+  @Query(
+      "SELECT mg FROM MemberGeneration mg JOIN FETCH mg.generation WHERE mg.member.id = :memberId")
   List<MemberGeneration> findByMemberId(@Param("memberId") Long memberId);
 
   @Query(

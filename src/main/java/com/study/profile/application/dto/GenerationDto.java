@@ -5,18 +5,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 public record GenerationDto(
-    Integer number,
-    LocalDate startDate,
-    LocalDate endDate,
-    Boolean isCurrent,
-    Instant createdAt) {
+    Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent, Instant createdAt) {
 
   public static GenerationDto from(Generation g) {
     return new GenerationDto(
-        g.getNumber(),
-        g.getStartDate(),
-        g.getEndDate(),
-        g.getIsCurrent(),
-        g.getCreatedAt());
+        g.getNumber(), g.getStartDate(), g.getEndDate(), g.getIsCurrent(), g.getCreatedAt());
   }
 }

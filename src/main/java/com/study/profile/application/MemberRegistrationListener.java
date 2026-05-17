@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 /**
  * 회원가입 이벤트를 수신해 Member 프로필을 생성한다.
  *
- * <p>{@code @EventListener}는 발행자(AuthService)와 동일한 트랜잭션 내에서 동기적으로 실행된다.
- * Member 생성 실패 시 User 저장도 함께 롤백되어 불완전한 상태가 남지 않는다.
+ * <p>{@code @EventListener}는 발행자(AuthService)와 동일한 트랜잭션 내에서 동기적으로 실행된다. Member 생성 실패 시 User 저장도 함께
+ * 롤백되어 불완전한 상태가 남지 않는다.
  */
 @Component
 @RequiredArgsConstructor
@@ -33,17 +33,22 @@ public class MemberRegistrationListener {
       sessionType = SessionType.valueOf(event.sessionType().toLowerCase());
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(
-          "유효하지 않은 sessionType입니다: " + event.sessionType()
+          "유효하지 않은 sessionType입니다: "
+              + event.sessionType()
               + ". 허용 값: backend, frontend, design, ai, pm, etc");
     }
 
-    MemberCreateRequest req = new MemberCreateRequest(
-        event.name(), sessionType, null, null, null, null, null, null);
+    MemberCreateRequest req =
+        new MemberCreateRequest(event.name(), sessionType, null, null, null, null, null, null);
     Member member = memberService.createMemberEntity(event.userId(), req);
 
-    generationRepository.findCurrentGeneration().ifPresent(generation -> {
-      MemberGeneration mg = MemberGeneration.create(member, generation, GenerationRole.member);
-      memberGenerationRepository.save(mg);
-    });
+    generationRepository
+        .findCurrentGeneration()
+        .ifPresent(
+            generation -> {
+              MemberGeneration mg =
+                  MemberGeneration.create(member, generation, GenerationRole.member);
+              memberGenerationRepository.save(mg);
+            });
   }
 }
