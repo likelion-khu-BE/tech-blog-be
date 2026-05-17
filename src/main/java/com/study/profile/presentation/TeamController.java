@@ -7,12 +7,17 @@ import com.study.profile.application.dto.TeamDto.TeamCreateRequest;
 import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
 import com.study.profile.application.dto.TeamDto.TeamListResponse;
+import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
+import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "팀 프로필", description = "팀 생성·조회·수정 API")
 @RestController
 @RequestMapping("/api/profile/teams")
 @RequiredArgsConstructor
@@ -27,12 +33,14 @@ public class TeamController {
 
   private final TeamService teamService;
 
+  @Operation(summary = "팀 목록 조회", description = "기수 번호로 필터링하여 팀 목록을 조회합니다. 기수 미입력 시 전체 조회.")
   @GetMapping
   public ResponseEntity<List<TeamListResponse>> getTeams(
       @RequestParam(required = false) Integer generationNumber) {
     return ResponseEntity.ok(teamService.getTeams(generationNumber));
   }
 
+  @Operation(summary = "팀 상세 조회", description = "팀 ID로 팀 상세 정보를 조회합니다. 비로그인 상태로도 조회 가능합니다.")
   @GetMapping("/{teamId}")
   public ResponseEntity<TeamDetailResponse> getTeamDetail(
       @PathVariable Long teamId, @CurrentUser CustomUserDetails user) {
@@ -40,11 +48,22 @@ public class TeamController {
     return ResponseEntity.ok(teamService.getTeamDetail(teamId, userId));
   }
 
+  @Operation(summary = "팀 생성", description = "새 팀을 생성합니다. 생성한 유저가 팀장으로 자동 등록되며 초대코드가 발급됩니다.")
   @PostMapping
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<TeamCreateResponse> createTeam(
       @RequestBody TeamCreateRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(teamService.createTeam(req, user.userId()));
+  }
+
+  @Operation(summary = "팀 정보 수정", description = "팀장만 팀 이름·설명·기술스택·이미지 등을 수정할 수 있습니다. null 필드는 변경하지 않습니다.")
+  @PatchMapping("/{teamId}")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<TeamUpdateResponse> updateTeam(
+      @PathVariable Long teamId,
+      @RequestBody TeamUpdateRequest req,
+      @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(teamService.updateTeam(teamId, req, user.userId()));
   }
 }
