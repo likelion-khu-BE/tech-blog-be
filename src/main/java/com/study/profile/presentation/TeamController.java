@@ -10,6 +10,8 @@ import com.study.profile.application.dto.TeamDto.TeamListResponse;
 import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
+import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
+import com.study.profile.application.dto.TeamDto.TeamLeadTransferResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,6 +69,16 @@ public class TeamController {
   public ResponseEntity<TeamJoinResponse> joinTeam(
       @RequestBody TeamJoinRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.ok(teamService.joinTeam(req, user.userId()));
+  }
+
+  @Operation(summary = "팀장 양도", description = "팀장만 호출 가능. 기존 팀장의 isLead는 false, 새 팀장의 isLead는 true로 변경됩니다. 대상 멤버는 accepted 상태여야 합니다.")
+  @PatchMapping("/{teamId}/lead")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<TeamLeadTransferResponse> transferLead(
+      @PathVariable Long teamId,
+      @RequestBody TeamLeadTransferRequest req,
+      @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(teamService.transferLead(teamId, req, user.userId()));
   }
 
   @Operation(summary = "초대 코드 재생성", description = "팀장만 초대 코드를 재생성할 수 있습니다. 기존 코드는 즉시 무효화되고 만료 시각은 현재 시각 + 3일로 갱신됩니다.")
