@@ -97,6 +97,10 @@ public class TeamMember {
     this.roles.add(TeamMemberRole.create(this, role));
   }
 
+  public void updateLead(boolean isLead) {
+    this.isLead = isLead;
+  }
+
   public static TeamMember createByInviteCode(TeamProfile team, Member member) {
     TeamMember teamMember = new TeamMember();
     teamMember.team = team;

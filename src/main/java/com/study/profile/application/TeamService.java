@@ -9,6 +9,8 @@ import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
 import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
+import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
+import com.study.profile.application.dto.TeamDto.TeamLeadTransferResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
@@ -173,6 +175,33 @@ public class TeamService {
     teamMemberRepository.save(TeamMember.createByInviteCode(team, member));
 
     return new TeamJoinResponse(team.getId(), team.getName());
+  }
+
+  @Transactional
+  public TeamLeadTransferResponse transferLead(Long teamId, TeamLeadTransferRequest req, Long userId) {
+    Member currentLeaderMember =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    teamRepository
+        .findById(teamId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    TeamMember currentLeader =
+        teamMemberRepository
+            .findByTeamIdAndMemberIdAndIsLeadTrue(teamId, currentLeaderMember.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 양도할 수 있습니다."));
+
+    TeamMember newLeader =
+        teamMemberRepository
+            .findByTeamIdAndMemberIdAndStatus(teamId, req.memberId(), TeamMemberStatus.accepted)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "대상 멤버가 해당 팀의 accepted 상태가 아닙니다."));
+
+    currentLeader.updateLead(false);
+    newLeader.updateLead(true);
+
+    return new TeamLeadTransferResponse(teamId, req.memberId());
   }
 
   @Transactional

@@ -33,6 +33,10 @@ public class TeamDto {
 
   public record TeamJoinResponse(Long teamId, String teamName) {}
 
+  public record TeamLeadTransferRequest(Long memberId) {}
+
+  public record TeamLeadTransferResponse(Long teamId, Long newLeadMemberId) {}
+
   public record GenerationSummary(Integer number) {}
 
   public record TechStackSummary(Long id, String name, String category, String logoUrl) {}
