@@ -1,19 +1,19 @@
 package com.study.profile.application;
 
 import com.study.profile.application.dto.TeamDto.GenerationSummary;
+import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
+import com.study.profile.application.dto.TeamDto.MyTeamResponse;
 import com.study.profile.application.dto.TeamDto.TeamCreateRequest;
 import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
-import com.study.profile.application.dto.TeamDto.TeamListResponse;
-import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
-import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferResponse;
+import com.study.profile.application.dto.TeamDto.TeamListResponse;
 import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateResponse;
-import com.study.profile.application.dto.TeamDto.MyTeamResponse;
+import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
@@ -166,13 +166,15 @@ public class TeamService {
     TeamProfile team =
         teamRepository
             .findByInviteCode(req.inviteCode())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 초대 코드입니다."));
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 초대 코드입니다."));
 
     if (team.getInviteCodeExpiresAt().isBefore(Instant.now())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "만료된 초대 코드입니다.");
     }
 
-    Optional<TeamMember> existing = teamMemberRepository.findByTeamIdAndMemberId(team.getId(), member.getId());
+    Optional<TeamMember> existing =
+        teamMemberRepository.findByTeamIdAndMemberId(team.getId(), member.getId());
 
     if (existing.isPresent()) {
       TeamMember teamMember = existing.get();
@@ -200,7 +202,8 @@ public class TeamService {
         .findById(teamId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
 
-    boolean isLead = teamMemberRepository.existsByTeamIdAndMemberIdAndIsLeadTrue(teamId, requestMember.getId());
+    boolean isLead =
+        teamMemberRepository.existsByTeamIdAndMemberIdAndIsLeadTrue(teamId, requestMember.getId());
     boolean isSelf = requestMember.getId().equals(targetMemberId);
 
     if (!isLead && !isSelf) {
@@ -210,7 +213,8 @@ public class TeamService {
     TeamMember target =
         teamMemberRepository
             .findByTeamIdAndMemberIdAndStatus(teamId, targetMemberId, TeamMemberStatus.accepted)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 존재하지 않는 멤버입니다."));
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 존재하지 않는 멤버입니다."));
 
     target.updateRoles(req.roles());
 
@@ -232,10 +236,12 @@ public class TeamService {
     TeamMember teamMember =
         teamMemberRepository
             .findByTeamIdAndMemberIdAndStatus(teamId, member.getId(), TeamMemberStatus.accepted)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 속해 있지 않습니다."));
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 속해 있지 않습니다."));
 
     if (teamMember.isLead()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "팀장은 탈퇴할 수 없습니다. 팀을 해산하려면 팀 삭제를 이용해주세요.");
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "팀장은 탈퇴할 수 없습니다. 팀을 해산하려면 팀 삭제를 이용해주세요.");
     }
 
     teamMember.leave();
@@ -263,13 +269,15 @@ public class TeamService {
     TeamMember target =
         teamMemberRepository
             .findByTeamIdAndMemberIdAndStatus(teamId, targetMemberId, TeamMemberStatus.accepted)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 존재하지 않는 멤버입니다."));
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 존재하지 않는 멤버입니다."));
 
     target.kick();
   }
 
   @Transactional
-  public TeamLeadTransferResponse transferLead(Long teamId, TeamLeadTransferRequest req, Long userId) {
+  public TeamLeadTransferResponse transferLead(
+      Long teamId, TeamLeadTransferRequest req, Long userId) {
     Member currentLeaderMember =
         memberRepository
             .findByUserId(userId)
@@ -282,12 +290,16 @@ public class TeamService {
     TeamMember currentLeader =
         teamMemberRepository
             .findByTeamIdAndMemberIdAndIsLeadTrue(teamId, currentLeaderMember.getId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 양도할 수 있습니다."));
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 양도할 수 있습니다."));
 
     TeamMember newLeader =
         teamMemberRepository
             .findByTeamIdAndMemberIdAndStatus(teamId, req.memberId(), TeamMemberStatus.accepted)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "대상 멤버가 해당 팀의 accepted 상태가 아닙니다."));
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "대상 멤버가 해당 팀의 accepted 상태가 아닙니다."));
 
     currentLeader.updateLead(false);
     newLeader.updateLead(true);
@@ -430,7 +442,10 @@ public class TeamService {
                       .map(
                           ts ->
                               new TechStackSummary(
-                                  ts.getId(), ts.getName(), ts.getCategory().name(), ts.getLogoUrl()))
+                                  ts.getId(),
+                                  ts.getName(),
+                                  ts.getCategory().name(),
+                                  ts.getLogoUrl()))
                       .toList();
               List<String> roles = tm.getRoles().stream().map(r -> r.getRole().name()).toList();
               String thumbUrl =
@@ -466,9 +481,10 @@ public class TeamService {
     String thumbUrl = team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
 
     int memberCount =
-        (int) team.getMembers().stream()
-            .filter(m -> m.getStatus() == TeamMemberStatus.accepted)
-            .count();
+        (int)
+            team.getMembers().stream()
+                .filter(m -> m.getStatus() == TeamMemberStatus.accepted)
+                .count();
 
     return new TeamListResponse(
         team.getId(),

@@ -3,15 +3,15 @@ package com.study.profile.presentation;
 import com.study.auth.infrastructure.security.CurrentUser;
 import com.study.auth.infrastructure.security.CustomUserDetails;
 import com.study.profile.application.TeamService;
+import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamCreateRequest;
 import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
-import com.study.profile.application.dto.TeamDto.TeamListResponse;
-import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferResponse;
+import com.study.profile.application.dto.TeamDto.TeamListResponse;
 import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
@@ -24,11 +24,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,7 +66,9 @@ public class TeamController {
         .body(teamService.createTeam(req, user.userId()));
   }
 
-  @Operation(summary = "초대 코드로 팀 가입", description = "초대 코드를 입력해 팀에 가입합니다. 가입 즉시 status = accepted로 확정됩니다.")
+  @Operation(
+      summary = "초대 코드로 팀 가입",
+      description = "초대 코드를 입력해 팀에 가입합니다. 가입 즉시 status = accepted로 확정됩니다.")
   @PostMapping("/join")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<TeamJoinResponse> joinTeam(
@@ -74,7 +76,9 @@ public class TeamController {
     return ResponseEntity.ok(teamService.joinTeam(req, user.userId()));
   }
 
-  @Operation(summary = "팀 탈퇴", description = "팀원이 팀을 탈퇴합니다. 탈퇴 시 status는 left로 변경됩니다. 팀장은 탈퇴 불가 — 팀 해산은 팀 삭제를 이용하세요.")
+  @Operation(
+      summary = "팀 탈퇴",
+      description = "팀원이 팀을 탈퇴합니다. 탈퇴 시 status는 left로 변경됩니다. 팀장은 탈퇴 불가 — 팀 해산은 팀 삭제를 이용하세요.")
   @DeleteMapping("/{teamId}/members/me")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<Void> leaveTeam(
@@ -83,7 +87,9 @@ public class TeamController {
     return ResponseEntity.noContent().build();
   }
 
-  @Operation(summary = "팀원 역할 수정", description = "팀장 또는 본인만 호출 가능. 기존 역할 목록을 전체 교체합니다. 빈 배열이면 전체 삭제.")
+  @Operation(
+      summary = "팀원 역할 수정",
+      description = "팀장 또는 본인만 호출 가능. 기존 역할 목록을 전체 교체합니다. 빈 배열이면 전체 삭제.")
   @PutMapping("/{teamId}/members/{memberId}/roles")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<TeamMemberRoleUpdateResponse> updateMemberRoles(
@@ -94,18 +100,21 @@ public class TeamController {
     return ResponseEntity.ok(teamService.updateMemberRoles(teamId, memberId, req, user.userId()));
   }
 
-  @Operation(summary = "팀원 강퇴", description = "팀장만 호출 가능. 강퇴된 팀원의 status는 kicked로 변경됩니다. 팀장 본인은 강퇴할 수 없습니다.")
+  @Operation(
+      summary = "팀원 강퇴",
+      description = "팀장만 호출 가능. 강퇴된 팀원의 status는 kicked로 변경됩니다. 팀장 본인은 강퇴할 수 없습니다.")
   @DeleteMapping("/{teamId}/members/{memberId}")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<Void> kickMember(
-      @PathVariable Long teamId,
-      @PathVariable Long memberId,
-      @CurrentUser CustomUserDetails user) {
+      @PathVariable Long teamId, @PathVariable Long memberId, @CurrentUser CustomUserDetails user) {
     teamService.kickMember(teamId, memberId, user.userId());
     return ResponseEntity.noContent().build();
   }
 
-  @Operation(summary = "팀장 양도", description = "팀장만 호출 가능. 기존 팀장의 isLead는 false, 새 팀장의 isLead는 true로 변경됩니다. 대상 멤버는 accepted 상태여야 합니다.")
+  @Operation(
+      summary = "팀장 양도",
+      description =
+          "팀장만 호출 가능. 기존 팀장의 isLead는 false, 새 팀장의 isLead는 true로 변경됩니다. 대상 멤버는 accepted 상태여야 합니다.")
   @PatchMapping("/{teamId}/lead")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<TeamLeadTransferResponse> transferLead(
@@ -115,7 +124,9 @@ public class TeamController {
     return ResponseEntity.ok(teamService.transferLead(teamId, req, user.userId()));
   }
 
-  @Operation(summary = "초대 코드 재생성", description = "팀장만 초대 코드를 재생성할 수 있습니다. 기존 코드는 즉시 무효화되고 만료 시각은 현재 시각 + 3일로 갱신됩니다.")
+  @Operation(
+      summary = "초대 코드 재생성",
+      description = "팀장만 초대 코드를 재생성할 수 있습니다. 기존 코드는 즉시 무효화되고 만료 시각은 현재 시각 + 3일로 갱신됩니다.")
   @PostMapping("/{teamId}/invite-code/regenerate")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<InviteCodeResponse> regenerateInviteCode(
@@ -132,7 +143,9 @@ public class TeamController {
     return ResponseEntity.noContent().build();
   }
 
-  @Operation(summary = "팀 정보 수정", description = "팀장만 팀 이름·설명·기술스택·이미지 등을 수정할 수 있습니다. null 필드는 변경하지 않습니다.")
+  @Operation(
+      summary = "팀 정보 수정",
+      description = "팀장만 팀 이름·설명·기술스택·이미지 등을 수정할 수 있습니다. null 필드는 변경하지 않습니다.")
   @PatchMapping("/{teamId}")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<TeamUpdateResponse> updateTeam(
