@@ -7,6 +7,8 @@ import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
 import com.study.profile.application.dto.TeamDto.TeamListResponse;
 import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
 import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
+import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
+import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
@@ -146,6 +148,31 @@ public class TeamService {
     teamRepository.saveAndFlush(team);
 
     return new TeamUpdateResponse(team.getId(), team.getUpdatedAt());
+  }
+
+  @Transactional
+  public TeamJoinResponse joinTeam(TeamJoinRequest req, Long userId) {
+    Member member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    TeamProfile team =
+        teamRepository
+            .findByInviteCode(req.inviteCode())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 초대 코드입니다."));
+
+    if (team.getInviteCodeExpiresAt().isBefore(Instant.now())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "만료된 초대 코드입니다.");
+    }
+
+    if (teamMemberRepository.existsByTeamIdAndMemberId(team.getId(), member.getId())) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 팀입니다.");
+    }
+
+    teamMemberRepository.save(TeamMember.createByInviteCode(team, member));
+
+    return new TeamJoinResponse(team.getId(), team.getName());
   }
 
   @Transactional

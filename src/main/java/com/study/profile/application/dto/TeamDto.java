@@ -29,6 +29,10 @@ public class TeamDto {
 
   public record InviteCodeResponse(String inviteCode, Instant inviteCodeExpiresAt) {}
 
+  public record TeamJoinRequest(String inviteCode) {}
+
+  public record TeamJoinResponse(Long teamId, String teamName) {}
+
   public record GenerationSummary(Integer number) {}
 
   public record TechStackSummary(Long id, String name, String category, String logoUrl) {}
