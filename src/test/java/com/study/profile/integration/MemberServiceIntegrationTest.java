@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.study.auth.domain.User;
 import com.study.auth.infrastructure.UserRepository;
+import com.study.config.TestcontainersConfig;
 import com.study.profile.application.MemberService;
 import com.study.profile.domain.member.Member;
 import com.study.profile.domain.member.SessionType;
@@ -14,10 +15,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
+@Import(TestcontainersConfig.class)
 class MemberServiceIntegrationTest {
 
   @Autowired private MemberService memberService;
