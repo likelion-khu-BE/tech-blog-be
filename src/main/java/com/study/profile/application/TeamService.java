@@ -11,6 +11,8 @@ import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferResponse;
+import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateRequest;
+import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
@@ -175,6 +177,33 @@ public class TeamService {
     teamMemberRepository.save(TeamMember.createByInviteCode(team, member));
 
     return new TeamJoinResponse(team.getId(), team.getName());
+  }
+
+  @Transactional
+  public TeamMemberRoleUpdateResponse updateMemberRoles(
+      Long teamId, Long targetMemberId, TeamMemberRoleUpdateRequest req, Long userId) {
+    Member requestMember =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    teamRepository
+        .findById(teamId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    teamMemberRepository
+        .findByTeamIdAndMemberIdAndIsLeadTrue(teamId, requestMember.getId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 역할을 수정할 수 있습니다."));
+
+    TeamMember target =
+        teamMemberRepository
+            .findByTeamIdAndMemberIdAndStatus(teamId, targetMemberId, TeamMemberStatus.accepted)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 팀에 존재하지 않는 멤버입니다."));
+
+    target.updateRoles(req.roles());
+
+    List<String> updatedRoles = target.getRoles().stream().map(r -> r.getRole().name()).toList();
+    return new TeamMemberRoleUpdateResponse(targetMemberId, updatedRoles);
   }
 
   @Transactional

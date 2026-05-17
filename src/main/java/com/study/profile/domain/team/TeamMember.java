@@ -109,6 +109,11 @@ public class TeamMember {
     this.status = TeamMemberStatus.left;
   }
 
+  public void updateRoles(List<RoleInTeam> newRoles) {
+    this.roles.clear();
+    newRoles.stream().distinct().forEach(role -> this.roles.add(TeamMemberRole.create(this, role)));
+  }
+
   public static TeamMember createByInviteCode(TeamProfile team, Member member) {
     TeamMember teamMember = new TeamMember();
     teamMember.team = team;
