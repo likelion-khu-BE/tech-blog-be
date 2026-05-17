@@ -1007,7 +1007,7 @@ GET /profile/contributions/ranking
 | ✅   | `POST` | `/profile/teams` | 팀 생성 | 시현 |
 | ✅   | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
 | [x] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
-| [ ] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
+| [x] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
 | [ ] | `GET` | `/profile/teams/{teamId}/invite-code` | 초대 코드 조회 (팀장) | 시현 |
 | [ ] | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
 | [ ] | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |

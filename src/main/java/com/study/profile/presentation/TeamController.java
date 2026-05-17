@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,6 +56,15 @@ public class TeamController {
       @RequestBody TeamCreateRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(teamService.createTeam(req, user.userId()));
+  }
+
+  @Operation(summary = "팀 삭제", description = "팀장만 팀을 삭제할 수 있습니다. 팀원·이미지·기술스택 모두 함께 삭제됩니다.")
+  @DeleteMapping("/{teamId}")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<Void> deleteTeam(
+      @PathVariable Long teamId, @CurrentUser CustomUserDetails user) {
+    teamService.deleteTeam(teamId, user.userId());
+    return ResponseEntity.noContent().build();
   }
 
   @Operation(summary = "팀 정보 수정", description = "팀장만 팀 이름·설명·기술스택·이미지 등을 수정할 수 있습니다. null 필드는 변경하지 않습니다.")
