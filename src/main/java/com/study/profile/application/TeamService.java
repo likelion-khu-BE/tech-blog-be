@@ -13,6 +13,7 @@ import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferResponse;
 import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateResponse;
+import com.study.profile.application.dto.TeamDto.MyTeamResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
@@ -403,6 +404,48 @@ public class TeamService {
         isTeamMember ? team.getInviteCode() : null,
         isTeamMember ? team.getInviteCodeExpiresAt() : null,
         team.getUpdatedAt());
+  }
+
+  @Transactional(readOnly = true)
+  public List<MyTeamResponse> getMyTeams(Long userId) {
+    Member member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    List<TeamMember> myTeamMembers =
+        teamMemberRepository.findByMemberIdAndStatus(member.getId(), TeamMemberStatus.accepted);
+
+    return myTeamMembers.stream()
+        .map(
+            tm -> {
+              TeamProfile team = tm.getTeam();
+              GenerationSummary generation =
+                  team.getGeneration() != null
+                      ? new GenerationSummary(team.getGeneration().getNumber())
+                      : null;
+              List<TechStackSummary> techStacks =
+                  team.getTechStacks().stream()
+                      .map(TeamTechStack::getTechStack)
+                      .map(
+                          ts ->
+                              new TechStackSummary(
+                                  ts.getId(), ts.getName(), ts.getCategory().name(), ts.getLogoUrl()))
+                      .toList();
+              List<String> roles = tm.getRoles().stream().map(r -> r.getRole().name()).toList();
+              String thumbUrl =
+                  team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
+              return new MyTeamResponse(
+                  team.getId(),
+                  team.getName(),
+                  team.getDescription(),
+                  generation,
+                  techStacks,
+                  tm.isLead(),
+                  roles,
+                  thumbUrl);
+            })
+        .toList();
   }
 
   private TeamListResponse toListResponse(TeamProfile team) {
