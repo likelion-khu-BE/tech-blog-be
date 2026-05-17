@@ -71,6 +71,15 @@ public class TeamController {
     return ResponseEntity.ok(teamService.joinTeam(req, user.userId()));
   }
 
+  @Operation(summary = "팀 탈퇴", description = "팀원이 팀을 탈퇴합니다. 탈퇴 시 status는 left로 변경됩니다. 팀장은 탈퇴 불가 — 팀 해산은 팀 삭제를 이용하세요.")
+  @DeleteMapping("/{teamId}/members/me")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<Void> leaveTeam(
+      @PathVariable Long teamId, @CurrentUser CustomUserDetails user) {
+    teamService.leaveTeam(teamId, user.userId());
+    return ResponseEntity.noContent().build();
+  }
+
   @Operation(summary = "팀원 강퇴", description = "팀장만 호출 가능. 강퇴된 팀원의 status는 kicked로 변경됩니다. 팀장 본인은 강퇴할 수 없습니다.")
   @DeleteMapping("/{teamId}/members/{memberId}")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
