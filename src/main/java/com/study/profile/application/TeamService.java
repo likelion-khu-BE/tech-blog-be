@@ -34,6 +34,7 @@ import jakarta.persistence.PersistenceContext;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -170,8 +171,15 @@ public class TeamService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "만료된 초대 코드입니다.");
     }
 
-    if (teamMemberRepository.existsByTeamIdAndMemberId(team.getId(), member.getId())) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 팀입니다.");
+    Optional<TeamMember> existing = teamMemberRepository.findByTeamIdAndMemberId(team.getId(), member.getId());
+
+    if (existing.isPresent()) {
+      TeamMember teamMember = existing.get();
+      if (teamMember.getStatus() == TeamMemberStatus.accepted) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 팀입니다.");
+      }
+      teamMember.rejoin();
+      return new TeamJoinResponse(team.getId(), team.getName());
     }
 
     teamMemberRepository.save(TeamMember.createByInviteCode(team, member));
