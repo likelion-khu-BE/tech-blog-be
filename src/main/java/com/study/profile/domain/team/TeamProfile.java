@@ -105,16 +105,21 @@ public class TeamProfile {
 
   /** 팀의 사용 기술 스택을 업데이트하는 메서드 */
   public void updateTechStacks(List<TechStack> newStacks) {
-    // 1. null이면 아무것도 하지 않고 기존 스택 유지 (방어 로직)
     if (newStacks == null) {
       return;
     }
-
-    // 2. 기존 스택 비우기
     this.techStacks.clear();
-
-    // 3. 중복을 제거(.distinct())하고 리스트에 추가
     newStacks.stream()
+        .distinct()
+        .forEach(stack -> this.techStacks.add(TeamTechStack.create(this, stack)));
+  }
+
+  public void clearTechStacks() {
+    this.techStacks.clear();
+  }
+
+  public void addTechStacks(List<TechStack> stacks) {
+    stacks.stream()
         .distinct()
         .forEach(stack -> this.techStacks.add(TeamTechStack.create(this, stack)));
   }

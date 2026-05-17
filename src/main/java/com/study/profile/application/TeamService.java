@@ -6,6 +6,8 @@ import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
 import com.study.profile.application.dto.TeamDto.TeamListResponse;
 import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
+import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
+import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
 import com.study.profile.domain.generation.Generation;
 import com.study.profile.domain.member.Member;
@@ -20,6 +22,8 @@ import com.study.profile.infrastructure.MemberRepository;
 import com.study.profile.infrastructure.TeamMemberRepository;
 import com.study.profile.infrastructure.TeamRepository;
 import com.study.profile.infrastructure.TechStackRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -33,6 +37,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 public class TeamService {
+
+  @PersistenceContext private EntityManager entityManager;
 
   private final TeamRepository teamRepository;
   private final TeamMemberRepository teamMemberRepository;
@@ -90,6 +96,55 @@ public class TeamService {
 
     return new TeamCreateResponse(
         team.getId(), team.getInviteCode(), team.getInviteCodeExpiresAt());
+  }
+
+  @Transactional
+  public TeamUpdateResponse updateTeam(Long teamId, TeamUpdateRequest req, Long userId) {
+    Member member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    TeamProfile team =
+        teamRepository
+            .findById(teamId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    if (!teamMemberRepository.existsByTeamIdAndMemberIdAndIsLeadTrue(teamId, member.getId())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 수정할 수 있습니다.");
+    }
+
+    Generation generation = team.getGeneration();
+    if (req.generationNumber() != null) {
+      generation =
+          generationRepository
+              .findById(req.generationNumber())
+              .orElseThrow(
+                  () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "기수를 찾을 수 없습니다."));
+    }
+
+    team.update(
+        generation,
+        req.name() != null ? req.name() : team.getName(),
+        req.description() != null ? req.description() : team.getDescription(),
+        req.projectUrl() != null ? req.projectUrl() : team.getProjectUrl(),
+        req.githubUrl() != null ? req.githubUrl() : team.getGithubUrl());
+
+    team.updateImages(req.imageUrls());
+
+    if (req.techStackIds() != null) {
+      List<TechStack> techStacks =
+          req.techStackIds().isEmpty()
+              ? List.of()
+              : techStackRepository.findAllById(req.techStackIds());
+      team.clearTechStacks();
+      entityManager.flush(); // DELETE 먼저 실행 후 INSERT — unique constraint 위반 방지
+      team.addTechStacks(techStacks);
+    }
+
+    teamRepository.saveAndFlush(team);
+
+    return new TeamUpdateResponse(team.getId(), team.getUpdatedAt());
   }
 
   @Transactional(readOnly = true)
