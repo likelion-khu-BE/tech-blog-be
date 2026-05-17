@@ -75,6 +75,12 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
+    // AWS S3
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.1'
+
+    // Rate Limiting
+    implementation 'com.bucket4j:bucket4j-core:8.10.1'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

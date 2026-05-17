@@ -35,6 +35,31 @@ spring:
       hibernate:
         format_sql: true         # SQL을 보기 좋게 줄바꿈 (한 줄 쿼리 → 포맷팅)
 
+# === AWS S3 ===
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ${AWS_REGION}
+
+      s3:
+        bucket:
+          event: ${S3_BUCKET_EVENT}       # 이벤트 게시글 이미지 버킷
+          session: ${S3_BUCKET_SESSION}   # 세션보드 이미지 버킷
+        presigned-url-expiration: ${S3_PRESIGNED_URL_EXPIRATION:180}  # 초 단위, 기본 3분
+        upload:
+          max-file-size-bytes: 10485760   # 10MB
+          allowed-extensions:
+            - jpg
+            - jpeg
+            - png
+            - gif
+            - webp
+          max-files-per-request: 10
+
 # === JWT 인증 ===
 # JWT_SECRET은 반드시 Base64 인코딩된 256bit 이상 키여야 한다
 # 생성: openssl rand -base64 32
