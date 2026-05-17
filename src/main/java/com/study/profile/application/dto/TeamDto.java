@@ -27,6 +27,8 @@ public class TeamDto {
 
   public record TeamUpdateResponse(Long id, Instant updatedAt) {}
 
+  public record InviteCodeResponse(String inviteCode, Instant inviteCodeExpiresAt) {}
+
   public record GenerationSummary(Integer number) {}
 
   public record TechStackSummary(Long id, String name, String category, String logoUrl) {}
