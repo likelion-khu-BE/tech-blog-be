@@ -62,6 +62,16 @@ public class TeamDto {
       boolean isLead,
       List<String> roles) {}
 
+  public record MyTeamResponse(
+      Long id,
+      String name,
+      String description,
+      GenerationSummary generation,
+      List<TechStackSummary> techStacks,
+      boolean isLead,
+      List<String> roles,
+      String thumbUrl) {}
+
   public record TeamDetailResponse(
       Long id,
       String name,

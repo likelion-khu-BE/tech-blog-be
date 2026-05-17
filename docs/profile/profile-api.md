@@ -971,7 +971,7 @@ GET /profile/contributions/ranking
 |-----|--------|------|------|------|
 | [x] | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
 | [x] | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
-| [ ] | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
+| [x] | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
 | [x] | `GET` | `/profile/members` | 멤버 목록 | 세인 |
 | [x] | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
 | [x] | `GET` | `/profile/generations` | 기수 목록 | 세인 |
