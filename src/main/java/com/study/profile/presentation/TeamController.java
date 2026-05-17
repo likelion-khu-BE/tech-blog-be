@@ -7,6 +7,7 @@ import com.study.profile.application.dto.TeamDto.TeamCreateRequest;
 import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
 import com.study.profile.application.dto.TeamDto.TeamListResponse;
+import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,6 +57,14 @@ public class TeamController {
       @RequestBody TeamCreateRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(teamService.createTeam(req, user.userId()));
+  }
+
+  @Operation(summary = "초대 코드 재생성", description = "팀장만 초대 코드를 재생성할 수 있습니다. 기존 코드는 즉시 무효화되고 만료 시각은 현재 시각 + 3일로 갱신됩니다.")
+  @PostMapping("/{teamId}/invite-code/regenerate")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<InviteCodeResponse> regenerateInviteCode(
+      @PathVariable Long teamId, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(teamService.regenerateInviteCode(teamId, user.userId()));
   }
 
   @Operation(summary = "팀 삭제", description = "팀장만 팀을 삭제할 수 있습니다. 팀원·이미지·기술스택 모두 함께 삭제됩니다.")

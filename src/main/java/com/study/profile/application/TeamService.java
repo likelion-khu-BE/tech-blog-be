@@ -6,6 +6,7 @@ import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
 import com.study.profile.application.dto.TeamDto.TeamListResponse;
 import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
+import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
@@ -145,6 +146,28 @@ public class TeamService {
     teamRepository.saveAndFlush(team);
 
     return new TeamUpdateResponse(team.getId(), team.getUpdatedAt());
+  }
+
+  @Transactional
+  public InviteCodeResponse regenerateInviteCode(Long teamId, Long userId) {
+    Member member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    TeamProfile team =
+        teamRepository
+            .findById(teamId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "팀을 찾을 수 없습니다."));
+
+    if (!teamMemberRepository.existsByTeamIdAndMemberIdAndIsLeadTrue(teamId, member.getId())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 초대 코드를 재생성할 수 있습니다.");
+    }
+
+    String newCode = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+    team.regenerateInviteCode(newCode);
+
+    return new InviteCodeResponse(team.getInviteCode(), team.getInviteCodeExpiresAt());
   }
 
   @Transactional
