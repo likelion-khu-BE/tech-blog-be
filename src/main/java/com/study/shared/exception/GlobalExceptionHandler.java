@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(
       DataIntegrityViolationException e) {
-    return errorResponse(HttpStatus.CONFLICT, "이미 투표한 답변입니다.");
+    return errorResponse(HttpStatus.CONFLICT, "중복된 요청입니다.");
   }
 
   @ExceptionHandler(S3Exception.class)

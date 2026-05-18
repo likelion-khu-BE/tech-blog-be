@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li>postB: PUBLISHED, AI/LLM, 12기, OTHER_USER — tags: ChatGPT, Python
  *   <li>postC: PUBLISHED, 해커톤/해커톤후기, 13기, OTHER_USER — no tags
  *   <li>postD: DRAFT, 백엔드/DevOps, 13기, MOCK_USER — no likes/bookmarks
- *   <li>postE: PUBLISHED, 백엔드/CI/CD, 13기, MOCK_USER — repost of postA, tag: Docker
+ *   <li>postE: PUBLISHED, 백엔드/CI/CD, 13기, MOCK_USER — reply to postA, tag: Docker
  * </ul>
  */
 @SpringBootTest(
@@ -135,7 +135,7 @@ class PostApiTest {
                 .generation("13기")
                 .build());
 
-    // Post E: PUBLISHED repost of A by MOCK_USER
+    // Post E: PUBLISHED reply to A by MOCK_USER
     postE =
         postRepository.save(
             Post.builder()
@@ -146,7 +146,7 @@ class PostApiTest {
                 .category("CI/CD")
                 .status(PostStatus.PUBLISHED)
                 .generation("13기")
-                .repostFromId(postA.getId())
+                .replyToId(postA.getId())
                 .build());
     postTagRepository.save(new PostTag(postE, "Docker"));
   }
@@ -269,11 +269,11 @@ class PostApiTest {
   }
 
   @Test
-  @DisplayName("GET /posts/{id} - 재게시 포스트 repostFromId 포함")
-  void getPost_repostedPost_includesRepostFromId() throws Exception {
+  @DisplayName("GET /posts/{id} - 답글 포스트 replyToId 포함")
+  void getPost_replyPost_includesReplyToId() throws Exception {
     mvc.perform(get("/api/blog/posts/{id}", postE.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.repostFromId").value(postA.getId()))
+        .andExpect(jsonPath("$.replyToId").value(postA.getId()))
         .andExpect(jsonPath("$.tags.length()").value(1));
   }
 
@@ -384,19 +384,19 @@ class PostApiTest {
   }
 
   @Test
-  @DisplayName("POST /posts - 재게시 201")
-  void createPost_withRepostFromId_returns201() throws Exception {
+  @DisplayName("POST /posts - 답글 작성 201")
+  void createPost_withReplyToId_returns201() throws Exception {
     String body =
         String.format(
             """
             {
-              "title": "재게시 테스트 포스트",
-              "content": "원본 포스트를 참조하는 재게시 글입니다.",
+              "title": "답글 테스트 포스트",
+              "content": "원글을 참조하는 답글입니다.",
               "board": "백엔드",
               "category": "CI/CD",
               "status": "PUBLISHED",
               "generation": "13기",
-              "repostFromId": %d
+              "replyToId": %d
             }
             """,
             postA.getId());
@@ -407,7 +407,7 @@ class PostApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.repostFromId").value(postA.getId()));
+        .andExpect(jsonPath("$.replyToId").value(postA.getId()));
   }
 
   @Test
