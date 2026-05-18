@@ -19,6 +19,7 @@ import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
 import com.study.blog.shared.exception.BlogException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -82,14 +83,19 @@ public class PostService {
 
     List<Long> replyToIds = posts.stream()
         .map(Post::getReplyToId).filter(Objects::nonNull).distinct().toList();
-    Map<Long, String> replyTitleById = replyToIds.isEmpty() ? Map.of() :
+    Map<Long, String> replyTitleById = replyToIds.isEmpty() ? Collections.emptyMap() :
         postRepository.findAllById(replyToIds).stream()
             .collect(Collectors.toMap(Post::getId, Post::getTitle));
+
+    List<Long> authorUserIds = posts.stream().map(Post::getUserId).distinct().toList();
+    Map<Long, String> authorNameByUserId = memberRepository.findAllByUserIdIn(authorUserIds).stream()
+        .collect(Collectors.toMap(m -> m.getUser().getId(), m -> m.getName()));
 
     return posts.map(
         post ->
             PostSummaryResponse.of(
                 post,
+                authorNameByUserId.get(post.getUserId()),
                 replyTitleById.get(post.getReplyToId()),
                 tagsByPostId.getOrDefault(post.getId(), List.of()),
                 likeCountByPostId.getOrDefault(post.getId(), 0L)));
@@ -220,7 +226,10 @@ public class PostService {
             && postBookmarkRepository
                 .findByIdPostIdAndIdUserId(post.getId(), requesterId)
                 .isPresent();
-    return PostResponse.of(post, tags, likeCount, bookmarkCount, liked, bookmarked);
+    String authorName = memberRepository.findByUserId(post.getUserId())
+        .map(m -> m.getName())
+        .orElse(null);
+    return PostResponse.of(post, authorName, tags, likeCount, bookmarkCount, liked, bookmarked);
   }
 
   private Map<Long, List<String>> batchTagsByPostId(Collection<Long> postIds) {

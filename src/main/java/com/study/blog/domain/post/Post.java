@@ -45,7 +45,7 @@ public class Post {
   @Column(nullable = false, length = 20)
   private PostStatus status;
 
-  @Column(nullable = false, length = 10)
+  @Column(length = 10)
   private String generation;
 
   @Column(name = "reply_to_id")

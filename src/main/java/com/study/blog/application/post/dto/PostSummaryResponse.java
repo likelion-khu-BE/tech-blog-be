@@ -13,13 +13,15 @@ public record PostSummaryResponse(
     String generation,
     PostStatus status,
     Long authorId,
+    String authorName,
     Long replyToId,
     String replyToTitle,
     List<String> tags,
     long likeCount,
     LocalDateTime createdAt) {
 
-  public static PostSummaryResponse of(Post post, String replyToTitle, List<String> tags, long likeCount) {
+  public static PostSummaryResponse of(
+      Post post, String authorName, String replyToTitle, List<String> tags, long likeCount) {
     return new PostSummaryResponse(
         post.getId(),
         post.getTitle(),
@@ -28,6 +30,7 @@ public record PostSummaryResponse(
         post.getGeneration(),
         post.getStatus(),
         post.getUserId(),
+        authorName,
         post.getReplyToId(),
         replyToTitle,
         tags,

@@ -21,6 +21,8 @@ import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
+import com.study.profile.infrastructure.MemberGenerationRepository;
+import com.study.profile.infrastructure.MemberRepository;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +49,8 @@ class PostServiceTest {
   @Mock PostTagRepository postTagRepository;
   @Mock PostLikeRepository postLikeRepository;
   @Mock PostBookmarkRepository postBookmarkRepository;
+  @Mock MemberRepository memberRepository;
+  @Mock MemberGenerationRepository memberGenerationRepository;
   @InjectMocks PostService postService;
 
   // ── 헬퍼 ──────────────────────────────────────────────────────────────────
@@ -70,6 +74,7 @@ class PostServiceTest {
     when(postTagRepository.findByPost(post)).thenReturn(List.of());
     when(postLikeRepository.countByIdPostId(post.getId())).thenReturn(0L);
     when(postBookmarkRepository.countByIdPostId(post.getId())).thenReturn(0L);
+    when(memberRepository.findByUserId(post.getUserId())).thenReturn(Optional.empty());
     if (requesterId != null) {
       when(postLikeRepository.findByIdPostIdAndIdUserId(post.getId(), requesterId))
           .thenReturn(Optional.empty());
@@ -161,9 +166,10 @@ class PostServiceTest {
     @DisplayName("항상 DRAFT 상태로 저장")
     void alwaysSavesAsDraft() {
       PostCreateRequest req =
-          new PostCreateRequest("제목", "내용", "백엔드", "Spring", "13기", List.of(), null);
+          new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
       stubToResponse(saved, USER_ID);
 
       PostResponse res = postService.createPost(req, USER_ID);
@@ -176,10 +182,11 @@ class PostServiceTest {
     void withTags_savesEachTag() {
       PostCreateRequest req =
           new PostCreateRequest(
-              "제목", "내용", "백엔드", "Spring", "13기", List.of("spring", "java"), null);
+              "제목", "내용", "백엔드", "Spring", List.of("spring", "java"), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       when(postTagRepository.save(any())).thenReturn(null);
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
       stubToResponse(saved, USER_ID);
 
       postService.createPost(req, USER_ID);
@@ -192,10 +199,11 @@ class PostServiceTest {
     void withDuplicateTags_savesDistinct() {
       PostCreateRequest req =
           new PostCreateRequest(
-              "제목", "내용", "백엔드", "Spring", "13기", List.of("spring", "spring", "java"), null);
+              "제목", "내용", "백엔드", "Spring", List.of("spring", "spring", "java"), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       when(postTagRepository.save(any())).thenReturn(null);
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
       stubToResponse(saved, USER_ID);
 
       postService.createPost(req, USER_ID);
@@ -206,9 +214,10 @@ class PostServiceTest {
     @Test
     @DisplayName("태그 없으면 postTagRepository.save 미호출")
     void withNoTags_doesNotSaveTags() {
-      PostCreateRequest req = new PostCreateRequest("제목", "내용", "백엔드", "Spring", "13기", null, null);
+      PostCreateRequest req = new PostCreateRequest("제목", "내용", "백엔드", "Spring", null, null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
       stubToResponse(saved, USER_ID);
 
       postService.createPost(req, USER_ID);
