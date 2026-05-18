@@ -3,6 +3,8 @@ package com.study.blog.application.post;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +23,9 @@ import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
+import com.study.profile.domain.generation.Generation;
+import com.study.profile.domain.generation.MemberGeneration;
+import com.study.profile.domain.member.Member;
 import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
 import java.util.List;
@@ -434,6 +439,99 @@ class PostServiceTest {
               e ->
                   assertThat(((BlogException) e).getErrorCode())
                       .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+    }
+  }
+
+  // ── authorName ─────────────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("authorName 조회")
+  class AuthorName {
+
+    @Test
+    @DisplayName("Member가 존재하면 getPost 응답에 authorName이 포함된다")
+    void memberExists_getPost_returnsAuthorName() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      Member member = mock(Member.class);
+      when(member.getName()).thenReturn("홍길동");
+
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      when(postTagRepository.findByPost(post)).thenReturn(List.of());
+      when(postLikeRepository.countByIdPostId(POST_ID)).thenReturn(0L);
+      when(postBookmarkRepository.countByIdPostId(POST_ID)).thenReturn(0L);
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.of(member));
+
+      PostResponse res = postService.getPost(POST_ID, null);
+
+      assertThat(res.authorName()).isEqualTo("홍길동");
+    }
+
+    @Test
+    @DisplayName("Member가 없으면 getPost 응답의 authorName이 null이다")
+    void memberNotFound_getPost_authorNameIsNull() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, null); // memberRepository → Optional.empty()
+
+      PostResponse res = postService.getPost(POST_ID, null);
+
+      assertThat(res.authorName()).isNull();
+    }
+  }
+
+  // ── generation 자동 주입 ────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("createPost - generation 자동 주입")
+  class GenerationAutoInject {
+
+    @Test
+    @DisplayName("Member와 MemberGeneration이 있으면 \"N기\" 형식으로 generation이 저장된다")
+    void memberWithGeneration_createPost_generationSaved() {
+      PostCreateRequest req = new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
+
+      Member member = mock(Member.class);
+      when(member.getId()).thenReturn(99L);
+      Generation gen = mock(Generation.class);
+      when(gen.getNumber()).thenReturn(17);
+      MemberGeneration mg = mock(MemberGeneration.class);
+      when(mg.getGeneration()).thenReturn(gen);
+
+      // createPost calls findByUserId once (generation 조회), toResponse calls it again (authorName)
+      when(memberRepository.findByUserId(USER_ID))
+          .thenReturn(Optional.of(member))  // 1st call: generation 도출
+          .thenReturn(Optional.empty());    // 2nd call: toResponse authorName
+      when(memberGenerationRepository.findByMemberId(99L)).thenReturn(List.of(mg));
+
+      Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      when(postRepository.save(any())).thenReturn(saved);
+      when(postTagRepository.findByPost(saved)).thenReturn(List.of());
+      when(postLikeRepository.countByIdPostId(POST_ID)).thenReturn(0L);
+      when(postBookmarkRepository.countByIdPostId(POST_ID)).thenReturn(0L);
+      when(postLikeRepository.findByIdPostIdAndIdUserId(POST_ID, USER_ID))
+          .thenReturn(Optional.empty());
+      when(postBookmarkRepository.findByIdPostIdAndIdUserId(POST_ID, USER_ID))
+          .thenReturn(Optional.empty());
+
+      postService.createPost(req, USER_ID);
+
+      verify(postRepository).save(argThat(p -> "17기".equals(p.getGeneration())));
+    }
+
+    @Test
+    @DisplayName("Member가 없으면 generation이 null로 저장된다")
+    void memberNotFound_createPost_generationIsNull() {
+      PostCreateRequest req = new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
+
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+      Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      when(postRepository.save(any())).thenReturn(saved);
+      stubToResponse(saved, USER_ID);
+
+      postService.createPost(req, USER_ID);
+
+      verify(postRepository).save(argThat(p -> p.getGeneration() == null));
     }
   }
 }

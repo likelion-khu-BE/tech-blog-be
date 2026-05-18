@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.StudyBeApplication;
+import com.study.auth.domain.User;
+import com.study.auth.infrastructure.UserRepository;
 import com.study.blog.domain.comment.Comment;
 import com.study.blog.domain.comment.CommentLike;
 import com.study.blog.domain.post.Post;
@@ -23,6 +25,15 @@ import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.config.TestcontainersConfig;
+import com.study.profile.domain.generation.Generation;
+import com.study.profile.domain.generation.GenerationRole;
+import com.study.profile.domain.generation.MemberGeneration;
+import com.study.profile.domain.member.Member;
+import com.study.profile.domain.member.SessionType;
+import com.study.profile.infrastructure.GenerationRepository;
+import com.study.profile.infrastructure.MemberGenerationRepository;
+import com.study.profile.infrastructure.MemberRepository;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,6 +78,10 @@ class PostApiTest {
   @Autowired PostBookmarkRepository postBookmarkRepository;
   @Autowired CommentRepository commentRepository;
   @Autowired CommentLikeRepository commentLikeRepository;
+  @Autowired UserRepository userRepository;
+  @Autowired MemberRepository memberRepository;
+  @Autowired GenerationRepository generationRepository;
+  @Autowired MemberGenerationRepository memberGenerationRepository;
 
   Post postA, postB, postC, postD, postE;
 
@@ -743,5 +758,129 @@ class PostApiTest {
 
     assertThat(postRepository.findById(richId)).isEmpty();
     assertThat(postTagRepository.findByPost(rich)).isEmpty();
+  }
+
+  // ── authorName 표시 ──────────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("GET /posts/{id} - Member가 있으면 authorName이 반환된다")
+  void getPost_withMember_returnsAuthorName() throws Exception {
+    User user = userRepository.save(User.create("author-detail@test.com", "hash"));
+    memberRepository.save(
+        Member.create(user, "홍길동", SessionType.backend, null, null, null, null, null, null));
+
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(user.getId())
+                .title("작성자 이름 상세 테스트")
+                .content("내용")
+                .board("백엔드")
+                .category("CI/CD")
+                .status(PostStatus.PUBLISHED)
+                .build());
+
+    mvc.perform(get("/api/blog/posts/{id}", post.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.authorName").value("홍길동"));
+  }
+
+  @Test
+  @DisplayName("GET /posts - Member가 있으면 목록에서 authorName이 반환된다")
+  void getPosts_withMember_returnsAuthorNameInList() throws Exception {
+    User user = userRepository.save(User.create("author-list@test.com", "hash"));
+    memberRepository.save(
+        Member.create(user, "김철수", SessionType.backend, null, null, null, null, null, null));
+
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(user.getId())
+                .title("목록 작성자 이름 테스트")
+                .content("내용")
+                .board("백엔드")
+                .category("CI/CD")
+                .status(PostStatus.PUBLISHED)
+                .build());
+
+    mvc.perform(get("/api/blog/posts").param("size", "20"))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath("$.content[?(@.id == " + post.getId() + ")].authorName").value("김철수"));
+  }
+
+  @Test
+  @DisplayName("GET /posts/{id} - Member가 없으면 authorName이 null이다")
+  void getPost_withoutMember_authorNameIsNull() throws Exception {
+    mvc.perform(get("/api/blog/posts/{id}", postA.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.authorName").doesNotExist());
+  }
+
+  // ── replyToTitle 표시 ────────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("GET /posts - 답글 포스트는 목록에서 replyToTitle을 포함한다")
+  void getPosts_replyPost_includesReplyToTitle() throws Exception {
+    mvc.perform(get("/api/blog/posts").param("size", "20"))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath("$.content[?(@.id == " + postE.getId() + ")].replyToTitle")
+                .value(postA.getTitle()));
+  }
+
+  @Test
+  @DisplayName("GET /posts - 답글이 아닌 포스트는 replyToTitle이 null이다")
+  void getPosts_normalPost_replyToTitleIsNull() throws Exception {
+    mvc.perform(get("/api/blog/posts").param("size", "20"))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath("$.content[?(@.id == " + postA.getId() + ")].replyToTitle").value((Object) null));
+  }
+
+  // ── generation 자동 주입 ─────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("POST /posts - Member와 Generation이 있으면 generation이 자동 저장된다")
+  void createPost_withMemberAndGeneration_generationAutoInjected() throws Exception {
+    User user = userRepository.save(User.create("gen-test@test.com", "hash"));
+    Member member =
+        memberRepository.save(
+            Member.create(
+                user, "기수테스터", SessionType.backend, null, null, null, null, null, null));
+    Generation gen =
+        generationRepository.save(
+            Generation.create(17, LocalDate.of(2024, 3, 1), null, true));
+    memberGenerationRepository.save(MemberGeneration.create(member, gen, GenerationRole.member));
+
+    String body =
+        """
+        {"title":"기수자동주입테스트","content":"내용","board":"백엔드","category":"CI/CD"}
+        """;
+
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(user.getId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.generation").value("17기"));
+  }
+
+  @Test
+  @DisplayName("POST /posts - Member가 없으면 generation이 null이다")
+  void createPost_withoutMember_generationIsNull() throws Exception {
+    String body =
+        """
+        {"title":"기수없음테스트","content":"내용","board":"백엔드","category":"CI/CD"}
+        """;
+
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.generation").doesNotExist());
   }
 }
