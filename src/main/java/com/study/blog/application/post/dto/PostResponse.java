@@ -15,6 +15,7 @@ public record PostResponse(
     String generation,
     Long replyToId,
     Long authorId,
+    String authorName,
     List<String> tags,
     long likeCount,
     long bookmarkCount,
@@ -25,6 +26,7 @@ public record PostResponse(
 
   public static PostResponse of(
       Post post,
+      String authorName,
       List<String> tags,
       long likeCount,
       long bookmarkCount,
@@ -40,6 +42,7 @@ public record PostResponse(
         post.getGeneration(),
         post.getReplyToId(),
         post.getUserId(),
+        authorName,
         tags,
         likeCount,
         bookmarkCount,
