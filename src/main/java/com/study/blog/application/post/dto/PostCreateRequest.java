@@ -8,6 +8,5 @@ public record PostCreateRequest(
     @NotBlank String content,
     @NotBlank String board,
     @NotBlank String category,
-    @NotBlank String generation,
     List<String> tags,
-    Long repostFromId) {}
+    Long replyToId) {}

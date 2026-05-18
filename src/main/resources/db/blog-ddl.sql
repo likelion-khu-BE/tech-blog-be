@@ -16,8 +16,8 @@ CREATE TABLE blog_posts (
     board           VARCHAR(20)       NOT NULL,
     category        VARCHAR(20)       NOT NULL,
     status          VARCHAR(20)       NOT NULL,
-    generation      VARCHAR(10)       NOT NULL,
-    repost_from_id  BIGINT,
+    generation      VARCHAR(10),
+    reply_to_id     BIGINT,
     created_at      TIMESTAMP(6)      NOT NULL,
     updated_at      TIMESTAMP(6)      NOT NULL
 );
