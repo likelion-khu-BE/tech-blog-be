@@ -54,7 +54,7 @@ class ActivityEventListenerTest {
     void onBlogPostCreated() {
       listener.onBlogPostCreated(new BlogPostCreated(1L, 42L));
 
-      then(activityService).should().record(1L, ActivityType.blog_post, 42L);
+      then(activityService).should().record(1L, ActivityType.blog_post, 42L, null);
     }
 
     @Test
@@ -62,7 +62,7 @@ class ActivityEventListenerTest {
     void onBlogCommentCreated() {
       listener.onBlogCommentCreated(new BlogCommentCreated(1L, 42L, 7L));
 
-      then(activityService).should().record(1L, ActivityType.blog_comment, 7L);
+      then(activityService).should().record(1L, ActivityType.blog_comment, 7L, 42L);
     }
 
     @Test
@@ -70,10 +70,10 @@ class ActivityEventListenerTest {
     void onBlogPostLiked() {
       listener.onBlogPostLiked(new BlogPostLiked(99L, 42L, 1L));
 
-      then(activityService).should().record(99L, ActivityType.blog_post_like, 42L);
+      then(activityService).should().record(99L, ActivityType.blog_post_like, 42L, null);
       then(activityService)
           .should()
-          .recordReceived(1L, ActivityType.blog_post_like_received, 42L, 99L);
+          .recordReceived(1L, ActivityType.blog_post_like_received, 42L, null, 99L);
     }
   }
 
@@ -118,7 +118,7 @@ class ActivityEventListenerTest {
     void onQnaQuestionCreated() {
       listener.onQnaQuestionCreated(new QnaQuestionCreated(1L, 10L));
 
-      then(activityService).should().record(1L, ActivityType.qna_question, 10L);
+      then(activityService).should().record(1L, ActivityType.qna_question, 10L, null);
     }
 
     @Test
@@ -126,7 +126,7 @@ class ActivityEventListenerTest {
     void onQnaAnswerCreated() {
       listener.onQnaAnswerCreated(new QnaAnswerCreated(1L, 100L, 20L));
 
-      then(activityService).should().record(1L, ActivityType.qna_answer, 20L);
+      then(activityService).should().record(1L, ActivityType.qna_answer, 20L, 100L);
     }
 
     @Test
@@ -134,7 +134,7 @@ class ActivityEventListenerTest {
     void onQnaAnswerAccepted() {
       listener.onQnaAnswerAccepted(new QnaAnswerAccepted(5L, 100L, 20L));
 
-      then(activityService).should().record(5L, ActivityType.qna_accepted, 20L);
+      then(activityService).should().record(5L, ActivityType.qna_accepted, 20L, 100L);
     }
 
     @Test
@@ -142,7 +142,7 @@ class ActivityEventListenerTest {
     void onQnaAnswerUpvoted() {
       listener.onQnaAnswerUpvoted(new QnaAnswerUpvoted(99L, 100L, 20L));
 
-      then(activityService).should().record(99L, ActivityType.qna_answer_upvote, 20L);
+      then(activityService).should().record(99L, ActivityType.qna_answer_upvote, 20L, 100L);
     }
 
     @Test
@@ -150,7 +150,7 @@ class ActivityEventListenerTest {
     void onQnaAnswerDownvoted() {
       listener.onQnaAnswerDownvoted(new QnaAnswerDownvoted(99L, 100L, 20L));
 
-      then(activityService).should().record(99L, ActivityType.qna_answer_downvote, 20L);
+      then(activityService).should().record(99L, ActivityType.qna_answer_downvote, 20L, 100L);
     }
 
     @Test
@@ -158,7 +158,7 @@ class ActivityEventListenerTest {
     void onQnaCommentCreated() {
       listener.onQnaCommentCreated(new QnaCommentCreated(1L, 10L, null, 30L));
 
-      then(activityService).should().record(1L, ActivityType.qna_comment, 30L);
+      then(activityService).should().record(1L, ActivityType.qna_comment, 30L, 10L);
     }
   }
 
@@ -227,7 +227,7 @@ class ActivityEventListenerTest {
     void onSessionEventPostCreated() {
       listener.onSessionEventPostCreated(new SessionEventPostCreated(1L, 50L));
 
-      then(activityService).should().record(1L, ActivityType.session_event_post, 50L);
+      then(activityService).should().record(1L, ActivityType.session_event_post, 50L, null);
     }
 
     @Test
@@ -235,7 +235,7 @@ class ActivityEventListenerTest {
     void onSessionEventCommentCreated() {
       listener.onSessionEventCommentCreated(new SessionEventCommentCreated(1L, 50L, 60L));
 
-      then(activityService).should().record(1L, ActivityType.session_event_comment, 60L);
+      then(activityService).should().record(1L, ActivityType.session_event_comment, 60L, 50L);
     }
 
     @Test
@@ -243,10 +243,10 @@ class ActivityEventListenerTest {
     void onSessionEventPostLiked() {
       listener.onSessionEventPostLiked(new SessionEventPostLiked(99L, 50L, 1L));
 
-      then(activityService).should().record(99L, ActivityType.session_event_post_like, 50L);
+      then(activityService).should().record(99L, ActivityType.session_event_post_like, 50L, null);
       then(activityService)
           .should()
-          .recordReceived(1L, ActivityType.session_event_post_like_received, 50L, 99L);
+          .recordReceived(1L, ActivityType.session_event_post_like_received, 50L, null, 99L);
     }
 
     @Test
@@ -254,7 +254,7 @@ class ActivityEventListenerTest {
     void onSessionSpeakerRegistered() {
       listener.onSessionSpeakerRegistered(new SessionSpeakerRegistered(1L, 70L));
 
-      then(activityService).should().record(1L, ActivityType.session_speak, 70L);
+      then(activityService).should().record(1L, ActivityType.session_speak, 70L, null);
     }
   }
 
@@ -313,6 +313,7 @@ class ActivityEventListenerTest {
               org.mockito.ArgumentMatchers.anyLong(),
               org.mockito.ArgumentMatchers.any(),
               org.mockito.ArgumentMatchers.anyLong(),
+              org.mockito.ArgumentMatchers.any(),
               org.mockito.ArgumentMatchers.anyLong());
     }
 
