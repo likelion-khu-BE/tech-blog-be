@@ -64,10 +64,11 @@
 > 좋아요는 양방향 — 누른 사람(`*_like`) / 받은 사람(`*_like_received`) 별도.
 > Q&A 답변 vote는 참여 자체로 활동(+1) — upvote/downvote 무관. 답변 받는 측엔 활동 X (채택 시스템이 별도 보상).
 
-### ContributionPeriodType
+### RankingPeriod
 ```
-"month" | "three_month" | "year" | "all"
+"month" | "year" | "all"
 ```
+> §6-4 랭킹 점수 합산 기간 필터. `all`은 전체 기간.
 
 ### 공통 에러 응답
 ```json
@@ -828,41 +829,44 @@ DELETE /profile/teams/{teamId}/members/me
 ## 6. 활동 기록 (Activities)
 > **담당: 근엽**
 >
-> 활동 기록은 blog / qna / sessionboard 도메인에서 이벤트 방식으로 자동 적재된다. 이 섹션은 **읽기 전용** API만 제공한다.
-
-### 점수 기준
-
-| ActivityType | 점수 |
-|---|---|
-| `blog_post` | +30 |
-| `blog_comment` | +3 |
-| `blog_post_like` | +1 |
-| `blog_post_like_received` | +1 |
-| `qna_question` | +10 |
-| `qna_answer` | +10 |
-| `qna_accepted` | +25 |
-| `qna_answer_upvote` | +1 |
-| `qna_answer_downvote` | +1 |
-| `qna_comment` | +3 |
-| `session_speak` | +50 |
-| `session_event_post` | +30 |
-| `session_event_comment` | +3 |
-| `session_event_post_like` | +1 |
-| `session_event_post_like_received` | +1 |
+> 활동 기록은 blog / qna / sessionboard 도메인에서 이벤트 방식으로 자동 적재된다. 이 섹션은 읽기 전용 API만 제공한다.
 
 ---
 
-### 6-1. 멤버 활동 목록 조회
+### 6-1. 멤버 활동 통계 조회
+
+```
+GET /profile/members/{memberId}/stats
+```
+
+> 멤버의 도메인(blog / qna / session)별 작성형 활동 누적 개수. 반응형(좋아요·투표·댓글 등)은 제외. 가중치 없이 단순 카운트. 멤버 프로필 페이지 카드용.
+
+**Query Parameters**: 없음
+
+**Response `200 OK`**
+```json
+{
+  "memberId": 1,
+  "blog": 5,
+  "qna": 3,
+  "session": 7
+}
+```
+
+---
+
+### 6-2. 멤버 작성형 활동 목록 조회
 
 ```
 GET /profile/members/{memberId}/activities
 ```
 
+> 멤버의 작성형 활동(글·답변·발표 등) 페이징. 정렬은 `createdAt DESC` 고정.
+
 **Query Parameters**
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `type` | `ActivityType` | 아니오 | — | 활동 종류 필터 |
 | `page` | `number` | 아니오 | `0` | 페이지 번호 (0-based) |
 | `size` | `number` | 아니오 | `20` | 페이지 크기 |
 
@@ -873,9 +877,16 @@ GET /profile/members/{memberId}/activities
     {
       "id": 1,
       "type": "blog_post",
-      "referenceId": 42,
       "score": 30,
-      "createdAt": "2025-05-01T10:00:00Z"
+      "createdAt": "2025-05-01T10:00:00Z",
+      "link": "/blog/posts/42"
+    },
+    {
+      "id": 2,
+      "type": "qna_answer",
+      "score": 10,
+      "createdAt": "2025-05-02T11:00:00Z",
+      "link": "/qna/questions/100#answer-20"
     }
   ],
   "page": 0,
@@ -886,82 +897,120 @@ GET /profile/members/{memberId}/activities
 }
 ```
 
+> `link`는 클라이언트가 클릭 시 라우팅할 frontend path. 백엔드가 type별 매핑. 
+
 ---
 
-### 6-2. 멤버 기여도 요약
+### 6-3. 내 반응형 활동 목록 조회
 
 ```
-GET /profile/members/{memberId}/contributions
+GET /profile/members/me/reactions
 ```
 
-> `activity` 테이블에서 기간별 점수를 집계해 반환한다.
+> 본인 반응형 활동(좋아요·투표·댓글 등) 페이징. 토큰 기반 본인 전용 — 타인 호출 불가. 정렬은 `createdAt DESC` 고정.
 
 **Query Parameters**
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `period` | `ContributionPeriodType` | 아니오 | `all` | 집계 기간 |
+| `page` | `number` | 아니오 | `0` | 페이지 번호 (0-based) |
+| `size` | `number` | 아니오 | `20` | 페이지 크기 |
 
 **Response `200 OK`**
 ```json
 {
-  "memberId": 1,
-  "name": "홍길동",
-  "period": "month",
-  "totalScore": 214,
-  "breakdown": {
-    "blog_post": 60,
-    "blog_comment": 3,
-    "blog_post_like": 3,
-    "blog_post_like_received": 12,
-    "qna_question": 10,
-    "qna_answer": 20,
-    "qna_accepted": 50,
-    "qna_comment": 3,
-    "session_speak": 50,
-    "session_event_post": 0,
-    "session_event_comment": 3,
-    "session_event_post_like": 0,
-    "session_event_post_like_received": 0
-  }
+  "content": [
+    {
+      "id": 10,
+      "type": "blog_post_like",
+      "score": 1,
+      "createdAt": "2025-05-03T09:00:00Z",
+      "link": "/blog/posts/42"
+    },
+    {
+      "id": 11,
+      "type": "qna_comment",
+      "score": 3,
+      "createdAt": "2025-05-03T10:00:00Z",
+      "link": "/qna/questions/100#comment-55"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 8,
+  "totalPages": 1,
+  "hasNext": false
 }
 ```
 
+> `link`는 클라이언트가 클릭 시 라우팅할 frontend path. 백엔드가 type별 매핑. 
 ---
 
-### 6-3. 기여도 랭킹
+### 6-4. 기여도 랭킹
 
 ```
-GET /profile/contributions/ranking
+GET /profile/ranking
 ```
+
+> 가중치 점수 기준 멤버 랭킹. 모든 멤버(활동 0 포함) 페이징. 정렬: `totalScore DESC → activityCount DESC → memberId ASC` (동률 결정 순).
+
+**점수 기준** (ActivityType별 가중치)
+
+| ActivityType | 점수 |
+|---|---|
+| `session_speak` | +50 |
+| `blog_post` | +30 |
+| `session_event_post` | +30 |
+| `qna_accepted` | +25 |
+| `qna_question` | +10 |
+| `qna_answer` | +10 |
+| `blog_comment` | +3 |
+| `qna_comment` | +3 |
+| `session_event_comment` | +3 |
+| `blog_post_like` | +1 |
+| `blog_post_like_received` | +1 |
+| `qna_answer_upvote` | +1 |
+| `qna_answer_downvote` | +1 |
+| `session_event_post_like` | +1 |
+| `session_event_post_like_received` | +1 |
 
 **Query Parameters**
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `period` | `ContributionPeriodType` | 아니오 | `all` | 집계 기간 |
-| `generationNumber` | `number` | 아니오 | — | 특정 기수 필터 |
-| `limit` | `number` | 아니오 | `10` | 반환할 순위 수 |
+| `period` | `RankingPeriod` | 아니오 | `month` | 집계 기간 |
+| `generationId` | `number` | 아니오 | 전체 | 특정 기수 필터. 안 보내면 전체 기수 통합 ranking. 보내면 그 기수만 (예: `14`, `15`, `16`) |
+| `page` | `number` | 아니오 | `0` | 페이지 번호 (0-based) |
+| `size` | `number` | 아니오 | `20` | 페이지 크기 |
 
 **Response `200 OK`**
 ```json
-[
-  {
-    "rank": 1,
-    "memberId": 1,
-    "name": "홍길동",
-    "profileImageUrl": "https://...",
-    "totalScore": 120
-  },
-  {
-    "rank": 2,
-    "memberId": 3,
-    "name": "김지수",
-    "profileImageUrl": "https://...",
-    "totalScore": 95
-  }
-]
+{
+  "content": [
+    {
+      "rank": 1,
+      "memberId": 1,
+      "name": "홍길동",
+      "profileImageUrl": "https://...",
+      "totalScore": 120
+    },
+    {
+      "rank": 2,
+      "memberId": 3,
+      "name": "김지수",
+      "profileImageUrl": "https://...",
+      "totalScore": 95
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 50,
+  "totalPages": 3,
+  "hasNext": true
+}
 ```
+
+> `rank`는 페이지 오프셋 반영 — `page=0`은 1부터, `page=1·size=20`은 21부터 시작.
 
 ---
 
@@ -976,7 +1025,7 @@ GET /profile/contributions/ranking
 | ✅   | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
 | ✅   | `GET` | `/profile/generations` | 기수 목록 | 세인 |
 | ✅   | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
-| [x] | `GET` | `/profile/generations/{generationNumber}` | 기수 상세 | 세인 |
+| ✅   | `GET` | `/profile/generations/{generationNumber}` | 기수 상세 | 세인 |
 | ✅   | `PATCH` | `/profile/generations/{generationNumber}` | 기수 수정 (관리자) | 세인 |
 | ✅   | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
 | ✅   | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
@@ -997,6 +1046,7 @@ GET /profile/contributions/ranking
 | ✅   | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장 또는 본인) | 시현 |
 | ✅   | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |
 | ✅   | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
-| [ ] | `GET` | `/profile/members/{memberId}/activities` | 멤버 활동 목록 | 근엽 |
-| [ ] | `GET` | `/profile/members/{memberId}/contributions` | 멤버 기여도 요약 | 근엽 |
-| [ ] | `GET` | `/profile/contributions/ranking` | 기여도 랭킹 | 근엽 |
+| ✅   | `GET` | `/profile/members/{memberId}/stats` | 멤버 활동 통계 | 근엽 |
+| ✅   | `GET` | `/profile/members/{memberId}/activities` | 멤버 작성형 활동 목록 | 근엽 |
+| ✅   | `GET` | `/profile/members/me/reactions` | 내 반응형 활동 목록 | 근엽 |
+| ✅   | `GET` | `/profile/ranking` | 기여도 랭킹 | 근엽 |
