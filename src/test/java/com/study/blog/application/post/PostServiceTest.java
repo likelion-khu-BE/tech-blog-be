@@ -170,8 +170,7 @@ class PostServiceTest {
     @Test
     @DisplayName("항상 DRAFT 상태로 저장")
     void alwaysSavesAsDraft() {
-      PostCreateRequest req =
-          new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
+      PostCreateRequest req = new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
@@ -186,8 +185,7 @@ class PostServiceTest {
     @DisplayName("태그 있으면 각 태그마다 save 호출")
     void withTags_savesEachTag() {
       PostCreateRequest req =
-          new PostCreateRequest(
-              "제목", "내용", "백엔드", "Spring", List.of("spring", "java"), null);
+          new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of("spring", "java"), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       when(postTagRepository.save(any())).thenReturn(null);
@@ -499,8 +497,8 @@ class PostServiceTest {
 
       // createPost calls findByUserId once (generation 조회), toResponse calls it again (authorName)
       when(memberRepository.findByUserId(USER_ID))
-          .thenReturn(Optional.of(member))  // 1st call: generation 도출
-          .thenReturn(Optional.empty());    // 2nd call: toResponse authorName
+          .thenReturn(Optional.of(member)) // 1st call: generation 도출
+          .thenReturn(Optional.empty()); // 2nd call: toResponse authorName
       when(memberGenerationRepository.findByMemberId(99L)).thenReturn(List.of(mg));
 
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);

@@ -805,8 +805,7 @@ class PostApiTest {
 
     mvc.perform(get("/api/blog/posts").param("size", "20"))
         .andExpect(status().isOk())
-        .andExpect(
-            jsonPath("$.content[?(@.id == " + post.getId() + ")].authorName").value("김철수"));
+        .andExpect(jsonPath("$.content[?(@.id == " + post.getId() + ")].authorName").value("김철수"));
   }
 
   @Test
@@ -835,7 +834,8 @@ class PostApiTest {
     mvc.perform(get("/api/blog/posts").param("size", "20"))
         .andExpect(status().isOk())
         .andExpect(
-            jsonPath("$.content[?(@.id == " + postA.getId() + ")].replyToTitle").value((Object) null));
+            jsonPath("$.content[?(@.id == " + postA.getId() + ")].replyToTitle")
+                .value((Object) null));
   }
 
   // ── generation 자동 주입 ─────────────────────────────────────────────────
@@ -846,11 +846,9 @@ class PostApiTest {
     User user = userRepository.save(User.create("gen-test@test.com", "hash"));
     Member member =
         memberRepository.save(
-            Member.create(
-                user, "기수테스터", SessionType.backend, null, null, null, null, null, null));
+            Member.create(user, "기수테스터", SessionType.backend, null, null, null, null, null, null));
     Generation gen =
-        generationRepository.save(
-            Generation.create(17, LocalDate.of(2024, 3, 1), null, true));
+        generationRepository.save(Generation.create(17, LocalDate.of(2024, 3, 1), null, true));
     memberGenerationRepository.save(MemberGeneration.create(member, gen, GenerationRole.member));
 
     String body =
