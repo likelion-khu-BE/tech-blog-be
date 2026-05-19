@@ -86,6 +86,15 @@ public class PostController {
     return ResponseEntity.ok(Map.of("liked", liked));
   }
 
+  @GetMapping("/bookmarks")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<Page<PostSummaryResponse>> getBookmarkedPosts(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(postService.getBookmarkedPosts(user.userId(), page, size));
+  }
+
   @PostMapping("/{id}/bookmark")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<Map<String, Boolean>> toggleBookmark(

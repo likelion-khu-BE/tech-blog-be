@@ -188,6 +188,46 @@ public class PostService {
             });
   }
 
+  public Page<PostSummaryResponse> getBookmarkedPosts(Long userId, int page, int size) {
+    List<Long> postIds = postBookmarkRepository.findPostIdsByUserId(userId);
+
+    if (postIds.isEmpty()) {
+      return Page.<PostSummaryResponse>empty(PageRequest.of(page, size));
+    }
+
+    Page<Post> posts =
+        postRepository.findAll(
+            Specification.where(PostSpecification.published())
+                .and((root, query, cb) -> root.get("id").in(postIds)),
+            PageRequest.of(page, size, Sort.by("createdAt").descending()));
+
+    List<Long> fetchedIds = posts.stream().map(Post::getId).toList();
+    Map<Long, List<String>> tagsByPostId = batchTagsByPostId(fetchedIds);
+    Map<Long, Long> likeCountByPostId = batchLikeCountByPostId(fetchedIds);
+
+    List<Long> replyToIds =
+        posts.stream().map(Post::getReplyToId).filter(Objects::nonNull).distinct().toList();
+    Map<Long, String> replyTitleById =
+        replyToIds.isEmpty()
+            ? Collections.emptyMap()
+            : postRepository.findAllById(replyToIds).stream()
+                .collect(Collectors.toMap(Post::getId, Post::getTitle));
+
+    List<Long> authorUserIds = posts.stream().map(Post::getUserId).distinct().toList();
+    Map<Long, String> authorNameByUserId =
+        memberRepository.findAllByUserIdIn(authorUserIds).stream()
+            .collect(Collectors.toMap(m -> m.getUser().getId(), m -> m.getName()));
+
+    return posts.map(
+        post ->
+            PostSummaryResponse.of(
+                post,
+                authorNameByUserId.get(post.getUserId()),
+                replyTitleById.get(post.getReplyToId()),
+                tagsByPostId.getOrDefault(post.getId(), List.of()),
+                likeCountByPostId.getOrDefault(post.getId(), 0L)));
+  }
+
   @Transactional
   public boolean toggleBookmark(Long postId, Long userId) {
     Post post = findById(postId);
