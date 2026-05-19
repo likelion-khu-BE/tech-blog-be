@@ -138,13 +138,14 @@ CREATE TABLE team_image
 -- 11. 활동 점수 및 로그 테이블
 CREATE TABLE activity
 (
-    id           BIGINT   NOT NULL AUTO_INCREMENT,
-    member_id    BIGINT   NOT NULL,
-    type         VARCHAR(50) NOT NULL,
-    reference_id BIGINT,
-    actor_id     BIGINT,
-    score        INT      NOT NULL DEFAULT 0,
-    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id                  BIGINT   NOT NULL AUTO_INCREMENT,
+    member_id           BIGINT   NOT NULL,
+    type                VARCHAR(50) NOT NULL,
+    reference_id        BIGINT,
+    parent_resource_id  BIGINT,
+    actor_id            BIGINT,
+    score               INT      NOT NULL DEFAULT 0,
+    created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (member_id) REFERENCES member (id) ON DELETE CASCADE
 );
