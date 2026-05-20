@@ -135,9 +135,15 @@ public class TeamService {
     team.update(
         generation,
         req.name() != null ? req.name() : team.getName(),
-        req.description() == null ? team.getDescription() : (req.description().isBlank() ? null : req.description()),
-        req.projectUrl() == null ? team.getProjectUrl() : (req.projectUrl().isBlank() ? null : req.projectUrl()),
-        req.githubUrl() == null ? team.getGithubUrl() : (req.githubUrl().isBlank() ? null : req.githubUrl()));
+        req.description() == null
+            ? team.getDescription()
+            : (req.description().isBlank() ? null : req.description()),
+        req.projectUrl() == null
+            ? team.getProjectUrl()
+            : (req.projectUrl().isBlank() ? null : req.projectUrl()),
+        req.githubUrl() == null
+            ? team.getGithubUrl()
+            : (req.githubUrl().isBlank() ? null : req.githubUrl()));
 
     team.updateImages(req.imageUrls());
 
