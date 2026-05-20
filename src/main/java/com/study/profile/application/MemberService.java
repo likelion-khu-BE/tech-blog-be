@@ -10,6 +10,7 @@ import com.study.profile.application.dto.MemberTechStackUpdateRequest;
 import com.study.profile.application.dto.MemberUpdateRequest;
 import com.study.profile.application.dto.MemberUpdateResponse;
 import com.study.profile.application.dto.TechStackItemDto;
+import com.study.profile.domain.exception.MemberNotFoundException;
 import com.study.profile.domain.member.Member;
 import com.study.profile.domain.member.SessionType;
 import com.study.profile.domain.techstack.MemberTechStack;
@@ -111,6 +112,20 @@ public class MemberService {
             .map(MemberGenerationDto::from)
             .toList();
     return MemberDto.from(member, generations);
+  }
+
+  /**
+   * 특정 멤버의 기술 스택 목록 조회 (§4-1).
+   *
+   * <p>멤버가 없으면 404. {@code member.getTechStacks()}는 LAZY라 이 readOnly 트랜잭션 안에서 초기화한 뒤 반환한다. 별도 정렬은
+   * 하지 않는다 — 멤버 기술 스택을 노출하는 다른 응답(§1-1, §1-4, §4-2)과 동일하게 저장 순서를 따른다.
+   */
+  public List<TechStackItemDto> getMemberTechStacks(Long memberId) {
+    Member member =
+        memberRepository
+            .findById(memberId)
+            .orElseThrow(() -> new MemberNotFoundException(memberId));
+    return member.getTechStacks().stream().map(TechStackItemDto::from).toList();
   }
 
   public List<MemberSummaryDto> getMembers(Integer generationId, SessionType sessionType) {

@@ -77,4 +77,11 @@ public class MemberController {
   public ResponseEntity<MemberDto> getMemberById(@PathVariable Long memberId) {
     return ResponseEntity.ok(memberService.getMemberById(memberId));
   }
+
+  @Operation(summary = "멤버 기술 스택 조회", description = "특정 멤버가 보유한 기술 스택 목록을 반환합니다.")
+  @GetMapping("/{memberId}/tech-stacks")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<List<TechStackItemDto>> getMemberTechStacks(@PathVariable Long memberId) {
+    return ResponseEntity.ok(memberService.getMemberTechStacks(memberId));
+  }
 }
