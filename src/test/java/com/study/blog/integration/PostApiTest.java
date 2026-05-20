@@ -760,6 +760,33 @@ class PostApiTest {
     assertThat(postTagRepository.findByPost(rich)).isEmpty();
   }
 
+  // ── GET /api/blog/posts/bookmarks ───────────────────────────────────────
+
+  @Test
+  @DisplayName("GET /posts/bookmarks - 비인증 요청 401")
+  void getBookmarkedPosts_unauthenticated_returns401() throws Exception {
+    mvc.perform(get("/api/blog/posts/bookmarks")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("GET /posts/bookmarks - 인증된 유저 본인 북마크만 반환")
+  void getBookmarkedPosts_authenticated_returnsOnlyCallerBookmarks() throws Exception {
+    // setUp: MOCK_USER → postA 북마크, OTHER_USER 북마크 없음
+    mvc.perform(get("/api/blog/posts/bookmarks").with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].id").value(postA.getId()));
+  }
+
+  @Test
+  @DisplayName("GET /posts/bookmarks - 다른 유저의 북마크는 포함되지 않음")
+  void getBookmarkedPosts_authenticated_doesNotIncludeOtherUsersBookmarks() throws Exception {
+    // OTHER_USER has no bookmarks → empty page
+    mvc.perform(get("/api/blog/posts/bookmarks").with(TestAuth.asMember(OTHER_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(0));
+  }
+
   // ── authorName 표시 ──────────────────────────────────────────────────────
 
   @Test
