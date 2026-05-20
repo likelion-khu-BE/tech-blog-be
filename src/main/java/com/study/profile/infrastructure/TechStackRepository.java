@@ -11,4 +11,10 @@ public interface TechStackRepository extends JpaRepository<TechStack, Long> {
   //    OrderByNameAsc     → ORDER BY name ASC
   //    → 결과: 전체 스택을 이름 오름차순으로 조회
   List<TechStack> findAllByOrderByNameAsc();
+
+  // 같은 이름의 기술 스택이 이미 있는지 (등록 시 중복 차단용 — §3-2)
+  boolean existsByName(String name);
+
+  // 자기 자신(id)을 제외하고 같은 이름이 있는지 (수정 시 남의 이름과 중복 차단용 — §3-3)
+  boolean existsByNameAndIdNot(String name, Long id);
 }
