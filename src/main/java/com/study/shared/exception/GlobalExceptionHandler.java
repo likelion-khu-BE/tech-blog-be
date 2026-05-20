@@ -6,6 +6,8 @@ import com.study.auth.domain.exception.InvalidTokenException;
 import com.study.auth.domain.exception.TokenReusedException;
 import com.study.auth.domain.exception.UserNotActiveException;
 import com.study.profile.domain.exception.MemberNotFoundException;
+import com.study.profile.domain.exception.TechStackNameDuplicateException;
+import com.study.profile.domain.exception.TechStackNotFoundException;
 import com.study.qna.domain.exception.AnswerNotFoundException;
 import com.study.qna.domain.exception.CommentNotFoundException;
 import com.study.qna.domain.exception.ForbiddenQnaActionException;
@@ -80,6 +82,17 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MemberNotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleMemberNotFound(MemberNotFoundException e) {
     return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(TechStackNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleTechStackNotFound(TechStackNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(TechStackNameDuplicateException.class)
+  public ResponseEntity<Map<String, Object>> handleTechStackNameDuplicate(
+      TechStackNameDuplicateException e) {
+    return errorResponse(HttpStatus.CONFLICT, e.getMessage());
   }
 
   @ExceptionHandler(TagAlreadyExistsException.class)
