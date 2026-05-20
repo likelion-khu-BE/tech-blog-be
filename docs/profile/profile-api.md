@@ -1090,7 +1090,7 @@ GET /profile/ranking
 | ✅   | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
 | ✅   | `GET` | `/profile/generations` | 기수 목록 | 세인 |
 | ✅   | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
-| ✅   | `GET` | `/profile/generations/{generationNumber}` | 기수 상세 | 세인 |
+| [x] | `GET` | `/profile/generations/{generationNumber}` | 기수 상세 | 세인 |
 | ✅   | `PATCH` | `/profile/generations/{generationNumber}` | 기수 수정 (관리자) | 세인 |
 | ✅   | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
 | ✅   | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
@@ -1111,7 +1111,7 @@ GET /profile/ranking
 | ✅   | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장 또는 본인) | 시현 |
 | ✅   | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |
 | ✅   | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
-| ✅   | `GET` | `/profile/members/{memberId}/stats` | 멤버 활동 통계 | 근엽 |
-| ✅   | `GET` | `/profile/members/{memberId}/activities` | 멤버 작성형 활동 목록 | 근엽 |
-| ✅   | `GET` | `/profile/members/me/reactions` | 내 반응형 활동 목록 | 근엽 |
-| ✅   | `GET` | `/profile/ranking` | 기여도 랭킹 | 근엽 |
+| ✅ | `GET` | `/profile/members/{memberId}/stats` | 멤버 활동 통계 | 근엽 |
+| ✅ | `GET` | `/profile/members/{memberId}/activities` | 멤버 작성형 활동 목록 | 근엽 |
+| ✅ | `GET` | `/profile/members/me/reactions` | 내 반응형 활동 목록 | 근엽 |
+| ✅ | `GET` | `/profile/ranking` | 기여도 랭킹 | 근엽 |
