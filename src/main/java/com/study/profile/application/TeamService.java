@@ -486,7 +486,8 @@ public class TeamService {
             .toList();
 
     // 시현 N+1 수정: Set 전환으로 get(0) 불가 → stream().findFirst()로 변경
-    String thumbUrl = team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
+    String thumbUrl =
+        team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
 
     int memberCount =
         (int)

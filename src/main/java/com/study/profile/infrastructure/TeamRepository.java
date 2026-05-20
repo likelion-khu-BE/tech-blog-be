@@ -7,8 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface
-TeamRepository extends JpaRepository<TeamProfile, Long> {
+public interface TeamRepository extends JpaRepository<TeamProfile, Long> {
 
   Optional<TeamProfile> findByInviteCode(String inviteCode);
 
@@ -34,5 +33,6 @@ TeamRepository extends JpaRepository<TeamProfile, Long> {
           + "LEFT JOIN FETCH t.images "
           + "LEFT JOIN FETCH t.members "
           + "WHERE t.generation.number = :generationNumber")
-  List<TeamProfile> findByGenerationNumberWithDetails(@Param("generationNumber") Integer generationNumber);
+  List<TeamProfile> findByGenerationNumberWithDetails(
+      @Param("generationNumber") Integer generationNumber);
 }
