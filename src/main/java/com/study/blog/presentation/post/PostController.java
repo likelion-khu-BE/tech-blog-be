@@ -92,9 +92,6 @@ public class PostController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
       @CurrentUser CustomUserDetails user) {
-    if (user == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
     return ResponseEntity.ok(postService.getBookmarkedPosts(user.userId(), page, size));
   }
 
