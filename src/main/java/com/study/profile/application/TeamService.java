@@ -455,7 +455,7 @@ public class TeamService {
                       .toList();
               List<String> roles = tm.getRoles().stream().map(r -> r.getRole().name()).toList();
               String thumbUrl =
-                  team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
+                  team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
               return new MyTeamResponse(
                   team.getId(),
                   team.getName(),
@@ -484,7 +484,7 @@ public class TeamService {
                         ts.getId(), ts.getName(), ts.getCategory().name(), ts.getLogoUrl()))
             .toList();
 
-    String thumbUrl = team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
+    String thumbUrl = team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
 
     int memberCount =
         (int)

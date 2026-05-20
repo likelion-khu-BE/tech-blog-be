@@ -4,6 +4,7 @@ import com.study.auth.domain.User;
 import com.study.auth.domain.UserStatus;
 import com.study.auth.infrastructure.UserRepository;
 import com.study.auth.presentation.dto.UserResponse;
+import com.study.profile.infrastructure.MemberRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserAdminService {
 
   private final UserRepository userRepository;
+  private final MemberRepository memberRepository;
 
   @Transactional(readOnly = true)
   public List<UserResponse> getUsers(String status) {
@@ -56,8 +58,10 @@ public class UserAdminService {
   }
 
   private UserResponse toResponse(User user) {
+    Long memberId = memberRepository.findByUserId(user.getId()).map(m -> m.getId()).orElse(null);
     return new UserResponse(
         user.getId(),
+        memberId,
         user.getLoginEmail(),
         user.getRole().name(),
         user.getStatus().name(),
