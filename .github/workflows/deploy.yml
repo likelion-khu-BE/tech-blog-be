@@ -39,14 +39,16 @@ jobs:
               --output text | jq -r '.GHCR_TOKEN')
 
             echo $GHCR_TOKEN | docker login ghcr.io -u ${{ github.event.workflow_run.actor.login }} --password-stdin
-            docker pull ghcr.io/${{ github.repository }}:latest
+
+            IMAGE=$(echo "ghcr.io/${{ github.repository }}:latest" | tr '[:upper:]' '[:lower:]')
+            docker pull $IMAGE
 
             aws secretsmanager get-secret-value \
               --secret-id tech-blog-be \
               --query SecretString \
               --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > /home/ubuntu/.env
 
-            echo "GITHUB_REPOSITORY=${{ github.repository }}" >> /home/ubuntu/.env
+            echo "GITHUB_REPOSITORY=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')" >> /home/ubuntu/.env
 
             cd /home/ubuntu
             docker compose down
