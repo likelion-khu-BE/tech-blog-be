@@ -15,6 +15,7 @@ import com.study.qna.domain.exception.TagNotFoundException;
 import com.study.qna.domain.exception.VoteAlreadyExistsException;
 import com.study.qna.domain.exception.VoteNotFoundException;
 import com.study.qna.domain.exception.VoteSelfNotAllowedException;
+import com.study.sessionboard.application.session.exception.SessionNotFoundException;
 import com.study.shared.s3.S3Exception;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -118,6 +119,11 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(VoteNotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleVoteNotFound(VoteNotFoundException e) {
+    return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(SessionNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleSessionNotFound(SessionNotFoundException e) {
     return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
   }
 
