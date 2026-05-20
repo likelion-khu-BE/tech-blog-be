@@ -61,7 +61,8 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/swagger-ui.html",
-                        "/error")
+                        "/error",
+                        "/actuator/health")
                     .permitAll()
                     .requestMatchers(
                         org.springframework.http.HttpMethod.GET,
