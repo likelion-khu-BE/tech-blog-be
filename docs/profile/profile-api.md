@@ -394,6 +394,7 @@ POST /profile/generations/{generationId}/members
 > **담당: 시현**
 >
 > 기술 스택은 시드 데이터로 제공된다 (`tech_stack_seed.json`). 일반 사용자는 읽기만 가능하고, 관리자만 추가/수정/삭제할 수 있다.
+>
 
 ### 3-1. 기술 스택 목록 조회
 
@@ -403,9 +404,9 @@ GET /profile/tech-stacks
 
 **Query Parameters**
 
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| `category` | `TechStackCategory` | 아니오 | 카테고리 필터 |
+| 파라미터 | 타입 | 필수 | 기본값 | 설명                                              |
+|----------|------|------|--------|-------------------------------------------------|
+| `category` | `string` | 아니오 | `all` | 분류 필터. `all`이면 전체. 그 외 값은 `TechStackCategory` 값 |
 
 **Response `200 OK`**
 ```json
@@ -436,31 +437,66 @@ POST /profile/tech-stacks
 }
 ```
 
-| 필드 | 타입 | 필수 | 제약 |
-|------|------|------|------|
-| `name` | `string` | 예 | 중복 불가 |
-| `category` | `TechStackCategory` | 예 | — |
-| `logoUrl` | `string` | 아니오 | — |
+| 필드 | 타입 | 필수 | 제약                               |
+|------|------|------|----------------------------------|
+| `name` | `string` | 예 | 중복 불가                            |
+| `category` | `TechStackCategory` | 예 | TechStackCategory 값 가능           |
+| `logoUrl` | `string` | 아니오 | 외부 CDN 주소를 그대로 저장 (없으면 로고 없는 스택) |
 
 **Response `201 Created`**
 ```json
 { "id": 120 }
 ```
 
+**에러**
+
+| 에러 | HTTP | 메시지                 |
+|------|------|---------------------|
+| 이름 중복 | `409` | 이미 존재하는 기술 스택 이름입니다 |
+| 검증 실패 | `400` | 값이 누락되었습니다          |
+
 ---
 
 ### 3-3. 기술 스택 수정 (관리자)
 
 ```
-PATCH /profile/tech-stacks/{techStackId}
+PUT /profile/tech-stacks/{techStackId}
 ```
 
-**Request Body** — 3-2와 동일 구조
+**Path Parameter**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `techStackId` | `number` | 수정할 기술 스택 id |
+
+> 기존 목록을 전체 교체한다.
+
+```json
+{
+  "name": "Bun",
+  "category": "framework",
+  "logoUrl": "https://..."
+}
+```
+
+| 필드 | 타입 | 필수 | 제약                     |
+|------|------|------|------------------------|
+| `name` | `string` | 예 | 다른 기술 스택과 중복 불가        |
+| `category` | `TechStackCategory` | 예 | TechStackCategory 값 가능 |
+| `logoUrl` | `string` | 아니오 | -                      |
 
 **Response `200 OK`**
 ```json
 { "id": 1 }
 ```
+
+**에러**
+
+| 에러       | HTTP | 메시지              |
+|----------|------|------------------|
+| 수정 대상 없음 | `404` | 기술 스택을 찾을 수 없습니다 |
+| 이름 중복    | `409` | 이미 존재하는이름입니다     |
+| 검증 실패    | `400` | 값이 누락되었습니다       |
 
 ---
 
@@ -470,7 +506,22 @@ PATCH /profile/tech-stacks/{techStackId}
 DELETE /profile/tech-stacks/{techStackId}
 ```
 
+**Path Parameter**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `techStackId` | `number` | 삭제할 기술 스택 id |
+
+
+> 이 기술을 보유한 멤버·팀의 연결(`member_tech_stack`, `team_tech_stack`)도 함께 삭제된다. 
+
 **Response `204 No Content`**
+
+**에러**
+
+| 에러 | HTTP | 메시지 |
+|------|------|--------|
+| 기술 스택 없음 | `404` | 기술 스택을 찾을 수 없습니다 |
 
 ---
 
@@ -482,6 +533,14 @@ DELETE /profile/tech-stacks/{techStackId}
 ```
 GET /profile/members/{memberId}/tech-stacks
 ```
+
+> 특정 멤버가 보유한 기술 스택 목록. 로그인한 멤버면 조회 가능.
+
+**Path Parameter**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `memberId` | `number` | 조회할 멤버 id |
 
 **Response `200 OK`**
 ```json
@@ -495,6 +554,12 @@ GET /profile/members/{memberId}/tech-stacks
   }
 ]
 ```
+
+**에러**
+
+| 에러 | HTTP | 메시지 |
+|------|------|--------|
+| 멤버 없음 | `404` | 멤버를 찾을 수 없습니다 |
 
 ---
 
@@ -1017,7 +1082,7 @@ GET /profile/ranking
 ## 엔드포인트 요약
 
 | 구현  | 메서드 | 경로 | 설명 | 담당 |
-|-----|--------|------|------|------|
+|-----|--------|------|------|----|
 | ✅   | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
 | ✅   | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
 | ✅   | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
@@ -1030,10 +1095,10 @@ GET /profile/ranking
 | ✅   | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
 | ✅   | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
 | ✅   | `GET` | `/profile/tech-stacks` | 기술 스택 목록 | 시현 |
-| [ ] | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 시현 |
-| [ ] | `PATCH` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 시현 |
-| [ ] | `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | 시현 |
-| [ ] | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 시현 |
+| ✅   | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 근엽 |
+| ✅   | `PUT` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 근엽 |
+| ✅   | `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | 근엽 |
+| ✅   | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 근엽 |
 | ✅   | `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | 시현 |
 | ✅   | `GET` | `/profile/teams` | 팀 목록 | 시현 |
 | ✅   | `POST` | `/profile/teams` | 팀 생성 | 시현 |
