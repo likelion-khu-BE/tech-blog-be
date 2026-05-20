@@ -108,6 +108,21 @@ public class AnswerService {
     return AnswerDetailResponse.from(answer, tempAuthor(answer.getUserId()));
   }
 
+  /**
+   * 질문 cascade 삭제 시 호출되는 답변 삭제.
+   *
+   * <p>TODO(answer 담당자): 아래 순서로 구현 필요
+   *
+   * <ol>
+   *   <li>해당 answer의 comment 목록 조회 → 삭제 + QnaCommentDeleted 이벤트 발행
+   *   <li>answer 삭제 + QnaAnswerDeleted 이벤트 발행
+   * </ol>
+   *
+   * <p>주의: answerCount 감산 불필요 — 질문 자체가 삭제되므로.
+   */
+  @Transactional
+  public void deleteAnswerCascade(Answer answer) {}
+
   @Transactional
   public void deleteAnswer(Long answerId, Long userId) {
     Answer answer =
