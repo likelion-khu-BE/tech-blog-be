@@ -13,9 +13,11 @@ import com.study.qna.infrastructure.AnswerRepository;
 import com.study.qna.infrastructure.CommentRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.study.shared.extevent.qna.QnaCommentCreated;
+import com.study.shared.extevent.qna.QnaCommentDeleted;
 @Transactional(readOnly = true)
 @Service("qnaCommentService")
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class CommentService {
 
   private final CommentRepository commentRepository;
   private final AnswerRepository answerRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   public List<CommentResponse> getComments(Long answerId) {
     answerRepository.findById(answerId).orElseThrow(() -> new AnswerNotFoundException(answerId));
@@ -48,6 +51,7 @@ public class CommentService {
     Comment saved = commentRepository.save(comment);
     MemberSummaryResponse author =
         MemberSummaryResponse.of(saved.getUserId(), String.valueOf(saved.getUserId()), 0);
+    eventPublisher.publishEvent(new QnaCommentCreated(userId, answer.getQuestion().getId(), answerId, saved.getId()));
     return CommentResponse.of(saved, author);
   }
 
@@ -79,8 +83,9 @@ public class CommentService {
       throw new ForbiddenQnaActionException();
     }
 
-    Long answerId = comment.getAnswer().getId();
+    Answer answer = comment.getAnswer();
     commentRepository.delete(comment);
-    answerRepository.decrementCommentCount(answerId);
+    answerRepository.decrementCommentCount(answer.getId());
+    eventPublisher.publishEvent(new QnaCommentDeleted(userId, answer.getQuestion().getId(), answer.getId(), commentId));
   }
 }
