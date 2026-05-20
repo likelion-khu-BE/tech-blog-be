@@ -7,7 +7,8 @@ public enum BlogErrorCode {
   COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다"),
   PARENT_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "부모 댓글을 찾을 수 없습니다"),
   FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다"),
-  UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다");
+  UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다"),
+  POST_NOT_PUBLISHED(HttpStatus.BAD_REQUEST, "발행된 게시글에만 북마크할 수 있습니다");
 
   private final HttpStatus status;
   private final String message;
