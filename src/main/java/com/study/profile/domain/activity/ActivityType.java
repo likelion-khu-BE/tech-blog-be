@@ -93,8 +93,7 @@ public enum ActivityType {
    */
   public String linkPath(Long referenceId, Long parentResourceId) {
     return switch (this) {
-      case blog_post, blog_post_like, blog_post_like_received ->
-          "/blog/posts/" + referenceId;
+      case blog_post, blog_post_like, blog_post_like_received -> "/blog/posts/" + referenceId;
       case blog_comment ->
           parentResourceId == null
               ? null

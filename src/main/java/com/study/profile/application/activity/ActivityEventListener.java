@@ -46,7 +46,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *   <li><b>차감</b>: 삭제/취소 이벤트 → {@link ActivityService#revoke} / {@link ActivityService#revokeLike}
  *       / {@link ActivityService#revokeLikeReceived}. reference_id(child id)로 cascade.
  * </ul>
- *
  */
 @Component
 @RequiredArgsConstructor
@@ -203,8 +202,7 @@ public class ActivityEventListener {
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onSessionEventPostCreated(SessionEventPostCreated event) {
-    activityService.record(
-        event.userId(), ActivityType.session_event_post, event.postId(), null);
+    activityService.record(event.userId(), ActivityType.session_event_post, event.postId(), null);
   }
 
   @Async

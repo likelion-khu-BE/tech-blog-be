@@ -14,7 +14,8 @@ public class ActivityDto {
   /**
    * §6-2 activities / §6-3 reactions 항목.
    *
-   * <p>{@code link}는 클라이언트가 클릭 시 라우팅할 frontend path — 백엔드에서 type별 매핑. {@code session_speak}는 page 미정으로 null.
+   * <p>{@code link}는 클라이언트가 클릭 시 라우팅할 frontend path — 백엔드에서 type별 매핑. {@code session_speak}는 page
+   * 미정으로 null.
    */
   public record ActivityResponse(
       Long id, ActivityType type, Integer score, Instant createdAt, String link) {

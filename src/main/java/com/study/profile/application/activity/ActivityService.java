@@ -198,8 +198,7 @@ public class ActivityService {
       RankingPeriod period, Integer generationId, int page, int size) {
     Instant since = period.toStartInstant().orElse(null);
     PageRequest pageRequest = PageRequest.of(page, size);
-    List<RankingProjection> rows =
-        activityRepository.findRanking(since, generationId, pageRequest);
+    List<RankingProjection> rows = activityRepository.findRanking(since, generationId, pageRequest);
     long total = activityRepository.countRankingMembers(generationId);
 
     int rankOffset = page * size;

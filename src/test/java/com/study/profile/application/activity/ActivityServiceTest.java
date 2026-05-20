@@ -122,8 +122,7 @@ class ActivityServiceTest {
       Member owner = Mockito.mock(Member.class);
       given(memberRepository.findByUserId(1L)).willReturn(Optional.of(owner));
 
-      activityService.recordReceived(
-          1L, ActivityType.blog_post_like_received, 42L, null, 99L);
+      activityService.recordReceived(1L, ActivityType.blog_post_like_received, 42L, null, 99L);
 
       ArgumentCaptor<Activity> captor = ArgumentCaptor.forClass(Activity.class);
       verify(activityRepository).save(captor.capture());
@@ -349,8 +348,7 @@ class ActivityServiceTest {
     @Test
     @DisplayName("page=1·size=20 → rank 21부터 시작")
     void getRanking_secondPage_rankStartsAt21() {
-      List<RankingProjection> rows =
-          List.of(new RankingProjection(21L, "21등", "url21", 10L, 1L));
+      List<RankingProjection> rows = List.of(new RankingProjection(21L, "21등", "url21", 10L, 1L));
       given(activityRepository.findRanking(any(), any(), any())).willReturn(rows);
       given(activityRepository.countRankingMembers(null)).willReturn(50L);
 

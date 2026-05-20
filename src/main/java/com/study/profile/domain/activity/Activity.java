@@ -60,11 +60,7 @@ public class Activity {
 
   /** 자기 행위 활동 생성 — 글/댓글/좋아요 누름/채택/발표 등. actor_id 없음. parentResourceId는 루트 리소스면 null. */
   public static Activity create(
-      Member member,
-      ActivityType type,
-      Long referenceId,
-      Long parentResourceId,
-      int score) {
+      Member member, ActivityType type, Long referenceId, Long parentResourceId, int score) {
     return createInternal(member, type, referenceId, parentResourceId, null, score);
   }
 
