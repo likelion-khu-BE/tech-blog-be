@@ -6,8 +6,10 @@ import com.study.profile.application.MemberService;
 import com.study.profile.application.TeamService;
 import com.study.profile.application.dto.MemberDto;
 import com.study.profile.application.dto.MemberSummaryDto;
+import com.study.profile.application.dto.MemberTechStackUpdateRequest;
 import com.study.profile.application.dto.MemberUpdateRequest;
 import com.study.profile.application.dto.MemberUpdateResponse;
+import com.study.profile.application.dto.TechStackItemDto;
 import com.study.profile.application.dto.TeamDto.MyTeamResponse;
 import com.study.profile.domain.member.SessionType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,6 +49,14 @@ public class MemberController {
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<List<MyTeamResponse>> getMyTeams(@CurrentUser CustomUserDetails user) {
     return ResponseEntity.ok(teamService.getMyTeams(user.userId()));
+  }
+
+  @Operation(summary = "내 기술 스택 수정", description = "기존 목록을 전체 교체합니다. 빈 배열 []이면 전체 삭제.")
+  @PutMapping("/me/tech-stacks")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<List<TechStackItemDto>> updateMyTechStacks(
+      @RequestBody List<MemberTechStackUpdateRequest> req, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(memberService.updateMyTechStacks(user.userId(), req));
   }
 
   @PatchMapping("/me")
