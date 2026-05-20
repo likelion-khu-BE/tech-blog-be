@@ -75,6 +75,7 @@ public class TeamProfile {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt; // 마지막 수정 시각
 
+  // 시현 N+1 수정: List(Bag) → Set 전환 — MultipleBagFetchException 및 JOIN FETCH 중복 방지
   @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<TeamImage> images = new HashSet<>();
 
@@ -101,7 +102,7 @@ public class TeamProfile {
     }
   }
 
-  // TeamProfile 클래스 안에 추가
+  // 시현 N+1 수정: List(Bag) → Set 전환 — JOIN FETCH 시 techStacks 중복 제거
   @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<TeamTechStack> techStacks = new HashSet<>();
 

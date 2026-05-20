@@ -454,6 +454,7 @@ public class TeamService {
                                   ts.getLogoUrl()))
                       .toList();
               List<String> roles = tm.getRoles().stream().map(r -> r.getRole().name()).toList();
+              // 시현 N+1 수정: Set 전환으로 get(0) 불가 → stream().findFirst()로 변경
               String thumbUrl =
                   team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
               return new MyTeamResponse(
@@ -484,6 +485,7 @@ public class TeamService {
                         ts.getId(), ts.getName(), ts.getCategory().name(), ts.getLogoUrl()))
             .toList();
 
+    // 시현 N+1 수정: Set 전환으로 get(0) 불가 → stream().findFirst()로 변경
     String thumbUrl = team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
 
     int memberCount =
