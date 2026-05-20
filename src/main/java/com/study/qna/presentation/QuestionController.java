@@ -74,13 +74,14 @@ public class QuestionController {
 
   @Operation(
       summary = "질문 상태 변경",
-      description = "작성자만 상태를 변경할 수 있습니다. OPEN → RESOLVED → CLOSED 순으로 전이됩니다.")
+      description = "작성자만 상태를 변경할 수 있습니다. OPEN → RESOLVED 전이만 허용됩니다.")
   @PatchMapping("/{questionId}/status")
-  public ResponseEntity<QuestionDetailResponse> closeQuestion(
+  public ResponseEntity<QuestionDetailResponse> updateQuestionStatus(
       @PathVariable Long questionId,
       @CurrentUser CustomUserDetails user,
       @Valid @RequestBody QuestionStatusUpdateRequest request) {
-    return ResponseEntity.ok(questionService.closeQuestion(questionId, request, user.userId()));
+    return ResponseEntity.ok(
+        questionService.updateQuestionStatus(questionId, request, user.userId()));
   }
 
   @Operation(summary = "질문 삭제", description = "작성자만 질문을 삭제할 수 있습니다.")
