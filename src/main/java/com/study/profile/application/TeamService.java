@@ -359,8 +359,8 @@ public class TeamService {
   public List<TeamListResponse> getTeams(Integer generationNumber) {
     List<TeamProfile> teams =
         generationNumber != null
-            ? teamRepository.findByGenerationNumber(generationNumber)
-            : teamRepository.findAll();
+            ? teamRepository.findByGenerationNumberWithDetails(generationNumber)
+            : teamRepository.findAllWithDetails();
 
     return teams.stream().map(this::toListResponse).toList();
   }
