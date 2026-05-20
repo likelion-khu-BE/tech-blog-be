@@ -6,6 +6,4 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("QnA CommentService")
-public class CommentServiceTest {
-
-}
+public class CommentServiceTest {}
