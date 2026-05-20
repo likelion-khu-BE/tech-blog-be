@@ -8,18 +8,23 @@ import com.study.qna.application.dto.response.common.MemberSummaryResponse;
 import com.study.qna.application.dto.response.question.QuestionDetailResponse;
 import com.study.qna.application.dto.response.question.QuestionSummaryResponse;
 import com.study.qna.application.dto.response.tag.TagResponse;
+import com.study.qna.domain.Answer;
 import com.study.qna.domain.Question;
 import com.study.qna.domain.QuestionStatus;
 import com.study.qna.domain.Tag;
 import com.study.qna.domain.exception.ForbiddenQnaActionException;
 import com.study.qna.domain.exception.QuestionNotFoundException;
 import com.study.qna.domain.exception.TagNotFoundException;
+import com.study.qna.infrastructure.AnswerRepository;
 import com.study.qna.infrastructure.QuestionRepository;
 import com.study.qna.infrastructure.TagRepository;
+import com.study.qna.infrastructure.VoteRepository;
+import com.study.shared.extevent.qna.QnaQuestionDeleted;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +36,11 @@ public class QuestionService {
   private static final String TEMP_NICKNAME = "임시닉네임";
 
   private final QuestionRepository questionRepository;
+  private final AnswerRepository answerRepository;
+  private final VoteRepository voteRepository;
+  private final AnswerService answerService;
   private final TagRepository tagRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   public List<QuestionSummaryResponse> getQuestions(QuestionSearchCondition condition) {
     return questionRepository.searchQuestions(condition).stream()
@@ -120,7 +129,14 @@ public class QuestionService {
       throw new ForbiddenQnaActionException();
     }
 
+    List<Answer> answers = answerRepository.findByQuestionId(questionId);
+    for (Answer answer : answers) {
+      voteRepository.deleteAllByAnswer_Id(answer.getId());
+      answerService.deleteAnswerCascade(answer);
+    }
+
     questionRepository.delete(question);
+    eventPublisher.publishEvent(new QnaQuestionDeleted(userId, questionId));
   }
 
   private List<Tag> fetchAndValidateTags(List<Long> tagIds) {
