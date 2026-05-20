@@ -231,6 +231,9 @@ public class PostService {
   @Transactional
   public boolean toggleBookmark(Long postId, Long userId) {
     Post post = findById(postId);
+    if (post.getStatus() == PostStatus.DRAFT) {
+      throw new BlogException(BlogErrorCode.POST_NOT_PUBLISHED);
+    }
     return postBookmarkRepository
         .findByIdPostIdAndIdUserId(postId, userId)
         .map(
