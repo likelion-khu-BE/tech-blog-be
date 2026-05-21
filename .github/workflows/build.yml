@@ -2,8 +2,8 @@ name: Build and Push
 
 on:
   push:
-    branches:
-      - dev
+    tags:
+      - 'v*'                    # 태그 트리거
 
 jobs:
   build:
@@ -27,7 +27,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=sha,prefix=,format=short
+            type=semver,pattern={{version}}   # (ex. v0.2.0 이미지 ghcr에 보존)
             type=raw,value=latest
 
       - uses: docker/build-push-action@v6

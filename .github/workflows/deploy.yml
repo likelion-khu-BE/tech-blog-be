@@ -5,8 +5,7 @@ on:
     workflows: ["Build and Push"]
     types:
       - completed
-    branches:
-      - dev
+      # branches 조건 제거
 
 jobs:
   deploy:
