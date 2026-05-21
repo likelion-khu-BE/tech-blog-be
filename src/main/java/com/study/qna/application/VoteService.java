@@ -45,7 +45,7 @@ public class VoteService {
 
   @Transactional
   public void cancelVote(Long answerId, Long userId) {
-    answerRepository.findById(answerId).orElseThrow(() -> new AnswerNotFoundException(answerId));
+    if (!answerRepository.existsById(answerId)) throw new AnswerNotFoundException(answerId);
 
     Vote vote =
         voteRepository
@@ -58,7 +58,7 @@ public class VoteService {
   }
 
   public MyVoteResponse getMyVote(Long answerId, Long userId) {
-    answerRepository.findById(answerId).orElseThrow(() -> new AnswerNotFoundException(answerId));
+    if (!answerRepository.existsById(answerId)) throw new AnswerNotFoundException(answerId);
 
     return voteRepository
         .findByAnswer_IdAndUserId(answerId, userId)
