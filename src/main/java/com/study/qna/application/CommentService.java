@@ -29,7 +29,7 @@ public class CommentService {
   private final ApplicationEventPublisher eventPublisher;
 
   public List<CommentResponse> getComments(Long answerId) {
-    answerRepository.findById(answerId).orElseThrow(() -> new AnswerNotFoundException(answerId));
+    if (!answerRepository.existsById(answerId)) throw new AnswerNotFoundException(answerId);
     return commentRepository.findByAnswer_IdOrderByCreatedAtAsc(answerId).stream()
         .map(
             comment ->
@@ -78,7 +78,7 @@ public class CommentService {
   public void deleteComment(Long commentId, Long userId) {
     Comment comment =
         commentRepository
-            .findById(commentId)
+            .findByIdWithAnswerAndQuestion(commentId)
             .orElseThrow(() -> new CommentNotFoundException(commentId));
 
     if (!comment.isAuthor(userId)) {
