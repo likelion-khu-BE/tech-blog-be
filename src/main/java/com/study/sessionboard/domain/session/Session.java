@@ -1,6 +1,7 @@
 package com.study.sessionboard.domain.session;
 
 import com.study.profile.domain.generation.Generation;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,8 +12,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,10 +48,33 @@ public class Session {
   @Column(name = "started_at")
   private OffsetDateTime startedAt;
 
-  public static Session of(Generation generation, String title) {
+  @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<SessionSpeaker> speakers = new ArrayList<>();
+
+  public void addSpeaker(SessionSpeaker speaker) {
+    this.speakers.add(speaker);
+  }
+
+  public static Session create(
+      Generation generation,
+      String weekLabel,
+      String title,
+      SessionStatus status,
+      OffsetDateTime startedAt) {
     Session session = new Session();
     session.generation = generation;
+    session.weekLabel = weekLabel;
     session.title = title;
+    session.status = status != null ? status : SessionStatus.SCHEDULED;
+    session.startedAt = startedAt;
     return session;
+  }
+
+  public void update(
+      String weekLabel, String title, SessionStatus status, OffsetDateTime startedAt) {
+    if (weekLabel != null) this.weekLabel = weekLabel;
+    if (title != null) this.title = title;
+    if (status != null) this.status = status;
+    if (startedAt != null) this.startedAt = startedAt;
   }
 }

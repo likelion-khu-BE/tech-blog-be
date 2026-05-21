@@ -50,7 +50,7 @@ public class AnswerService {
             .findById(questionId)
             .orElseThrow(() -> new QuestionNotFoundException(questionId));
 
-    if (question.getStatus() == QuestionStatus.CLOSED) {
+    if (question.getStatus() == QuestionStatus.RESOLVED) {
       throw new QuestionAlreadyClosedException(questionId);
     }
 
@@ -90,7 +90,7 @@ public class AnswerService {
       throw new ForbiddenQnaActionException();
     }
 
-    if (question.getStatus() == QuestionStatus.CLOSED) {
+    if (question.getStatus() == QuestionStatus.RESOLVED) {
       throw new QuestionAlreadyClosedException(question.getId());
     }
 

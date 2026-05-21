@@ -6,32 +6,51 @@ import com.study.profile.application.dto.MemberCreateRequest;
 import com.study.profile.application.dto.MemberDto;
 import com.study.profile.application.dto.MemberGenerationDto;
 import com.study.profile.application.dto.MemberSummaryDto;
+import com.study.profile.application.dto.MemberTechStackUpdateRequest;
 import com.study.profile.application.dto.MemberUpdateRequest;
 import com.study.profile.application.dto.MemberUpdateResponse;
+import com.study.profile.application.dto.TechStackItemDto;
+import com.study.profile.domain.exception.MemberNotFoundException;
 import com.study.profile.domain.member.Member;
 import com.study.profile.domain.member.SessionType;
+import com.study.profile.domain.techstack.MemberTechStack;
+import com.study.profile.domain.techstack.TechStack;
 import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
+import com.study.profile.infrastructure.MemberTechStackRepository;
+import com.study.profile.infrastructure.TechStackRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceContext;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional(readOnly = true)
 public class MemberService {
 
+  @PersistenceContext private EntityManager entityManager;
+
   private final MemberRepository memberRepository;
   private final MemberGenerationRepository memberGenerationRepository;
   private final UserRepository userRepository;
+  private final TechStackRepository techStackRepository;
+  private final MemberTechStackRepository memberTechStackRepository;
 
   public MemberService(
       MemberRepository memberRepository,
       MemberGenerationRepository memberGenerationRepository,
-      UserRepository userRepository) {
+      UserRepository userRepository,
+      TechStackRepository techStackRepository,
+      MemberTechStackRepository memberTechStackRepository) {
     this.memberRepository = memberRepository;
     this.memberGenerationRepository = memberGenerationRepository;
     this.userRepository = userRepository;
+    this.techStackRepository = techStackRepository;
+    this.memberTechStackRepository = memberTechStackRepository;
   }
 
   public Member getMemberToUserId(Long userId) {
@@ -95,6 +114,20 @@ public class MemberService {
     return MemberDto.from(member, generations);
   }
 
+  /**
+   * 특정 멤버의 기술 스택 목록 조회 (§4-1).
+   *
+   * <p>멤버가 없으면 404. {@code member.getTechStacks()}는 LAZY라 이 readOnly 트랜잭션 안에서 초기화한 뒤 반환한다. 별도 정렬은
+   * 하지 않는다 — 멤버 기술 스택을 노출하는 다른 응답(§1-1, §1-4, §4-2)과 동일하게 저장 순서를 따른다.
+   */
+  public List<TechStackItemDto> getMemberTechStacks(Long memberId) {
+    Member member =
+        memberRepository
+            .findById(memberId)
+            .orElseThrow(() -> new MemberNotFoundException(memberId));
+    return member.getTechStacks().stream().map(TechStackItemDto::from).toList();
+  }
+
   public List<MemberSummaryDto> getMembers(Integer generationId, SessionType sessionType) {
     List<Member> members;
     if (generationId != null) {
@@ -113,6 +146,31 @@ public class MemberService {
               : memberRepository.findAllSorted();
     }
     return members.stream().map(MemberSummaryDto::from).toList();
+  }
+
+  @Transactional
+  public List<TechStackItemDto> updateMyTechStacks(
+      Long userId, List<MemberTechStackUpdateRequest> req) {
+    Member member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+    member.getTechStacks().clear();
+    entityManager.flush(); // DELETE 먼저 실행 — unique constraint 위반 방지
+
+    for (MemberTechStackUpdateRequest item : req) {
+      TechStack techStack =
+          techStackRepository
+              .findById(item.techStackId())
+              .orElseThrow(
+                  () ->
+                      new ResponseStatusException(
+                          HttpStatus.NOT_FOUND, "기술 스택을 찾을 수 없습니다. id: " + item.techStackId()));
+      member.getTechStacks().add(MemberTechStack.create(member, techStack, item.proficiency()));
+    }
+
+    return member.getTechStacks().stream().map(TechStackItemDto::from).toList();
   }
 
   @Transactional

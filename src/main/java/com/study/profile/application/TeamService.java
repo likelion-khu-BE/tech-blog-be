@@ -135,9 +135,15 @@ public class TeamService {
     team.update(
         generation,
         req.name() != null ? req.name() : team.getName(),
-        req.description() != null ? req.description() : team.getDescription(),
-        req.projectUrl() != null ? req.projectUrl() : team.getProjectUrl(),
-        req.githubUrl() != null ? req.githubUrl() : team.getGithubUrl());
+        req.description() == null
+            ? team.getDescription()
+            : (req.description().isBlank() ? null : req.description()),
+        req.projectUrl() == null
+            ? team.getProjectUrl()
+            : (req.projectUrl().isBlank() ? null : req.projectUrl()),
+        req.githubUrl() == null
+            ? team.getGithubUrl()
+            : (req.githubUrl().isBlank() ? null : req.githubUrl()));
 
     team.updateImages(req.imageUrls());
 
@@ -353,8 +359,8 @@ public class TeamService {
   public List<TeamListResponse> getTeams(Integer generationNumber) {
     List<TeamProfile> teams =
         generationNumber != null
-            ? teamRepository.findByGenerationNumber(generationNumber)
-            : teamRepository.findAll();
+            ? teamRepository.findByGenerationNumberWithDetails(generationNumber)
+            : teamRepository.findAllWithDetails();
 
     return teams.stream().map(this::toListResponse).toList();
   }
@@ -448,8 +454,9 @@ public class TeamService {
                                   ts.getLogoUrl()))
                       .toList();
               List<String> roles = tm.getRoles().stream().map(r -> r.getRole().name()).toList();
+              // 시현 N+1 수정: Set 전환으로 get(0) 불가 → stream().findFirst()로 변경
               String thumbUrl =
-                  team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
+                  team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
               return new MyTeamResponse(
                   team.getId(),
                   team.getName(),
@@ -478,7 +485,9 @@ public class TeamService {
                         ts.getId(), ts.getName(), ts.getCategory().name(), ts.getLogoUrl()))
             .toList();
 
-    String thumbUrl = team.getImages().isEmpty() ? null : team.getImages().get(0).getImageUrl();
+    // 시현 N+1 수정: Set 전환으로 get(0) 불가 → stream().findFirst()로 변경
+    String thumbUrl =
+        team.getImages().stream().findFirst().map(TeamImage::getImageUrl).orElse(null);
 
     int memberCount =
         (int)

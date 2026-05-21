@@ -64,10 +64,11 @@
 > 좋아요는 양방향 — 누른 사람(`*_like`) / 받은 사람(`*_like_received`) 별도.
 > Q&A 답변 vote는 참여 자체로 활동(+1) — upvote/downvote 무관. 답변 받는 측엔 활동 X (채택 시스템이 별도 보상).
 
-### ContributionPeriodType
+### RankingPeriod
 ```
-"month" | "three_month" | "year" | "all"
+"month" | "year" | "all"
 ```
+> §6-4 랭킹 점수 합산 기간 필터. `all`은 전체 기간.
 
 ### 공통 에러 응답
 ```json
@@ -393,6 +394,7 @@ POST /profile/generations/{generationId}/members
 > **담당: 시현**
 >
 > 기술 스택은 시드 데이터로 제공된다 (`tech_stack_seed.json`). 일반 사용자는 읽기만 가능하고, 관리자만 추가/수정/삭제할 수 있다.
+>
 
 ### 3-1. 기술 스택 목록 조회
 
@@ -402,9 +404,9 @@ GET /profile/tech-stacks
 
 **Query Parameters**
 
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| `category` | `TechStackCategory` | 아니오 | 카테고리 필터 |
+| 파라미터 | 타입 | 필수 | 기본값 | 설명                                              |
+|----------|------|------|--------|-------------------------------------------------|
+| `category` | `string` | 아니오 | `all` | 분류 필터. `all`이면 전체. 그 외 값은 `TechStackCategory` 값 |
 
 **Response `200 OK`**
 ```json
@@ -435,31 +437,66 @@ POST /profile/tech-stacks
 }
 ```
 
-| 필드 | 타입 | 필수 | 제약 |
-|------|------|------|------|
-| `name` | `string` | 예 | 중복 불가 |
-| `category` | `TechStackCategory` | 예 | — |
-| `logoUrl` | `string` | 아니오 | — |
+| 필드 | 타입 | 필수 | 제약                               |
+|------|------|------|----------------------------------|
+| `name` | `string` | 예 | 중복 불가                            |
+| `category` | `TechStackCategory` | 예 | TechStackCategory 값 가능           |
+| `logoUrl` | `string` | 아니오 | 외부 CDN 주소를 그대로 저장 (없으면 로고 없는 스택) |
 
 **Response `201 Created`**
 ```json
 { "id": 120 }
 ```
 
+**에러**
+
+| 에러 | HTTP | 메시지                 |
+|------|------|---------------------|
+| 이름 중복 | `409` | 이미 존재하는 기술 스택 이름입니다 |
+| 검증 실패 | `400` | 값이 누락되었습니다          |
+
 ---
 
 ### 3-3. 기술 스택 수정 (관리자)
 
 ```
-PATCH /profile/tech-stacks/{techStackId}
+PUT /profile/tech-stacks/{techStackId}
 ```
 
-**Request Body** — 3-2와 동일 구조
+**Path Parameter**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `techStackId` | `number` | 수정할 기술 스택 id |
+
+> 기존 목록을 전체 교체한다.
+
+```json
+{
+  "name": "Bun",
+  "category": "framework",
+  "logoUrl": "https://..."
+}
+```
+
+| 필드 | 타입 | 필수 | 제약                     |
+|------|------|------|------------------------|
+| `name` | `string` | 예 | 다른 기술 스택과 중복 불가        |
+| `category` | `TechStackCategory` | 예 | TechStackCategory 값 가능 |
+| `logoUrl` | `string` | 아니오 | -                      |
 
 **Response `200 OK`**
 ```json
 { "id": 1 }
 ```
+
+**에러**
+
+| 에러       | HTTP | 메시지              |
+|----------|------|------------------|
+| 수정 대상 없음 | `404` | 기술 스택을 찾을 수 없습니다 |
+| 이름 중복    | `409` | 이미 존재하는이름입니다     |
+| 검증 실패    | `400` | 값이 누락되었습니다       |
 
 ---
 
@@ -469,7 +506,22 @@ PATCH /profile/tech-stacks/{techStackId}
 DELETE /profile/tech-stacks/{techStackId}
 ```
 
+**Path Parameter**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `techStackId` | `number` | 삭제할 기술 스택 id |
+
+
+> 이 기술을 보유한 멤버·팀의 연결(`member_tech_stack`, `team_tech_stack`)도 함께 삭제된다. 
+
 **Response `204 No Content`**
+
+**에러**
+
+| 에러 | HTTP | 메시지 |
+|------|------|--------|
+| 기술 스택 없음 | `404` | 기술 스택을 찾을 수 없습니다 |
 
 ---
 
@@ -481,6 +533,14 @@ DELETE /profile/tech-stacks/{techStackId}
 ```
 GET /profile/members/{memberId}/tech-stacks
 ```
+
+> 특정 멤버가 보유한 기술 스택 목록. 로그인한 멤버면 조회 가능.
+
+**Path Parameter**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `memberId` | `number` | 조회할 멤버 id |
 
 **Response `200 OK`**
 ```json
@@ -494,6 +554,12 @@ GET /profile/members/{memberId}/tech-stacks
   }
 ]
 ```
+
+**에러**
+
+| 에러 | HTTP | 메시지 |
+|------|------|--------|
+| 멤버 없음 | `404` | 멤버를 찾을 수 없습니다 |
 
 ---
 
@@ -828,41 +894,44 @@ DELETE /profile/teams/{teamId}/members/me
 ## 6. 활동 기록 (Activities)
 > **담당: 근엽**
 >
-> 활동 기록은 blog / qna / sessionboard 도메인에서 이벤트 방식으로 자동 적재된다. 이 섹션은 **읽기 전용** API만 제공한다.
-
-### 점수 기준
-
-| ActivityType | 점수 |
-|---|---|
-| `blog_post` | +30 |
-| `blog_comment` | +3 |
-| `blog_post_like` | +1 |
-| `blog_post_like_received` | +1 |
-| `qna_question` | +10 |
-| `qna_answer` | +10 |
-| `qna_accepted` | +25 |
-| `qna_answer_upvote` | +1 |
-| `qna_answer_downvote` | +1 |
-| `qna_comment` | +3 |
-| `session_speak` | +50 |
-| `session_event_post` | +30 |
-| `session_event_comment` | +3 |
-| `session_event_post_like` | +1 |
-| `session_event_post_like_received` | +1 |
+> 활동 기록은 blog / qna / sessionboard 도메인에서 이벤트 방식으로 자동 적재된다. 이 섹션은 읽기 전용 API만 제공한다.
 
 ---
 
-### 6-1. 멤버 활동 목록 조회
+### 6-1. 멤버 활동 통계 조회
+
+```
+GET /profile/members/{memberId}/stats
+```
+
+> 멤버의 도메인(blog / qna / session)별 작성형 활동 누적 개수. 반응형(좋아요·투표·댓글 등)은 제외. 가중치 없이 단순 카운트. 멤버 프로필 페이지 카드용.
+
+**Query Parameters**: 없음
+
+**Response `200 OK`**
+```json
+{
+  "memberId": 1,
+  "blog": 5,
+  "qna": 3,
+  "session": 7
+}
+```
+
+---
+
+### 6-2. 멤버 작성형 활동 목록 조회
 
 ```
 GET /profile/members/{memberId}/activities
 ```
 
+> 멤버의 작성형 활동(글·답변·발표 등) 페이징. 정렬은 `createdAt DESC` 고정.
+
 **Query Parameters**
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `type` | `ActivityType` | 아니오 | — | 활동 종류 필터 |
 | `page` | `number` | 아니오 | `0` | 페이지 번호 (0-based) |
 | `size` | `number` | 아니오 | `20` | 페이지 크기 |
 
@@ -873,9 +942,16 @@ GET /profile/members/{memberId}/activities
     {
       "id": 1,
       "type": "blog_post",
-      "referenceId": 42,
       "score": 30,
-      "createdAt": "2025-05-01T10:00:00Z"
+      "createdAt": "2025-05-01T10:00:00Z",
+      "link": "/blog/posts/42"
+    },
+    {
+      "id": 2,
+      "type": "qna_answer",
+      "score": 10,
+      "createdAt": "2025-05-02T11:00:00Z",
+      "link": "/qna/questions/100#answer-20"
     }
   ],
   "page": 0,
@@ -886,117 +962,156 @@ GET /profile/members/{memberId}/activities
 }
 ```
 
+> `link`는 클라이언트가 클릭 시 라우팅할 frontend path. 백엔드가 type별 매핑. 
+
 ---
 
-### 6-2. 멤버 기여도 요약
+### 6-3. 내 반응형 활동 목록 조회
 
 ```
-GET /profile/members/{memberId}/contributions
+GET /profile/members/me/reactions
 ```
 
-> `activity` 테이블에서 기간별 점수를 집계해 반환한다.
+> 본인 반응형 활동(좋아요·투표·댓글 등) 페이징. 토큰 기반 본인 전용 — 타인 호출 불가. 정렬은 `createdAt DESC` 고정.
 
 **Query Parameters**
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `period` | `ContributionPeriodType` | 아니오 | `all` | 집계 기간 |
+| `page` | `number` | 아니오 | `0` | 페이지 번호 (0-based) |
+| `size` | `number` | 아니오 | `20` | 페이지 크기 |
 
 **Response `200 OK`**
 ```json
 {
-  "memberId": 1,
-  "name": "홍길동",
-  "period": "month",
-  "totalScore": 214,
-  "breakdown": {
-    "blog_post": 60,
-    "blog_comment": 3,
-    "blog_post_like": 3,
-    "blog_post_like_received": 12,
-    "qna_question": 10,
-    "qna_answer": 20,
-    "qna_accepted": 50,
-    "qna_comment": 3,
-    "session_speak": 50,
-    "session_event_post": 0,
-    "session_event_comment": 3,
-    "session_event_post_like": 0,
-    "session_event_post_like_received": 0
-  }
+  "content": [
+    {
+      "id": 10,
+      "type": "blog_post_like",
+      "score": 1,
+      "createdAt": "2025-05-03T09:00:00Z",
+      "link": "/blog/posts/42"
+    },
+    {
+      "id": 11,
+      "type": "qna_comment",
+      "score": 3,
+      "createdAt": "2025-05-03T10:00:00Z",
+      "link": "/qna/questions/100#comment-55"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 8,
+  "totalPages": 1,
+  "hasNext": false
 }
 ```
 
+> `link`는 클라이언트가 클릭 시 라우팅할 frontend path. 백엔드가 type별 매핑. 
 ---
 
-### 6-3. 기여도 랭킹
+### 6-4. 기여도 랭킹
 
 ```
-GET /profile/contributions/ranking
+GET /profile/ranking
 ```
+
+> 가중치 점수 기준 멤버 랭킹. 모든 멤버(활동 0 포함) 페이징. 정렬: `totalScore DESC → activityCount DESC → memberId ASC` (동률 결정 순).
+
+**점수 기준** (ActivityType별 가중치)
+
+| ActivityType | 점수 |
+|---|---|
+| `session_speak` | +50 |
+| `blog_post` | +30 |
+| `session_event_post` | +30 |
+| `qna_accepted` | +25 |
+| `qna_question` | +10 |
+| `qna_answer` | +10 |
+| `blog_comment` | +3 |
+| `qna_comment` | +3 |
+| `session_event_comment` | +3 |
+| `blog_post_like` | +1 |
+| `blog_post_like_received` | +1 |
+| `qna_answer_upvote` | +1 |
+| `qna_answer_downvote` | +1 |
+| `session_event_post_like` | +1 |
+| `session_event_post_like_received` | +1 |
 
 **Query Parameters**
 
 | 파라미터 | 타입 | 필수 | 기본값 | 설명 |
 |----------|------|------|--------|------|
-| `period` | `ContributionPeriodType` | 아니오 | `all` | 집계 기간 |
-| `generationNumber` | `number` | 아니오 | — | 특정 기수 필터 |
-| `limit` | `number` | 아니오 | `10` | 반환할 순위 수 |
+| `period` | `RankingPeriod` | 아니오 | `month` | 집계 기간 |
+| `generationId` | `number` | 아니오 | 전체 | 특정 기수 필터. 안 보내면 전체 기수 통합 ranking. 보내면 그 기수만 (예: `14`, `15`, `16`) |
+| `page` | `number` | 아니오 | `0` | 페이지 번호 (0-based) |
+| `size` | `number` | 아니오 | `20` | 페이지 크기 |
 
 **Response `200 OK`**
 ```json
-[
-  {
-    "rank": 1,
-    "memberId": 1,
-    "name": "홍길동",
-    "profileImageUrl": "https://...",
-    "totalScore": 120
-  },
-  {
-    "rank": 2,
-    "memberId": 3,
-    "name": "김지수",
-    "profileImageUrl": "https://...",
-    "totalScore": 95
-  }
-]
+{
+  "content": [
+    {
+      "rank": 1,
+      "memberId": 1,
+      "name": "홍길동",
+      "profileImageUrl": "https://...",
+      "totalScore": 120
+    },
+    {
+      "rank": 2,
+      "memberId": 3,
+      "name": "김지수",
+      "profileImageUrl": "https://...",
+      "totalScore": 95
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 50,
+  "totalPages": 3,
+  "hasNext": true
+}
 ```
+
+> `rank`는 페이지 오프셋 반영 — `page=0`은 1부터, `page=1·size=20`은 21부터 시작.
 
 ---
 
 ## 엔드포인트 요약
 
 | 구현  | 메서드 | 경로 | 설명 | 담당 |
-|-----|--------|------|------|------|
-| [x] | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
-| [x] | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
-| [x] | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
-| [x] | `GET` | `/profile/members` | 멤버 목록 | 세인 |
-| [x] | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
-| [x] | `GET` | `/profile/generations` | 기수 목록 | 세인 |
-| [x] | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
+|-----|--------|------|------|----|
+| ✅   | `GET` | `/profile/members/me` | 내 프로필 조회 | 세인 |
+| ✅   | `PATCH` | `/profile/members/me` | 내 프로필 수정 | 세인 |
+| ✅   | `GET` | `/profile/members/me/teams` | 내가 속한 팀 목록 | 시현 |
+| ✅   | `GET` | `/profile/members` | 멤버 목록 | 세인 |
+| ✅   | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
+| ✅   | `GET` | `/profile/generations` | 기수 목록 | 세인 |
+| ✅   | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
 | [x] | `GET` | `/profile/generations/{generationNumber}` | 기수 상세 | 세인 |
-| [x] | `PATCH` | `/profile/generations/{generationNumber}` | 기수 수정 (관리자) | 세인 |
-| [x] | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
-| [x] | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
+| ✅   | `PATCH` | `/profile/generations/{generationNumber}` | 기수 수정 (관리자) | 세인 |
+| ✅   | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
+| ✅   | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
 | ✅   | `GET` | `/profile/tech-stacks` | 기술 스택 목록 | 시현 |
-| [ ] | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 시현 |
-| [ ] | `PATCH` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 시현 |
-| [ ] | `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | 시현 |
-| [ ] | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 시현 |
-| [ ] | `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | 시현 |
+| ✅   | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 근엽 |
+| ✅   | `PUT` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 근엽 |
+| ✅   | `DELETE` | `/profile/tech-stacks/{techStackId}` | 기술 스택 삭제 (관리자) | 근엽 |
+| ✅   | `GET` | `/profile/members/{memberId}/tech-stacks` | 멤버 기술 스택 조회 | 근엽 |
+| ✅   | `PUT` | `/profile/members/me/tech-stacks` | 내 기술 스택 수정 | 시현 |
 | ✅   | `GET` | `/profile/teams` | 팀 목록 | 시현 |
 | ✅   | `POST` | `/profile/teams` | 팀 생성 | 시현 |
 | ✅   | `GET` | `/profile/teams/{teamId}` | 팀 상세 | 시현 |
-| [x] | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
-| [x] | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
-| [x] | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
-| [x] | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |
-| [x] | `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | 시현 |
-| [x] | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장 또는 본인) | 시현 |
-| [x] | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |
-| [x] | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
-| [ ] | `GET` | `/profile/members/{memberId}/activities` | 멤버 활동 목록 | 근엽 |
-| [ ] | `GET` | `/profile/members/{memberId}/contributions` | 멤버 기여도 요약 | 근엽 |
-| [ ] | `GET` | `/profile/contributions/ranking` | 기여도 랭킹 | 근엽 |
+| ✅   | `PATCH` | `/profile/teams/{teamId}` | 팀 정보 수정 (팀장) | 시현 |
+| ✅   | `DELETE` | `/profile/teams/{teamId}` | 팀 삭제 (팀장) | 시현 |
+| ✅   | `POST` | `/profile/teams/{teamId}/invite-code/regenerate` | 초대 코드 재생성 (팀장) | 시현 |
+| ✅   | `POST` | `/profile/teams/join` | 초대 코드로 팀 가입 | 시현 |
+| ✅   | `PATCH` | `/profile/teams/{teamId}/lead` | 팀장 양도 (팀장) | 시현 |
+| ✅   | `PUT` | `/profile/teams/{teamId}/members/{memberId}/roles` | 팀원 역할 수정 (팀장 또는 본인) | 시현 |
+| ✅   | `DELETE` | `/profile/teams/{teamId}/members/{memberId}` | 팀원 강퇴 (팀장) | 시현 |
+| ✅   | `DELETE` | `/profile/teams/{teamId}/members/me` | 팀 탈퇴 | 시현 |
+| ✅ | `GET` | `/profile/members/{memberId}/stats` | 멤버 활동 통계 | 근엽 |
+| ✅ | `GET` | `/profile/members/{memberId}/activities` | 멤버 작성형 활동 목록 | 근엽 |
+| ✅ | `GET` | `/profile/members/me/reactions` | 내 반응형 활동 목록 | 근엽 |
+| ✅ | `GET` | `/profile/ranking` | 기여도 랭킹 | 근엽 |
