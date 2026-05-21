@@ -196,7 +196,8 @@ class CommentServiceTest {
       Answer answer = makeAnswer(ANSWER_ID, question);
       Comment comment = makeComment(COMMENT_ID, answer, USER_ID);
 
-      when(commentRepository.findByIdWithAnswerAndQuestion(COMMENT_ID)).thenReturn(Optional.of(comment));
+      when(commentRepository.findByIdWithAnswerAndQuestion(COMMENT_ID))
+          .thenReturn(Optional.of(comment));
 
       commentService.deleteComment(COMMENT_ID, USER_ID);
 
@@ -212,7 +213,8 @@ class CommentServiceTest {
       Answer answer = makeAnswer(ANSWER_ID, question);
       Comment comment = makeComment(COMMENT_ID, answer, OTHER_USER_ID);
 
-      when(commentRepository.findByIdWithAnswerAndQuestion(COMMENT_ID)).thenReturn(Optional.of(comment));
+      when(commentRepository.findByIdWithAnswerAndQuestion(COMMENT_ID))
+          .thenReturn(Optional.of(comment));
 
       assertThatThrownBy(() -> commentService.deleteComment(COMMENT_ID, USER_ID))
           .isInstanceOf(ForbiddenQnaActionException.class);
@@ -223,7 +225,8 @@ class CommentServiceTest {
     @Test
     @DisplayName("존재하지 않는 댓글 삭제 → CommentNotFoundException")
     void notFound_throwsCommentNotFoundException() {
-      when(commentRepository.findByIdWithAnswerAndQuestion(COMMENT_ID)).thenReturn(Optional.empty());
+      when(commentRepository.findByIdWithAnswerAndQuestion(COMMENT_ID))
+          .thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> commentService.deleteComment(COMMENT_ID, USER_ID))
           .isInstanceOf(CommentNotFoundException.class);
