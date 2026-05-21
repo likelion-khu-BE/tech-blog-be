@@ -71,5 +71,5 @@ jwt:
 # === 로깅 ===
 logging:
   level:
-    org.hibernate.SQL: debug     # Hibernate가 실행하는 SQL을 로그에 출력
-    org.springframework.security: trace
+    org.hibernate.SQL: warn
+    org.springframework.security: warn

@@ -27,4 +27,7 @@ public class TechStackDto {
   // 7. 목록 응답 전용 DTO — List<TechStackResponse> 를 감싸서
   //    JSON 응답이 { "techStacks": [...] } 형태로 나오게 한다.
   public record TechStackListResponse(List<TechStackResponse> techStacks) {}
+
+  /** 등록/수정 응답 — 생성·수정된 기술 스택의 id만 반환 (§3-2, §3-3). */
+  public record IdResponse(Long id) {}
 }
