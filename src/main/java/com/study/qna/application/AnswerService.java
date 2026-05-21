@@ -18,7 +18,10 @@ import com.study.qna.infrastructure.QuestionRepository;
 import com.study.profile.domain.exception.MemberNotFoundException;
 import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
+import com.study.shared.extevent.qna.QnaAnswerAccepted;
+import com.study.shared.extevent.qna.QnaAnswerCreated;
 import com.study.shared.extevent.qna.QnaAnswerDeleted;
+import com.study.shared.extevent.qna.QnaAnswerUnaccepted;
 import com.study.shared.extevent.qna.QnaCommentDeleted;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +54,11 @@ public class AnswerService {
     Map<Long, MemberSummaryResponse> authorByUserId = buildAuthorMap(userIds);
 
     List<AnswerDetailResponse> responses = answers.stream()
-        .map(a -> AnswerDetailResponse.from(a,
-            authorByUserId.computeIfAbsent(a.getUserId(),
-                uid -> { throw new MemberNotFoundException(uid); })))
+        .map(a -> {
+          MemberSummaryResponse author = authorByUserId.get(a.getUserId());
+          if (author == null) throw new MemberNotFoundException(a.getUserId());
+          return AnswerDetailResponse.from(a, author);
+        })
         .toList();
 
     return AnswerListResponse.of(responses);
@@ -75,6 +80,7 @@ public class AnswerService {
       Answer saved = answerRepository.save(answer);
     questionRepository.incrementAnswerCount(questionId);
 
+    eventPublisher.publishEvent(new QnaAnswerCreated(userId, questionId, saved.getId()));
     return AnswerDetailResponse.from(saved, buildAuthor(userId));
   }
 
@@ -114,9 +120,15 @@ public class AnswerService {
     answerRepository.findByQuestionId(question.getId()).stream()
         .filter(a -> a.isAccepted() && !a.getId().equals(answerId))
         .findFirst()
-        .ifPresent(Answer::cancelAccept);
+        .ifPresent(prev -> {
+          prev.cancelAccept();
+          eventPublisher.publishEvent(
+              new QnaAnswerUnaccepted(prev.getUserId(), question.getId(), prev.getId()));
+        });
 
     answer.accept();
+    eventPublisher.publishEvent(
+        new QnaAnswerAccepted(answer.getUserId(), question.getId(), answerId));
 
     if (question.getStatus() == QuestionStatus.OPEN) {
       question.resolve();
@@ -139,6 +151,7 @@ public class AnswerService {
     Long questionId = answer.getQuestion().getId();
     answerRepository.delete(answer);
     questionRepository.decrementAnswerCount(questionId);
+    eventPublisher.publishEvent(new QnaAnswerDeleted(userId, questionId, answerId));
   }
 
   @Transactional
