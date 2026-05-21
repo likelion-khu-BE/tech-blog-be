@@ -8,6 +8,7 @@ import com.study.auth.domain.exception.UserNotActiveException;
 import com.study.profile.domain.exception.MemberNotFoundException;
 import com.study.profile.domain.exception.TechStackNameDuplicateException;
 import com.study.profile.domain.exception.TechStackNotFoundException;
+import com.study.qna.domain.exception.AnswerNotAcceptedException;
 import com.study.qna.domain.exception.AnswerNotFoundException;
 import com.study.qna.domain.exception.CommentNotFoundException;
 import com.study.qna.domain.exception.ForbiddenQnaActionException;
@@ -68,6 +69,12 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AnswerNotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleAnswerNotFound(AnswerNotFoundException e) {
     return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+  }
+
+  @ExceptionHandler(AnswerNotAcceptedException.class)
+  public ResponseEntity<Map<String, Object>> handleAnswerNotAccepted(
+      AnswerNotAcceptedException e) {
+    return errorResponse(HttpStatus.CONFLICT, e.getMessage());
   }
 
   @ExceptionHandler(CommentNotFoundException.class)
