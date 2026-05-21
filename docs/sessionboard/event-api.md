@@ -54,7 +54,7 @@
 ### 1-1. 목록 조회
 
 ```
-GET /session-board/{generationId}/event-posts
+GET /session-board/{generationNumber}/event-posts
 ```
 
 > `status = PUBLISHED` 인 게시글만 반환한다.
@@ -105,14 +105,14 @@ GET /session-board/{generationId}/event-posts
 ### 1-2. 상세 조회
 
 ```
-GET /session-board/{generationId}/event-posts/{eventPostId}
+GET /session-board/{generationNumber}/event-posts/{eventPostId}
 ```
 
 **Response `200 OK`**
 ```json
 {
   "id": 1,
-  "type": "hackathon",
+  "type": "HACKATHON",
   "status": "PUBLISHED",
   "title": "24시간 해커톤 후기 — 우리가 만든 AI 식단 관리 앱",
   "author": { "id": 1, "name": "김지현", "initial": "김지" },
@@ -133,16 +133,17 @@ GET /session-board/{generationId}/event-posts/{eventPostId}
 
 | 필드 | 설명 |
 |------|------|
-| `images[].url` | S3 presigned URL. 유효 기간이 있으므로 캐시 금지 |
+| `type` | 대문자 반환 (`"HACKATHON"` 등). 목록 조회의 소문자와 다름 |
+| `images[].url` | S3 URL. 유효 기간이 있으므로 캐시 금지 |
 | `images[].order` | 0-based 정렬 순서 |
-| `likedByMe` | 비로그인 요청 시 `false` |
+| `likedByMe` | 현재 항상 `false` (로그인 여부 무관, 미구현) |
 
 ---
 
 ### 1-3. 작성
 
 ```
-POST /session-board/{generationId}/event-posts
+POST /session-board/{generationNumber}/event-posts
 ```
 
 **Request Body**
@@ -162,6 +163,8 @@ POST /session-board/{generationId}/event-posts
 | `body` | `string` | 예 | 최대 10,000자 |
 | `tags` | `string[]` | 아니오 | 태그당 최대 20자, 최대 10개 |
 
+> 생성된 게시글의 `status`는 `PUBLISHED`로 고정된다.
+
 **Response `201 Created`**
 ```json
 {
@@ -174,7 +177,7 @@ POST /session-board/{generationId}/event-posts
 ### 1-4. 수정
 
 ```
-PUT /session-board/{generationId}/event-posts/{eventPostId}
+PUT /session-board/{generationNumber}/event-posts/{eventPostId}
 ```
 
 > 본인 작성 글만 수정 가능. 타인 요청 시 `403`.
@@ -194,19 +197,19 @@ PUT /session-board/{generationId}/event-posts/{eventPostId}
 ### 1-5. 삭제
 
 ```
-DELETE /session-board/{generationId}/event-posts/{eventPostId}
+DELETE /session-board/{generationNumber}/event-posts/{eventPostId}
 ```
 
-> 본인 작성 글만 삭제 가능. 삭제 시 하위 댓글·답글도 함께 삭제.
+> 본인 작성 글만 삭제 가능.
 
 **Response `204 No Content`**
 
 ---
 
-### 1-6. 좋아요 토글
+### 1-6. 좋아요 토글 _(미구현)_
 
 ```
-POST /session-board/{generationId}/event-posts/{eventPostId}/like
+POST /session-board/{generationNumber}/event-posts/{eventPostId}/like
 ```
 
 > 이미 좋아요된 상태에서 호출하면 취소.
@@ -221,12 +224,12 @@ POST /session-board/{generationId}/event-posts/{eventPostId}/like
 
 ---
 
-## 2. 댓글 (Comments)
+## 2. 댓글 (Comments) _(미구현)_
 
 ### 2-1. 목록 조회
 
 ```
-GET /session-board/{generationId}/event-posts/{eventPostId}/comments
+GET /session-board/{generationNumber}/event-posts/{eventPostId}/comments
 ```
 
 > 최상위 댓글과 각 댓글의 답글을 함께 반환.
@@ -258,7 +261,7 @@ GET /session-board/{generationId}/event-posts/{eventPostId}/comments
 ### 2-2. 댓글 작성
 
 ```
-POST /session-board/{generationId}/event-posts/{eventPostId}/comments
+POST /session-board/{generationNumber}/event-posts/{eventPostId}/comments
 ```
 
 **Request Body**
@@ -289,7 +292,7 @@ POST /session-board/{generationId}/event-posts/{eventPostId}/comments
 ### 2-3. 댓글 수정
 
 ```
-PATCH /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}
+PATCH /session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}
 ```
 
 > 본인 댓글만 수정 가능.
@@ -315,7 +318,7 @@ PATCH /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentI
 ### 2-4. 댓글 삭제
 
 ```
-DELETE /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}
+DELETE /session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}
 ```
 
 > 본인 댓글만 삭제 가능. 삭제 시 하위 답글도 함께 삭제.
@@ -324,12 +327,12 @@ DELETE /session-board/{generationId}/event-posts/{eventPostId}/comments/{comment
 
 ---
 
-## 3. 답글 (Replies)
+## 3. 답글 (Replies) _(미구현)_
 
 ### 3-1. 답글 작성
 
 ```
-POST /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}/replies
+POST /session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}/replies
 ```
 
 **Request Body**
@@ -359,7 +362,7 @@ POST /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId
 ### 3-2. 답글 수정
 
 ```
-PATCH /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}
+PATCH /session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}
 ```
 
 > 본인 답글만 수정 가능.
@@ -385,7 +388,7 @@ PATCH /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentI
 ### 3-3. 답글 삭제
 
 ```
-DELETE /session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}
+DELETE /session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}
 ```
 
 > 본인 답글만 삭제 가능.
@@ -398,16 +401,16 @@ DELETE /session-board/{generationId}/event-posts/{eventPostId}/comments/{comment
 
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
-| `GET` | `/session-board/{generationId}/event-posts` | 활동 기록 목록 |
-| `POST` | `/session-board/{generationId}/event-posts` | 활동 기록 작성 |
-| `GET` | `/session-board/{generationId}/event-posts/{eventPostId}` | 활동 기록 상세 |
-| `PUT` | `/session-board/{generationId}/event-posts/{eventPostId}` | 활동 기록 수정 |
-| `DELETE` | `/session-board/{generationId}/event-posts/{eventPostId}` | 활동 기록 삭제 |
-| `POST` | `/session-board/{generationId}/event-posts/{eventPostId}/like` | 좋아요 토글 |
-| `GET` | `/session-board/{generationId}/event-posts/{eventPostId}/comments` | 댓글 목록 (답글 포함) |
-| `POST` | `/session-board/{generationId}/event-posts/{eventPostId}/comments` | 댓글 작성 |
-| `PATCH` | `/session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}` | 댓글 수정 |
-| `DELETE` | `/session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}` | 댓글 삭제 |
-| `POST` | `/session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}/replies` | 답글 작성 |
-| `PATCH` | `/session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}` | 답글 수정 |
-| `DELETE` | `/session-board/{generationId}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}` | 답글 삭제 |
+| `GET` | `/session-board/{generationNumber}/event-posts` | 활동 기록 목록 |
+| `POST` | `/session-board/{generationNumber}/event-posts` | 활동 기록 작성 |
+| `GET` | `/session-board/{generationNumber}/event-posts/{eventPostId}` | 활동 기록 상세 |
+| `PUT` | `/session-board/{generationNumber}/event-posts/{eventPostId}` | 활동 기록 수정 |
+| `DELETE` | `/session-board/{generationNumber}/event-posts/{eventPostId}` | 활동 기록 삭제 |
+| `POST` | `/session-board/{generationNumber}/event-posts/{eventPostId}/like` | 좋아요 토글 _(미구현)_ |
+| `GET` | `/session-board/{generationNumber}/event-posts/{eventPostId}/comments` | 댓글 목록 (답글 포함) _(미구현)_ |
+| `POST` | `/session-board/{generationNumber}/event-posts/{eventPostId}/comments` | 댓글 작성 _(미구현)_ |
+| `PATCH` | `/session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}` | 댓글 수정 _(미구현)_ |
+| `DELETE` | `/session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}` | 댓글 삭제 _(미구현)_ |
+| `POST` | `/session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}/replies` | 답글 작성 _(미구현)_ |
+| `PATCH` | `/session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}` | 답글 수정 _(미구현)_ |
+| `DELETE` | `/session-board/{generationNumber}/event-posts/{eventPostId}/comments/{commentId}/replies/{replyId}` | 답글 삭제 _(미구현)_ |

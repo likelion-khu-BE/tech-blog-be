@@ -165,7 +165,7 @@ DELETE /session-board/{generationNumber}/sessions/{sessionId}
 
 ---
 
-## 2. 세션 노트 (Session Note)
+## 2. 세션 노트 (Session Note) _(미구현)_
 
 ### 2-1. 노트 목록 조회
 
@@ -245,7 +245,7 @@ DELETE /session-board/{generationNumber}/sessions/{sessionId}/notes/{noteId}
 
 ---
 
-## 3. 세션 자료 (Resource)
+## 3. 세션 자료 (Resource) _(미구현)_
 
 ### 3-1. 자료 목록 조회
 
@@ -325,7 +325,7 @@ DELETE /session-board/{generationNumber}/sessions/{sessionId}/resources/{resourc
 
 ---
 
-## 4. 세션 회고 (Retro)
+## 4. 세션 회고 (Retro) _(미구현)_
 
 ### 4-1. 회고 목록 조회
 
@@ -398,13 +398,13 @@ PUT /session-board/{generationNumber}/sessions/{sessionId}/retros/{retroId}
 | `GET` | `/session-board/{generationNumber}/sessions/{sessionId}` | 세션 단건 조회 |
 | `PUT` | `/session-board/{generationNumber}/sessions/{sessionId}` | 세션 수정 |
 | `DELETE` | `/session-board/{generationNumber}/sessions/{sessionId}` | 세션 삭제 |
-| `GET` | `/session-board/{generationNumber}/sessions/{sessionId}/notes` | 노트 목록 |
-| `POST` | `/session-board/{generationNumber}/sessions/{sessionId}/notes` | 노트 작성 |
-| `PUT` | `/session-board/{generationNumber}/sessions/{sessionId}/notes/{noteId}` | 노트 수정 |
-| `DELETE` | `/session-board/{generationNumber}/sessions/{sessionId}/notes/{noteId}` | 노트 삭제 |
-| `GET` | `/session-board/{generationNumber}/sessions/{sessionId}/resources` | 자료 목록 |
-| `POST` | `/session-board/{generationNumber}/sessions/{sessionId}/resources` | 자료 업로드/등록 |
-| `DELETE` | `/session-board/{generationNumber}/sessions/{sessionId}/resources/{resourceId}` | 자료 삭제 |
-| `GET` | `/session-board/{generationNumber}/sessions/{sessionId}/retros` | 회고 목록 |
-| `POST` | `/session-board/{generationNumber}/sessions/{sessionId}/retros` | 회고 작성 |
-| `PUT` | `/session-board/{generationNumber}/sessions/{sessionId}/retros/{retroId}` | 회고 수정 |
+| `GET` | `/session-board/{generationNumber}/sessions/{sessionId}/notes` | 노트 목록 _(미구현)_ |
+| `POST` | `/session-board/{generationNumber}/sessions/{sessionId}/notes` | 노트 작성 _(미구현)_ |
+| `PUT` | `/session-board/{generationNumber}/sessions/{sessionId}/notes/{noteId}` | 노트 수정 _(미구현)_ |
+| `DELETE` | `/session-board/{generationNumber}/sessions/{sessionId}/notes/{noteId}` | 노트 삭제 _(미구현)_ |
+| `GET` | `/session-board/{generationNumber}/sessions/{sessionId}/resources` | 자료 목록 _(미구현)_ |
+| `POST` | `/session-board/{generationNumber}/sessions/{sessionId}/resources` | 자료 업로드/등록 _(미구현)_ |
+| `DELETE` | `/session-board/{generationNumber}/sessions/{sessionId}/resources/{resourceId}` | 자료 삭제 _(미구현)_ |
+| `GET` | `/session-board/{generationNumber}/sessions/{sessionId}/retros` | 회고 목록 _(미구현)_ |
+| `POST` | `/session-board/{generationNumber}/sessions/{sessionId}/retros` | 회고 작성 _(미구현)_ |
+| `PUT` | `/session-board/{generationNumber}/sessions/{sessionId}/retros/{retroId}` | 회고 수정 _(미구현)_ |
