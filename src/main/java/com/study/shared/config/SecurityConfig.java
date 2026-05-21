@@ -75,7 +75,10 @@ public class SecurityConfig {
                         "/api/profile/members",
                         "/api/profile/members/**",
                         "/api/profile/generations",
-                        "/api/profile/generations/**")
+                        "/api/profile/generations/**",
+                        "/api/v1/questions",
+                        "/api/v1/questions/**",
+                        "/api/v1/tags")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
