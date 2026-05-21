@@ -128,8 +128,7 @@ class CommentServiceTest {
 
       assertThatThrownBy(
               () ->
-                  commentService.createComment(
-                      ANSWER_ID, new CommentCreateRequest("내용"), USER_ID))
+                  commentService.createComment(ANSWER_ID, new CommentCreateRequest("내용"), USER_ID))
           .isInstanceOf(AnswerNotFoundException.class);
 
       verify(eventPublisher, never()).publishEvent(any());
