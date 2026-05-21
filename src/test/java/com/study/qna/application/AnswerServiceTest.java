@@ -10,6 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.study.auth.domain.User;
+import com.study.profile.domain.exception.MemberNotFoundException;
+import com.study.profile.domain.member.Member;
+import com.study.profile.infrastructure.MemberGenerationRepository;
+import com.study.profile.infrastructure.MemberRepository;
 import com.study.qna.application.dto.request.answer.AnswerCreateRequest;
 import com.study.qna.application.dto.request.answer.AnswerUpdateRequest;
 import com.study.qna.application.dto.response.answer.AnswerDetailResponse;
@@ -25,10 +29,6 @@ import com.study.qna.domain.exception.QuestionNotFoundException;
 import com.study.qna.infrastructure.AnswerRepository;
 import com.study.qna.infrastructure.CommentRepository;
 import com.study.qna.infrastructure.QuestionRepository;
-import com.study.profile.domain.exception.MemberNotFoundException;
-import com.study.profile.domain.member.Member;
-import com.study.profile.infrastructure.MemberGenerationRepository;
-import com.study.profile.infrastructure.MemberRepository;
 import com.study.shared.extevent.qna.QnaAnswerAccepted;
 import com.study.shared.extevent.qna.QnaAnswerCreated;
 import com.study.shared.extevent.qna.QnaAnswerDeleted;
@@ -408,8 +408,7 @@ class AnswerServiceTest {
       Question question = questionWithId(QUESTION_ID, OTHER_USER_ID);
       Answer answer = answerWithId(ANSWER_ID, USER_ID, question);
 
-      when(commentRepository.findByAnswer_IdOrderByCreatedAtAsc(ANSWER_ID))
-          .thenReturn(List.of());
+      when(commentRepository.findByAnswer_IdOrderByCreatedAtAsc(ANSWER_ID)).thenReturn(List.of());
 
       answerService.deleteAnswerCascade(answer);
 
