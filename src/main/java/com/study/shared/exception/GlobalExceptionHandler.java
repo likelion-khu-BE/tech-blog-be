@@ -72,8 +72,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(AnswerNotAcceptedException.class)
-  public ResponseEntity<Map<String, Object>> handleAnswerNotAccepted(
-      AnswerNotAcceptedException e) {
+  public ResponseEntity<Map<String, Object>> handleAnswerNotAccepted(AnswerNotAcceptedException e) {
     return errorResponse(HttpStatus.CONFLICT, e.getMessage());
   }
 
