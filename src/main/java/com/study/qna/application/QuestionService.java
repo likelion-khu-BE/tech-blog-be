@@ -39,6 +39,7 @@ public class QuestionService {
         .toList();
   }
 
+  @Transactional
   public QuestionDetailResponse getQuestion(Long questionId) {
     Question question =
         questionRepository
