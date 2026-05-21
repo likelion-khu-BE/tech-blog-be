@@ -97,6 +97,37 @@ public class TeamMember {
     this.roles.add(TeamMemberRole.create(this, role));
   }
 
+  public void updateLead(boolean isLead) {
+    this.isLead = isLead;
+  }
+
+  public void kick() {
+    this.status = TeamMemberStatus.kicked;
+  }
+
+  public void leave() {
+    this.status = TeamMemberStatus.left;
+  }
+
+  public void rejoin() {
+    this.status = TeamMemberStatus.accepted;
+    this.isLead = false;
+  }
+
+  public void updateRoles(List<RoleInTeam> newRoles) {
+    this.roles.clear();
+    newRoles.stream().distinct().forEach(role -> this.roles.add(TeamMemberRole.create(this, role)));
+  }
+
+  public static TeamMember createByInviteCode(TeamProfile team, Member member) {
+    TeamMember teamMember = new TeamMember();
+    teamMember.team = team;
+    teamMember.member = member;
+    teamMember.isLead = false;
+    teamMember.status = TeamMemberStatus.accepted;
+    return teamMember;
+  }
+
   /** DB 저장 직전에 JPA가 자동으로 현재 시각을 createdAt에 넣어준다. */
   @PrePersist
   void prePersist() {

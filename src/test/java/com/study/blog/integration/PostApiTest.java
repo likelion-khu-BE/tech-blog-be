@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.study.StudyBeApplication;
+import com.study.auth.domain.User;
+import com.study.auth.infrastructure.UserRepository;
 import com.study.blog.domain.comment.Comment;
 import com.study.blog.domain.comment.CommentLike;
 import com.study.blog.domain.post.Post;
@@ -22,19 +24,30 @@ import com.study.blog.infrastructure.post.PostBookmarkRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
+import com.study.config.TestcontainersConfig;
+import com.study.profile.domain.generation.Generation;
+import com.study.profile.domain.generation.GenerationRole;
+import com.study.profile.domain.generation.MemberGeneration;
+import com.study.profile.domain.member.Member;
+import com.study.profile.domain.member.SessionType;
+import com.study.profile.infrastructure.GenerationRepository;
+import com.study.profile.infrastructure.MemberGenerationRepository;
+import com.study.profile.infrastructure.MemberRepository;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Integration tests for POST API endpoints. Uses H2 in-memory DB with PostgreSQL compatibility
- * mode. Each test runs in its own transaction that is rolled back afterwards.
+ * Integration tests for POST API endpoints. Uses PostgreSQL Testcontainers. Each test runs in its
+ * own transaction that is rolled back afterwards.
  *
  * <p>Test data:
  *
@@ -43,7 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li>postB: PUBLISHED, AI/LLM, 12기, OTHER_USER — tags: ChatGPT, Python
  *   <li>postC: PUBLISHED, 해커톤/해커톤후기, 13기, OTHER_USER — no tags
  *   <li>postD: DRAFT, 백엔드/DevOps, 13기, MOCK_USER — no likes/bookmarks
- *   <li>postE: PUBLISHED, 백엔드/CI/CD, 13기, MOCK_USER — repost of postA, tag: Docker
+ *   <li>postE: PUBLISHED, 백엔드/CI/CD, 13기, MOCK_USER — reply to postA, tag: Docker
  * </ul>
  */
 @SpringBootTest(
@@ -51,6 +64,7 @@ import org.springframework.transaction.annotation.Transactional;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Transactional
+@Import(TestcontainersConfig.class)
 @DisplayName("포스트 API")
 class PostApiTest {
 
@@ -64,6 +78,10 @@ class PostApiTest {
   @Autowired PostBookmarkRepository postBookmarkRepository;
   @Autowired CommentRepository commentRepository;
   @Autowired CommentLikeRepository commentLikeRepository;
+  @Autowired UserRepository userRepository;
+  @Autowired MemberRepository memberRepository;
+  @Autowired GenerationRepository generationRepository;
+  @Autowired MemberGenerationRepository memberGenerationRepository;
 
   Post postA, postB, postC, postD, postE;
 
@@ -132,7 +150,7 @@ class PostApiTest {
                 .generation("13기")
                 .build());
 
-    // Post E: PUBLISHED repost of A by MOCK_USER
+    // Post E: PUBLISHED reply to A by MOCK_USER
     postE =
         postRepository.save(
             Post.builder()
@@ -143,7 +161,7 @@ class PostApiTest {
                 .category("CI/CD")
                 .status(PostStatus.PUBLISHED)
                 .generation("13기")
-                .repostFromId(postA.getId())
+                .replyToId(postA.getId())
                 .build());
     postTagRepository.save(new PostTag(postE, "Docker"));
   }
@@ -266,11 +284,11 @@ class PostApiTest {
   }
 
   @Test
-  @DisplayName("GET /posts/{id} - 재게시 포스트 repostFromId 포함")
-  void getPost_repostedPost_includesRepostFromId() throws Exception {
+  @DisplayName("GET /posts/{id} - 답글 포스트 replyToId 포함")
+  void getPost_replyPost_includesReplyToId() throws Exception {
     mvc.perform(get("/api/blog/posts/{id}", postE.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.repostFromId").value(postA.getId()))
+        .andExpect(jsonPath("$.replyToId").value(postA.getId()))
         .andExpect(jsonPath("$.tags.length()").value(1));
   }
 
@@ -381,19 +399,19 @@ class PostApiTest {
   }
 
   @Test
-  @DisplayName("POST /posts - 재게시 201")
-  void createPost_withRepostFromId_returns201() throws Exception {
+  @DisplayName("POST /posts - 답글 작성 201")
+  void createPost_withReplyToId_returns201() throws Exception {
     String body =
         String.format(
             """
             {
-              "title": "재게시 테스트 포스트",
-              "content": "원본 포스트를 참조하는 재게시 글입니다.",
+              "title": "답글 테스트 포스트",
+              "content": "원글을 참조하는 답글입니다.",
               "board": "백엔드",
               "category": "CI/CD",
               "status": "PUBLISHED",
               "generation": "13기",
-              "repostFromId": %d
+              "replyToId": %d
             }
             """,
             postA.getId());
@@ -404,7 +422,7 @@ class PostApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.repostFromId").value(postA.getId()));
+        .andExpect(jsonPath("$.replyToId").value(postA.getId()));
   }
 
   @Test
@@ -740,5 +758,127 @@ class PostApiTest {
 
     assertThat(postRepository.findById(richId)).isEmpty();
     assertThat(postTagRepository.findByPost(rich)).isEmpty();
+  }
+
+  // ── authorName 표시 ──────────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("GET /posts/{id} - Member가 있으면 authorName이 반환된다")
+  void getPost_withMember_returnsAuthorName() throws Exception {
+    User user = userRepository.save(User.create("author-detail@test.com", "hash"));
+    memberRepository.save(
+        Member.create(user, "홍길동", SessionType.backend, null, null, null, null, null, null));
+
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(user.getId())
+                .title("작성자 이름 상세 테스트")
+                .content("내용")
+                .board("백엔드")
+                .category("CI/CD")
+                .status(PostStatus.PUBLISHED)
+                .build());
+
+    mvc.perform(get("/api/blog/posts/{id}", post.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.authorName").value("홍길동"));
+  }
+
+  @Test
+  @DisplayName("GET /posts - Member가 있으면 목록에서 authorName이 반환된다")
+  void getPosts_withMember_returnsAuthorNameInList() throws Exception {
+    User user = userRepository.save(User.create("author-list@test.com", "hash"));
+    memberRepository.save(
+        Member.create(user, "김철수", SessionType.backend, null, null, null, null, null, null));
+
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(user.getId())
+                .title("목록 작성자 이름 테스트")
+                .content("내용")
+                .board("백엔드")
+                .category("CI/CD")
+                .status(PostStatus.PUBLISHED)
+                .build());
+
+    mvc.perform(get("/api/blog/posts").param("size", "20"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[?(@.id == " + post.getId() + ")].authorName").value("김철수"));
+  }
+
+  @Test
+  @DisplayName("GET /posts/{id} - Member가 없으면 authorName이 null이다")
+  void getPost_withoutMember_authorNameIsNull() throws Exception {
+    mvc.perform(get("/api/blog/posts/{id}", postA.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.authorName").doesNotExist());
+  }
+
+  // ── replyToTitle 표시 ────────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("GET /posts - 답글 포스트는 목록에서 replyToTitle을 포함한다")
+  void getPosts_replyPost_includesReplyToTitle() throws Exception {
+    mvc.perform(get("/api/blog/posts").param("size", "20"))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath("$.content[?(@.id == " + postE.getId() + ")].replyToTitle")
+                .value(postA.getTitle()));
+  }
+
+  @Test
+  @DisplayName("GET /posts - 답글이 아닌 포스트는 replyToTitle이 null이다")
+  void getPosts_normalPost_replyToTitleIsNull() throws Exception {
+    mvc.perform(get("/api/blog/posts").param("size", "20"))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath("$.content[?(@.id == " + postA.getId() + ")].replyToTitle")
+                .value((Object) null));
+  }
+
+  // ── generation 자동 주입 ─────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("POST /posts - Member와 Generation이 있으면 generation이 자동 저장된다")
+  void createPost_withMemberAndGeneration_generationAutoInjected() throws Exception {
+    User user = userRepository.save(User.create("gen-test@test.com", "hash"));
+    Member member =
+        memberRepository.save(
+            Member.create(user, "기수테스터", SessionType.backend, null, null, null, null, null, null));
+    Generation gen =
+        generationRepository.save(Generation.create(17, LocalDate.of(2024, 3, 1), null, true));
+    memberGenerationRepository.save(MemberGeneration.create(member, gen, GenerationRole.member));
+
+    String body =
+        """
+        {"title":"기수자동주입테스트","content":"내용","board":"백엔드","category":"CI/CD"}
+        """;
+
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(user.getId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.generation").value("17기"));
+  }
+
+  @Test
+  @DisplayName("POST /posts - Member가 없으면 generation이 null이다")
+  void createPost_withoutMember_generationIsNull() throws Exception {
+    String body =
+        """
+        {"title":"기수없음테스트","content":"내용","board":"백엔드","category":"CI/CD"}
+        """;
+
+    mvc.perform(
+            post("/api/blog/posts")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.generation").doesNotExist());
   }
 }

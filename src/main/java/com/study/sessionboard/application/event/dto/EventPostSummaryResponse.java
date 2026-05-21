@@ -35,8 +35,10 @@ public record EventPostSummaryResponse(
   }
 
   private static String extractExcerpt(String body) {
-    if (body == null) return null;
+    if (body == null || body.isEmpty()) {
+      return "";
+    }
     String stripped = body.replaceAll("<[^>]*>", "").strip();
-    return stripped.length() <= 100 ? stripped : stripped.substring(0, 100) + "...";
+    return stripped.length() <= 100 ? stripped : stripped.substring(0, 100);
   }
 }

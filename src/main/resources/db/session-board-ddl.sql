@@ -43,6 +43,8 @@ CREATE TABLE event_post_image (
                             post_id    BIGINT      NOT NULL REFERENCES event_post(id) ON DELETE CASCADE,
                             url        TEXT        NOT NULL,
                             "order"    INT         NOT NULL DEFAULT 0,
+                            image_key  TEXT,
+                            file_size  BIGINT,
                             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -150,9 +152,11 @@ CREATE TABLE retro (
 -- INDEXES
 -- ============================================================
 
-CREATE INDEX idx_event_post_author     ON event_post(author_id);
-CREATE INDEX idx_event_post_generation ON event_post(generation_id);
-CREATE INDEX idx_event_post_status     ON event_post(status);
+CREATE INDEX idx_event_post_author          ON event_post(author_id);
+CREATE INDEX idx_event_post_generation      ON event_post(generation_id);
+CREATE INDEX idx_event_post_status          ON event_post(status);
+-- PENDING 만료 배치 쿼리(status = PENDING AND created_at < threshold) 최적화
+CREATE INDEX idx_event_post_status_created  ON event_post(status, created_at);
 -- tags 컬럼은 TEXT[] 배열이므로 GIN 인덱스로 배열 포함 연산(@>)을 지원한다.
 CREATE INDEX idx_event_post_tags       ON event_post USING GIN(tags);
 -- 게시글 제목/본문 텍스트 검색 (ILIKE '%keyword%') — pg_trgm gin_trgm_ops 사용

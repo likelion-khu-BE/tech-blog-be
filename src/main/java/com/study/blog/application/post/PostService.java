@@ -16,9 +16,13 @@ import com.study.blog.infrastructure.post.PostSpecification;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
+import com.study.profile.infrastructure.MemberGenerationRepository;
+import com.study.profile.infrastructure.MemberRepository;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -36,16 +40,22 @@ public class PostService {
   private final PostTagRepository postTagRepository;
   private final PostLikeRepository postLikeRepository;
   private final PostBookmarkRepository postBookmarkRepository;
+  private final MemberRepository memberRepository;
+  private final MemberGenerationRepository memberGenerationRepository;
 
   public PostService(
       PostRepository postRepository,
       PostTagRepository postTagRepository,
       PostLikeRepository postLikeRepository,
-      PostBookmarkRepository postBookmarkRepository) {
+      PostBookmarkRepository postBookmarkRepository,
+      MemberRepository memberRepository,
+      MemberGenerationRepository memberGenerationRepository) {
     this.postRepository = postRepository;
     this.postTagRepository = postTagRepository;
     this.postLikeRepository = postLikeRepository;
     this.postBookmarkRepository = postBookmarkRepository;
+    this.memberRepository = memberRepository;
+    this.memberGenerationRepository = memberGenerationRepository;
   }
 
   public Page<PostSummaryResponse> getPosts(
@@ -71,10 +81,25 @@ public class PostService {
     Map<Long, List<String>> tagsByPostId = batchTagsByPostId(postIds);
     Map<Long, Long> likeCountByPostId = batchLikeCountByPostId(postIds);
 
+    List<Long> replyToIds =
+        posts.stream().map(Post::getReplyToId).filter(Objects::nonNull).distinct().toList();
+    Map<Long, String> replyTitleById =
+        replyToIds.isEmpty()
+            ? Collections.emptyMap()
+            : postRepository.findAllById(replyToIds).stream()
+                .collect(Collectors.toMap(Post::getId, Post::getTitle));
+
+    List<Long> authorUserIds = posts.stream().map(Post::getUserId).distinct().toList();
+    Map<Long, String> authorNameByUserId =
+        memberRepository.findAllByUserIdIn(authorUserIds).stream()
+            .collect(Collectors.toMap(m -> m.getUser().getId(), m -> m.getName()));
+
     return posts.map(
         post ->
             PostSummaryResponse.of(
                 post,
+                authorNameByUserId.get(post.getUserId()),
+                replyTitleById.get(post.getReplyToId()),
                 tagsByPostId.getOrDefault(post.getId(), List.of()),
                 likeCountByPostId.getOrDefault(post.getId(), 0L)));
   }
@@ -90,18 +115,26 @@ public class PostService {
   }
 
   @Transactional
-  public PostResponse createPost(PostCreateRequest req, Long userId, String authorEmail) {
+  public PostResponse createPost(PostCreateRequest req, Long userId) {
+    String generation =
+        memberRepository
+            .findByUserId(userId)
+            .flatMap(
+                member ->
+                    memberGenerationRepository.findByMemberId(member.getId()).stream().findFirst())
+            .map(mg -> mg.getGeneration().getNumber() + "기")
+            .orElse(null);
+
     Post post =
         Post.builder()
             .userId(userId)
-            .authorEmail(authorEmail)
             .title(req.title())
             .content(req.content())
             .board(req.board())
             .category(req.category())
             .status(PostStatus.DRAFT)
-            .generation(req.generation())
-            .repostFromId(req.repostFromId())
+            .generation(generation)
+            .replyToId(req.replyToId())
             .build();
     post = postRepository.save(post);
 
@@ -200,7 +233,9 @@ public class PostService {
             && postBookmarkRepository
                 .findByIdPostIdAndIdUserId(post.getId(), requesterId)
                 .isPresent();
-    return PostResponse.of(post, tags, likeCount, bookmarkCount, liked, bookmarked);
+    String authorName =
+        memberRepository.findByUserId(post.getUserId()).map(m -> m.getName()).orElse(null);
+    return PostResponse.of(post, authorName, tags, likeCount, bookmarkCount, liked, bookmarked);
   }
 
   private Map<Long, List<String>> batchTagsByPostId(Collection<Long> postIds) {

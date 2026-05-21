@@ -17,8 +17,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -73,11 +74,12 @@ public class TeamProfile {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt; // 마지막 수정 시각
 
+  // 시현 N+1 수정: List(Bag) → Set 전환 — MultipleBagFetchException 및 JOIN FETCH 중복 방지
   @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<TeamImage> images = new ArrayList<>();
+  private Set<TeamImage> images = new HashSet<>();
 
   @OneToMany(mappedBy = "team")
-  private List<TeamMember> members = new ArrayList<>();
+  private Set<TeamMember> members = new HashSet<>();
 
   /**
    * 이미지들을 추가하는 메서드
@@ -99,22 +101,27 @@ public class TeamProfile {
     }
   }
 
-  // TeamProfile 클래스 안에 추가
+  // 시현 N+1 수정: List(Bag) → Set 전환 — JOIN FETCH 시 techStacks 중복 제거
   @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<TeamTechStack> techStacks = new ArrayList<>();
+  private Set<TeamTechStack> techStacks = new HashSet<>();
 
   /** 팀의 사용 기술 스택을 업데이트하는 메서드 */
   public void updateTechStacks(List<TechStack> newStacks) {
-    // 1. null이면 아무것도 하지 않고 기존 스택 유지 (방어 로직)
     if (newStacks == null) {
       return;
     }
-
-    // 2. 기존 스택 비우기
     this.techStacks.clear();
-
-    // 3. 중복을 제거(.distinct())하고 리스트에 추가
     newStacks.stream()
+        .distinct()
+        .forEach(stack -> this.techStacks.add(TeamTechStack.create(this, stack)));
+  }
+
+  public void clearTechStacks() {
+    this.techStacks.clear();
+  }
+
+  public void addTechStacks(List<TechStack> stacks) {
+    stacks.stream()
         .distinct()
         .forEach(stack -> this.techStacks.add(TeamTechStack.create(this, stack)));
   }

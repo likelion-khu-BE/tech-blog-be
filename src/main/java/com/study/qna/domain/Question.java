@@ -100,20 +100,6 @@ public class Question {
     this.status = QuestionStatus.RESOLVED;
   }
 
-  public void close() {
-    if (!this.status.canTransitionTo(QuestionStatus.CLOSED)) {
-      throw new IllegalStateException("질문 상태를 CLOSED로 변경할 수 없습니다");
-    }
-    this.status = QuestionStatus.CLOSED;
-  }
-
-  public void reopen() {
-    if (this.status != QuestionStatus.CLOSED) {
-      throw new IllegalStateException("CLOSED 상태인 질문만 다시 OPEN으로 변경할 수 있습니다");
-    }
-    this.status = QuestionStatus.OPEN;
-  }
-
   public void addTag(Tag tag) {
     boolean exists =
         this.questionTags.stream()

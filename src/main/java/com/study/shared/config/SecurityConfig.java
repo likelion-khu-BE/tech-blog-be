@@ -60,7 +60,9 @@ public class SecurityConfig {
                         "/api/health/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
-                        "/swagger-ui.html")
+                        "/swagger-ui.html",
+                        "/error",
+                        "/actuator/health")
                     .permitAll()
                     .requestMatchers(
                         org.springframework.http.HttpMethod.GET,
@@ -69,7 +71,11 @@ public class SecurityConfig {
                         "/api/profile/tech-stacks",
                         "/api/profile/tech-stacks/**",
                         "/api/profile/teams",
-                        "/api/profile/teams/**")
+                        "/api/profile/teams/**",
+                        "/api/profile/members",
+                        "/api/profile/members/**",
+                        "/api/profile/generations",
+                        "/api/profile/generations/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

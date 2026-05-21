@@ -13,9 +13,11 @@ import com.study.auth.infrastructure.security.JwtProvider;
 import com.study.auth.infrastructure.security.TokenHasher;
 import com.study.auth.presentation.dto.LoginResponse;
 import com.study.auth.presentation.dto.SignupResponse;
+import com.study.shared.extevent.auth.UserSignedUpEvent;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,9 +44,10 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtProvider jwtProvider;
   private final TokenHasher tokenHasher;
+  private final ApplicationEventPublisher eventPublisher;
 
-  /** 회원가입 — PENDING 상태로 생성. 관리자 승인 전까지 로그인 불가. */
-  public SignupResponse signup(String email, String rawPassword) {
+  /** 회원가입 — PENDING 상태로 생성 + Member 프로필 동시 생성. 관리자 승인 전까지 로그인 불가. */
+  public SignupResponse signup(String email, String rawPassword, String name, String sessionType) {
     if (userRepository.existsByLoginEmail(email)) {
       throw new EmailAlreadyExistsException();
     }
@@ -52,6 +55,9 @@ public class AuthService {
     String passwordHash = passwordEncoder.encode(rawPassword);
     User user = User.create(email, passwordHash);
     userRepository.save(user);
+
+    // Member 생성을 profile 모듈에 위임 — 같은 트랜잭션에서 실행되므로 실패 시 함께 롤백됨
+    eventPublisher.publishEvent(new UserSignedUpEvent(user.getId(), name, sessionType));
 
     return new SignupResponse(user.getId(), user.getLoginEmail(), user.getStatus());
   }
@@ -84,8 +90,7 @@ public class AuthService {
 
     // 새 토큰 family 시작
     UUID familyId = UUID.randomUUID();
-    String accessToken =
-        jwtProvider.generateAccessToken(user.getId(), user.getRole(), user.getLoginEmail());
+    String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
     String rawRefreshToken = jwtProvider.generateRefreshToken(user.getId(), familyId);
 
     saveRefreshToken(user.getId(), rawRefreshToken, familyId);
@@ -142,8 +147,7 @@ public class AuthService {
     }
 
     // 같은 familyId로 새 토큰 발급 (체인 유지)
-    String newAccessToken =
-        jwtProvider.generateAccessToken(userId, user.getRole(), user.getLoginEmail());
+    String newAccessToken = jwtProvider.generateAccessToken(userId, user.getRole());
     String newRawRefreshToken = jwtProvider.generateRefreshToken(userId, familyId);
 
     saveRefreshToken(userId, newRawRefreshToken, familyId);

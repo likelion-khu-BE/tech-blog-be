@@ -45,14 +45,11 @@ public class Post {
   @Column(nullable = false, length = 20)
   private PostStatus status;
 
-  @Column(nullable = false, length = 10)
+  @Column(length = 10)
   private String generation;
 
-  @Column(name = "repost_from_id")
-  private Long repostFromId;
-
-  @Column(name = "author_email", length = 255)
-  private String authorEmail;
+  @Column(name = "reply_to_id")
+  private Long replyToId;
 
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -65,23 +62,21 @@ public class Post {
   @Builder
   public Post(
       Long userId,
-      String authorEmail,
       String title,
       String content,
       String board,
       String category,
       PostStatus status,
       String generation,
-      Long repostFromId) {
+      Long replyToId) {
     this.userId = userId;
-    this.authorEmail = authorEmail;
     this.title = title;
     this.content = content;
     this.board = board;
     this.category = category;
     this.status = status;
     this.generation = generation;
-    this.repostFromId = repostFromId;
+    this.replyToId = replyToId;
   }
 
   public void update(

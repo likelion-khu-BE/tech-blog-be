@@ -42,16 +42,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *
  * <ul>
  *   <li><b>부여</b>: 생성/좋아요/채택/등록 이벤트 → {@link ActivityService#record} / {@link
- *       ActivityService#recordReceived}
+ *       ActivityService#recordReceived}. parent_resource_id는 댓글/답변/vote에 부모 글·질문 id 저장.
  *   <li><b>차감</b>: 삭제/취소 이벤트 → {@link ActivityService#revoke} / {@link ActivityService#revokeLike}
- *       / {@link ActivityService#revokeLikeReceived}
+ *       / {@link ActivityService#revokeLikeReceived}. reference_id(child id)로 cascade.
  * </ul>
- *
- * <p>cascade 정책: 발행자 BC가 cascade 자식들도 각자 fine-grained 이벤트(예: {@link BlogPostDeleted} + {@link
- * BlogCommentDeleted} × N + {@link BlogPostUnliked} × M)로 발행. 이 어댑터는 들어온 이벤트를 1:1 처리.
- *
- * <p>채택 답변 삭제: {@link QnaAnswerUnaccepted} + {@link QnaAnswerDeleted} 두 이벤트 모두 발행되어야 채택 +25 + 답변
- * +10 모두 차감.
  */
 @Component
 @RequiredArgsConstructor
@@ -68,21 +62,26 @@ public class ActivityEventListener {
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onBlogPostCreated(BlogPostCreated event) {
-    activityService.record(event.userId(), ActivityType.blog_post, event.postId());
+    activityService.record(event.userId(), ActivityType.blog_post, event.postId(), null);
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onBlogCommentCreated(BlogCommentCreated event) {
-    activityService.record(event.userId(), ActivityType.blog_comment, event.commentId());
+    activityService.record(
+        event.userId(), ActivityType.blog_comment, event.commentId(), event.postId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onBlogPostLiked(BlogPostLiked event) {
-    activityService.record(event.likerId(), ActivityType.blog_post_like, event.postId());
+    activityService.record(event.likerId(), ActivityType.blog_post_like, event.postId(), null);
     activityService.recordReceived(
-        event.postOwnerId(), ActivityType.blog_post_like_received, event.postId(), event.likerId());
+        event.postOwnerId(),
+        ActivityType.blog_post_like_received,
+        event.postId(),
+        null,
+        event.likerId());
   }
 
   // ----- 차감 -----
@@ -116,37 +115,42 @@ public class ActivityEventListener {
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaQuestionCreated(QnaQuestionCreated event) {
-    activityService.record(event.userId(), ActivityType.qna_question, event.questionId());
+    activityService.record(event.userId(), ActivityType.qna_question, event.questionId(), null);
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaAnswerCreated(QnaAnswerCreated event) {
-    activityService.record(event.userId(), ActivityType.qna_answer, event.answerId());
+    activityService.record(
+        event.userId(), ActivityType.qna_answer, event.answerId(), event.questionId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaAnswerAccepted(QnaAnswerAccepted event) {
-    activityService.record(event.userId(), ActivityType.qna_accepted, event.answerId());
+    activityService.record(
+        event.userId(), ActivityType.qna_accepted, event.answerId(), event.questionId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaAnswerUpvoted(QnaAnswerUpvoted event) {
-    activityService.record(event.voterId(), ActivityType.qna_answer_upvote, event.answerId());
+    activityService.record(
+        event.voterId(), ActivityType.qna_answer_upvote, event.answerId(), event.questionId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaAnswerDownvoted(QnaAnswerDownvoted event) {
-    activityService.record(event.voterId(), ActivityType.qna_answer_downvote, event.answerId());
+    activityService.record(
+        event.voterId(), ActivityType.qna_answer_downvote, event.answerId(), event.questionId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onQnaCommentCreated(QnaCommentCreated event) {
-    activityService.record(event.userId(), ActivityType.qna_comment, event.commentId());
+    activityService.record(
+        event.userId(), ActivityType.qna_comment, event.commentId(), event.questionId());
   }
 
   // ----- 차감 -----
@@ -198,30 +202,33 @@ public class ActivityEventListener {
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onSessionEventPostCreated(SessionEventPostCreated event) {
-    activityService.record(event.userId(), ActivityType.session_event_post, event.postId());
+    activityService.record(event.userId(), ActivityType.session_event_post, event.postId(), null);
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onSessionEventCommentCreated(SessionEventCommentCreated event) {
-    activityService.record(event.userId(), ActivityType.session_event_comment, event.commentId());
+    activityService.record(
+        event.userId(), ActivityType.session_event_comment, event.commentId(), event.postId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onSessionEventPostLiked(SessionEventPostLiked event) {
-    activityService.record(event.likerId(), ActivityType.session_event_post_like, event.postId());
+    activityService.record(
+        event.likerId(), ActivityType.session_event_post_like, event.postId(), null);
     activityService.recordReceived(
         event.postOwnerId(),
         ActivityType.session_event_post_like_received,
         event.postId(),
+        null,
         event.likerId());
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onSessionSpeakerRegistered(SessionSpeakerRegistered event) {
-    activityService.record(event.userId(), ActivityType.session_speak, event.sessionId());
+    activityService.record(event.userId(), ActivityType.session_speak, event.sessionId(), null);
   }
 
   // ----- 차감 -----

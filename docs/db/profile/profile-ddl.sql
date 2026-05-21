@@ -97,13 +97,14 @@ CREATE TABLE team_image (
 );
 
 CREATE TABLE activity (
-    id           BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    member_id    BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    type         VARCHAR(50) NOT NULL,
-    reference_id BIGINT,
-    actor_id     BIGINT,
-    score        INT NOT NULL DEFAULT 0,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                  BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    member_id           BIGINT NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    type                VARCHAR(50) NOT NULL,
+    reference_id        BIGINT,
+    parent_resource_id  BIGINT, -- 라우팅용 부모 리소스 id (댓글→글, 답변→질문 등). 루트는 NULL.
+    actor_id            BIGINT,
+    score               INT NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 멱등성 보장: 같은 활동을 두 번 기록 차단.

@@ -25,6 +25,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 멤버(프로필) 엔티티.
@@ -78,6 +80,7 @@ public class Member {
   @Column(name = "intro")
   private String intro;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "links_json", columnDefinition = "jsonb")
   private String linksJson;
 

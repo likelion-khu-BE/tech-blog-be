@@ -16,6 +16,31 @@ public class TeamDto {
 
   public record TeamCreateResponse(Long id, String inviteCode, Instant inviteCodeExpiresAt) {}
 
+  public record TeamUpdateRequest(
+      String name,
+      String description,
+      String projectUrl,
+      String githubUrl,
+      Integer generationNumber,
+      List<String> imageUrls,
+      List<Long> techStackIds) {}
+
+  public record TeamUpdateResponse(Long id, Instant updatedAt) {}
+
+  public record InviteCodeResponse(String inviteCode, Instant inviteCodeExpiresAt) {}
+
+  public record TeamJoinRequest(String inviteCode) {}
+
+  public record TeamJoinResponse(Long teamId, String teamName) {}
+
+  public record TeamLeadTransferRequest(Long memberId) {}
+
+  public record TeamLeadTransferResponse(Long teamId, Long newLeadMemberId) {}
+
+  public record TeamMemberRoleUpdateRequest(List<com.study.profile.domain.team.RoleInTeam> roles) {}
+
+  public record TeamMemberRoleUpdateResponse(Long memberId, List<String> roles) {}
+
   public record GenerationSummary(Integer number) {}
 
   public record TechStackSummary(Long id, String name, String category, String logoUrl) {}
@@ -36,6 +61,16 @@ public class TeamDto {
       String profileImageUrl,
       boolean isLead,
       List<String> roles) {}
+
+  public record MyTeamResponse(
+      Long id,
+      String name,
+      String description,
+      GenerationSummary generation,
+      List<TechStackSummary> techStacks,
+      boolean isLead,
+      List<String> roles,
+      String thumbUrl) {}
 
   public record TeamDetailResponse(
       Long id,

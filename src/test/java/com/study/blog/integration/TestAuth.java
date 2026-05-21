@@ -15,7 +15,7 @@ final class TestAuth {
   static RequestPostProcessor asMember(Long userId) {
     return SecurityMockMvcRequestPostProcessors.authentication(
         new UsernamePasswordAuthenticationToken(
-            new CustomUserDetails(userId, UserRole.MEMBER, ""),
+            new CustomUserDetails(userId, UserRole.MEMBER),
             null,
             List.of(new SimpleGrantedAuthority("ROLE_MEMBER"))));
   }
@@ -23,7 +23,7 @@ final class TestAuth {
   static RequestPostProcessor asAdmin(Long userId) {
     return SecurityMockMvcRequestPostProcessors.authentication(
         new UsernamePasswordAuthenticationToken(
-            new CustomUserDetails(userId, UserRole.ADMIN, ""),
+            new CustomUserDetails(userId, UserRole.ADMIN),
             null,
             List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
   }

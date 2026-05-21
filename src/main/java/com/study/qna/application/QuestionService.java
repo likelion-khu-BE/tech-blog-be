@@ -90,7 +90,7 @@ public class QuestionService {
   }
 
   @Transactional
-  public QuestionDetailResponse closeQuestion(
+  public QuestionDetailResponse updateQuestionStatus(
       Long questionId, QuestionStatusUpdateRequest request, Long userId) {
     Question question =
         questionRepository
@@ -102,8 +102,8 @@ public class QuestionService {
     }
 
     QuestionStatus targetStatus = QuestionStatus.valueOf(request.status());
-    if (targetStatus == QuestionStatus.CLOSED) {
-      question.close();
+    if (targetStatus == QuestionStatus.RESOLVED) {
+      question.resolve();
     }
 
     return toDetailResponse(question);

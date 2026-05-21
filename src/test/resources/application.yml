@@ -1,14 +1,8 @@
 spring:
   application:
     name: blog-test
-  datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;NON_KEYWORDS=VALUE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-
       ddl-auto: create-drop
     open-in-view: false
     show-sql: false
@@ -17,6 +11,19 @@ spring:
         format_sql: false
   flyway:
     enabled: false
+
+  cloud:
+    aws:
+      credentials:
+        access-key: test-access-key
+        secret-key: test-secret-key
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket:
+          event: test-event-bucket
+          session: test-session-bucket
+        presigned-url-expiration: 180
 
 jwt:
   secret: dGVzdC1zZWNyZXQta2V5LWZvci1oMi10ZXN0LW9ubHktMzJieXRlcw==

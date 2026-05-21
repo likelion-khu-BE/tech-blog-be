@@ -80,12 +80,27 @@ public class EventPost {
   }
 
   public static EventPost of(
-      Member author, Generation generation, EventPostType type, String title) {
+      Member author,
+      Generation generation,
+      EventPostType type,
+      String title,
+      String body,
+      String[] tags) {
     EventPost post = new EventPost();
     post.author = author;
     post.generation = generation;
     post.type = type;
     post.title = title;
+    post.body = body;
+    post.tags = tags != null ? tags : new String[0];
+    post.status = EventPostStatus.PUBLISHED; // Default to PUBLISHED for now as per spec 1-3
     return post;
+  }
+
+  public void update(EventPostType type, String title, String body, String[] tags) {
+    this.type = type;
+    this.title = title;
+    this.body = body;
+    this.tags = tags != null ? tags : new String[0];
   }
 }

@@ -50,7 +50,7 @@ public class AnswerService {
             .findById(questionId)
             .orElseThrow(() -> new QuestionNotFoundException(questionId));
 
-    if (question.getStatus() == QuestionStatus.CLOSED) {
+    if (question.getStatus() == QuestionStatus.RESOLVED) {
       throw new QuestionAlreadyClosedException(questionId);
     }
 
@@ -84,11 +84,27 @@ public class AnswerService {
             .findById(answerId)
             .orElseThrow(() -> new AnswerNotFoundException(answerId));
 
-    if (!answer.getQuestion().isAuthor(userId)) {
+    Question question = answer.getQuestion();
+
+    if (!question.isAuthor(userId)) {
       throw new ForbiddenQnaActionException();
     }
 
+    if (question.getStatus() == QuestionStatus.RESOLVED) {
+      throw new QuestionAlreadyClosedException(question.getId());
+    }
+
+    answerRepository.findByQuestionId(question.getId()).stream()
+        .filter(a -> a.isAccepted() && !a.getId().equals(answerId))
+        .findFirst()
+        .ifPresent(Answer::cancelAccept);
+
     answer.accept();
+
+    if (question.getStatus() == QuestionStatus.OPEN) {
+      question.resolve();
+    }
+
     return AnswerDetailResponse.from(answer, tempAuthor(answer.getUserId()));
   }
 

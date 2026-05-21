@@ -36,6 +36,9 @@ tasks.named('bootRun') {
 tasks.named('test') {
     useJUnitPlatform()
     workingDir = rootProject.projectDir
+    // docker-java 기본 API 버전(1.32)은 Docker 29.x에서 지원 안 됨(최소 v1.44 필요)
+    jvmArgs '-Dapi.version=1.44'
+    environment 'DOCKER_HOST', 'tcp://127.0.0.1:2375'
     testLogging {
         events 'passed', 'failed', 'skipped'
         showStandardStreams false
@@ -72,6 +75,12 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
+    // AWS S3
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.1'
+
+    // Rate Limiting
+    implementation 'com.bucket4j:bucket4j-core:8.10.1'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -79,9 +88,16 @@ dependencies {
     // Swagger UI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 
+    //Actuator Health Check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testRuntimeOnly 'com.h2database:h2'
+
+    // Testcontainers
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
 }
