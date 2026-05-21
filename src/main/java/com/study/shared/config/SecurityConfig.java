@@ -66,10 +66,6 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(
                         org.springframework.http.HttpMethod.GET,
-                        "/api/blog/posts/bookmarks")
-                    .authenticated()
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.GET,
                         "/api/blog/posts",
                         "/api/blog/posts/**",
                         "/api/profile/tech-stacks",
