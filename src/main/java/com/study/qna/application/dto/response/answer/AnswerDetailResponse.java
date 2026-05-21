@@ -9,8 +9,7 @@ public record AnswerDetailResponse(
     Long id,
     String content,
     boolean accepted,
-    int upvoteCount,
-    int downvoteCount,
+    int voteCount,
     int commentCount,
     MemberSummaryResponse author,
     Instant createdAt,
@@ -21,22 +20,7 @@ public record AnswerDetailResponse(
         answer.getId(),
         answer.getContent(),
         answer.isAccepted(),
-        0,
-        0,
-        answer.getCommentCount(),
-        author,
-        answer.getCreatedAt(),
-        answer.getUpdatedAt());
-  }
-
-  public static AnswerDetailResponse of(
-      Answer answer, MemberSummaryResponse author, int upvoteCount, int downvoteCount) {
-    return new AnswerDetailResponse(
-        answer.getId(),
-        answer.getContent(),
-        answer.isAccepted(),
-        upvoteCount,
-        downvoteCount,
+        answer.getVoteCount(),
         answer.getCommentCount(),
         author,
         answer.getCreatedAt(),
