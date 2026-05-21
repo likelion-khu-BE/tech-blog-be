@@ -1,5 +1,8 @@
 package com.study.qna.application;
 
+import com.study.profile.domain.exception.MemberNotFoundException;
+import com.study.profile.infrastructure.MemberGenerationRepository;
+import com.study.profile.infrastructure.MemberRepository;
 import com.study.qna.application.dto.request.answer.AnswerCreateRequest;
 import com.study.qna.application.dto.request.answer.AnswerUpdateRequest;
 import com.study.qna.application.dto.response.answer.AnswerDetailResponse;
@@ -15,9 +18,6 @@ import com.study.qna.domain.exception.QuestionNotFoundException;
 import com.study.qna.infrastructure.AnswerRepository;
 import com.study.qna.infrastructure.CommentRepository;
 import com.study.qna.infrastructure.QuestionRepository;
-import com.study.profile.domain.exception.MemberNotFoundException;
-import com.study.profile.infrastructure.MemberGenerationRepository;
-import com.study.profile.infrastructure.MemberRepository;
 import com.study.shared.extevent.qna.QnaAnswerAccepted;
 import com.study.shared.extevent.qna.QnaAnswerCreated;
 import com.study.shared.extevent.qna.QnaAnswerDeleted;
@@ -53,13 +53,15 @@ public class AnswerService {
     List<Long> userIds = answers.stream().map(Answer::getUserId).distinct().toList();
     Map<Long, MemberSummaryResponse> authorByUserId = buildAuthorMap(userIds);
 
-    List<AnswerDetailResponse> responses = answers.stream()
-        .map(a -> {
-          MemberSummaryResponse author = authorByUserId.get(a.getUserId());
-          if (author == null) throw new MemberNotFoundException(a.getUserId());
-          return AnswerDetailResponse.from(a, author);
-        })
-        .toList();
+    List<AnswerDetailResponse> responses =
+        answers.stream()
+            .map(
+                a -> {
+                  MemberSummaryResponse author = authorByUserId.get(a.getUserId());
+                  if (author == null) throw new MemberNotFoundException(a.getUserId());
+                  return AnswerDetailResponse.from(a, author);
+                })
+            .toList();
 
     return AnswerListResponse.of(responses);
   }
@@ -77,7 +79,7 @@ public class AnswerService {
     }
 
     Answer answer = Answer.create(question, userId, request.content());
-      Answer saved = answerRepository.save(answer);
+    Answer saved = answerRepository.save(answer);
     questionRepository.incrementAnswerCount(questionId);
 
     eventPublisher.publishEvent(new QnaAnswerCreated(userId, questionId, saved.getId()));
@@ -120,11 +122,12 @@ public class AnswerService {
     answerRepository.findByQuestionId(question.getId()).stream()
         .filter(a -> a.isAccepted() && !a.getId().equals(answerId))
         .findFirst()
-        .ifPresent(prev -> {
-          prev.cancelAccept();
-          eventPublisher.publishEvent(
-              new QnaAnswerUnaccepted(prev.getUserId(), question.getId(), prev.getId()));
-        });
+        .ifPresent(
+            prev -> {
+              prev.cancelAccept();
+              eventPublisher.publishEvent(
+                  new QnaAnswerUnaccepted(prev.getUserId(), question.getId(), prev.getId()));
+            });
 
     answer.accept();
     eventPublisher.publishEvent(
@@ -159,36 +162,45 @@ public class AnswerService {
     Long questionId = answer.getQuestion().getId();
     Long answerId = answer.getId();
 
-    commentRepository.findByAnswer_IdOrderByCreatedAtAsc(answerId).forEach(comment -> {
-      commentRepository.delete(comment);
-      eventPublisher.publishEvent(
-          new QnaCommentDeleted(comment.getUserId(), questionId, answerId, comment.getId()));
-    });
+    commentRepository
+        .findByAnswer_IdOrderByCreatedAtAsc(answerId)
+        .forEach(
+            comment -> {
+              commentRepository.delete(comment);
+              eventPublisher.publishEvent(
+                  new QnaCommentDeleted(
+                      comment.getUserId(), questionId, answerId, comment.getId()));
+            });
 
     answerRepository.delete(answer);
     eventPublisher.publishEvent(new QnaAnswerDeleted(answer.getUserId(), questionId, answerId));
   }
 
   private MemberSummaryResponse buildAuthor(Long userId) {
-    var member = memberRepository.findByUserId(userId)
-        .orElseThrow(() -> new MemberNotFoundException(userId));
-    int gen = memberGenerationRepository.findByMemberId(member.getId())
-        .stream().findFirst()
-        .map(mg -> mg.getGeneration().getNumber())
-        .orElse(0);
+    var member =
+        memberRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new MemberNotFoundException(userId));
+    int gen =
+        memberGenerationRepository.findByMemberId(member.getId()).stream()
+            .findFirst()
+            .map(mg -> mg.getGeneration().getNumber())
+            .orElse(0);
     return MemberSummaryResponse.of(userId, member.getName(), gen);
   }
 
   private Map<Long, MemberSummaryResponse> buildAuthorMap(List<Long> userIds) {
     return memberRepository.findAllByUserIdIn(userIds).stream()
-        .collect(Collectors.toMap(
-            m -> m.getUser().getId(),
-            m -> {
-              int gen = memberGenerationRepository.findByMemberId(m.getId())
-                  .stream().findFirst()
-                  .map(mg -> mg.getGeneration().getNumber())
-                  .orElse(0);
-              return MemberSummaryResponse.of(m.getUser().getId(), m.getName(), gen);
-            }));
+        .collect(
+            Collectors.toMap(
+                m -> m.getUser().getId(),
+                m -> {
+                  int gen =
+                      memberGenerationRepository.findByMemberId(m.getId()).stream()
+                          .findFirst()
+                          .map(mg -> mg.getGeneration().getNumber())
+                          .orElse(0);
+                  return MemberSummaryResponse.of(m.getUser().getId(), m.getName(), gen);
+                }));
   }
 }
