@@ -9,8 +9,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.study.auth.domain.User;
 import com.study.blog.application.post.dto.PostCreateRequest;
 import com.study.blog.application.post.dto.PostResponse;
+import com.study.blog.application.post.dto.PostSummaryResponse;
 import com.study.blog.application.post.dto.PostUpdateRequest;
 import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostBookmark;
@@ -39,6 +41,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -427,6 +433,20 @@ class PostServiceTest {
     }
 
     @Test
+    @DisplayName("DRAFT 포스트 북마크 → POST_NOT_PUBLISHED")
+    void draftPost_throwsPostNotPublished() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> postService.toggleBookmark(POST_ID, USER_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_PUBLISHED));
+    }
+
+    @Test
     @DisplayName("존재하지 않는 포스트 → POST_NOT_FOUND")
     void notFound_throwsPostNotFound() {
       when(postRepository.findById(999L)).thenReturn(Optional.empty());
@@ -437,6 +457,149 @@ class PostServiceTest {
               e ->
                   assertThat(((BlogException) e).getErrorCode())
                       .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+    }
+  }
+
+  // ── getBookmarkedPosts ─────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("getBookmarkedPosts")
+  class GetBookmarkedPosts {
+
+    private void stubBookmarkedPage(Post post) {
+      when(postBookmarkRepository.findPostIdsByUserId(USER_ID)).thenReturn(List.of(post.getId()));
+      when(postRepository.findAll(any(Specification.class), any(Pageable.class)))
+          .thenReturn(new PageImpl<>(List.of(post)));
+      when(postTagRepository.findByIdPostIdIn(any())).thenReturn(List.of());
+      when(postLikeRepository.countGroupedByPostId(any())).thenReturn(List.of());
+      when(memberRepository.findAllByUserIdIn(any())).thenReturn(List.of());
+    }
+
+    @Test
+    @DisplayName("북마크 없으면 빈 페이지 반환 — postRepository.findAll 미호출")
+    void noBookmarks_returnsEmptyPage() {
+      when(postBookmarkRepository.findPostIdsByUserId(USER_ID)).thenReturn(List.of());
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getTotalElements()).isZero();
+      verify(postRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("태그 있으면 응답에 포함")
+    void withTags_tagsInResponse() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      stubBookmarkedPage(post);
+      PostTag tag = new PostTag(post, "spring");
+      when(postTagRepository.findByIdPostIdIn(any())).thenReturn(List.of(tag));
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getContent().get(0).tags()).containsExactly("spring");
+    }
+
+    @Test
+    @DisplayName("태그 없으면 빈 리스트")
+    void withoutTags_emptyTagList() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      stubBookmarkedPage(post);
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getContent().get(0).tags()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("좋아요 수 응답에 반영")
+    void withLikeCount_likeCountInResponse() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      stubBookmarkedPage(post);
+      when(postLikeRepository.countGroupedByPostId(any()))
+          .thenReturn(List.<Object[]>of(new Object[] {POST_ID, 5L}));
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getContent().get(0).likeCount()).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("좋아요 없으면 likeCount = 0")
+    void withoutLikes_likeCountIsZero() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      stubBookmarkedPage(post);
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getContent().get(0).likeCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("Member 있으면 authorName 응답에 포함")
+    void withMember_authorNameInResponse() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      stubBookmarkedPage(post);
+      User user = mock(User.class);
+      when(user.getId()).thenReturn(USER_ID);
+      Member member = mock(Member.class);
+      when(member.getUser()).thenReturn(user);
+      when(member.getName()).thenReturn("홍길동");
+      when(memberRepository.findAllByUserIdIn(any())).thenReturn(List.of(member));
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getContent().get(0).authorName()).isEqualTo("홍길동");
+    }
+
+    @Test
+    @DisplayName("Member 없으면 authorName = null")
+    void withoutMember_authorNameIsNull() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      stubBookmarkedPage(post);
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getContent().get(0).authorName()).isNull();
+    }
+
+    @Test
+    @DisplayName("replyToId 있으면 원글 제목 응답에 포함")
+    void withReplyToId_replyTitleInResponse() {
+      Post original = postWithId(2L, OTHER_USER_ID, PostStatus.PUBLISHED);
+      Post reply =
+          Post.builder()
+              .userId(USER_ID)
+              .title("답글")
+              .content("내용")
+              .board("백엔드")
+              .category("Spring")
+              .status(PostStatus.PUBLISHED)
+              .replyToId(2L)
+              .build();
+      ReflectionTestUtils.setField(reply, "id", POST_ID);
+
+      when(postBookmarkRepository.findPostIdsByUserId(USER_ID)).thenReturn(List.of(POST_ID));
+      when(postRepository.findAll(any(Specification.class), any(Pageable.class)))
+          .thenReturn(new PageImpl<>(List.of(reply)));
+      when(postTagRepository.findByIdPostIdIn(any())).thenReturn(List.of());
+      when(postLikeRepository.countGroupedByPostId(any())).thenReturn(List.of());
+      when(memberRepository.findAllByUserIdIn(any())).thenReturn(List.of());
+      when(postRepository.findAllById(List.of(2L))).thenReturn(List.of(original));
+
+      Page<PostSummaryResponse> result = postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      assertThat(result.getContent().get(0).replyToTitle()).isEqualTo("제목");
+    }
+
+    @Test
+    @DisplayName("replyToId 없으면 postRepository.findAllById 미호출")
+    void withoutReplyToId_findAllByIdNotCalled() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      stubBookmarkedPage(post);
+
+      postService.getBookmarkedPosts(USER_ID, 0, 10);
+
+      verify(postRepository, never()).findAllById(any());
     }
   }
 

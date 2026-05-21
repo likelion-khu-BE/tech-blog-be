@@ -693,6 +693,15 @@ class PostApiTest {
   }
 
   @Test
+  @DisplayName("POST /posts/bookmark - DRAFT 포스트 400")
+  void toggleBookmark_draftPost_returns400() throws Exception {
+    mvc.perform(
+            post("/api/blog/posts/{id}/bookmark", postD.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   @DisplayName("포스트 좋아요 수 - 여러 사용자 좋아요 집계")
   void likeCount_reflectsMultipleUsers() throws Exception {
     // Add like from OTHER_USER manually, verify likeCount=2
@@ -785,6 +794,18 @@ class PostApiTest {
     mvc.perform(get("/api/blog/posts/bookmarks").with(TestAuth.asMember(OTHER_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalElements").value(0));
+  }
+
+  @Test
+  @DisplayName("GET /posts/bookmarks - 북마크된 DRAFT 포스트는 목록에서 제외")
+  void getBookmarkedPosts_draftBookmarked_notIncluded() throws Exception {
+    // toggleBookmark API로는 DRAFT에 북마크 불가 → 직접 저장
+    postBookmarkRepository.save(new PostBookmark(postD, MOCK_USER_ID));
+
+    mvc.perform(get("/api/blog/posts/bookmarks").with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1)) // postA만 (postD 제외)
+        .andExpect(jsonPath("$.content[0].id").value(postA.getId()));
   }
 
   // ── authorName 표시 ──────────────────────────────────────────────────────
