@@ -44,10 +44,10 @@ public class SessionService {
     return sessions.stream().map(this::toResponse).toList();
   }
 
-  public SessionResponse getSession(Long sessionId) {
+  public SessionResponse getSession(Integer generationNumber, Long sessionId) {
     Session session =
         sessionRepository
-            .findById(sessionId)
+            .findByGenerationNumberAndId(generationNumber, sessionId)
             .orElseThrow(() -> new SessionNotFoundException(sessionId));
     return toResponse(session);
   }
@@ -86,10 +86,11 @@ public class SessionService {
   }
 
   @Transactional
-  public OffsetDateTime updateSession(Long sessionId, SessionUpdateRequest request) {
+  public OffsetDateTime updateSession(
+      Integer generationNumber, Long sessionId, SessionUpdateRequest request) {
     Session session =
         sessionRepository
-            .findById(sessionId)
+            .findByGenerationNumberAndId(generationNumber, sessionId)
             .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
     session.update(request.weekLabel(), request.title(), request.status(), request.startedAt());
@@ -112,10 +113,10 @@ public class SessionService {
   }
 
   @Transactional
-  public void deleteSession(Long sessionId) {
+  public void deleteSession(Integer generationNumber, Long sessionId) {
     Session session =
         sessionRepository
-            .findById(sessionId)
+            .findByGenerationNumberAndId(generationNumber, sessionId)
             .orElseThrow(() -> new SessionNotFoundException(sessionId));
     sessionRepository.delete(session);
   }

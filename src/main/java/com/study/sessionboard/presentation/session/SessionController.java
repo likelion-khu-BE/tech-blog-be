@@ -40,7 +40,7 @@ public class SessionController {
   @GetMapping("/{sessionId}")
   public ResponseEntity<SessionResponse> getSession(
       @PathVariable Integer generationNumber, @PathVariable Long sessionId) {
-    return ResponseEntity.ok(sessionService.getSession(sessionId));
+    return ResponseEntity.ok(sessionService.getSession(generationNumber, sessionId));
   }
 
   @PostMapping
@@ -55,14 +55,14 @@ public class SessionController {
       @PathVariable Integer generationNumber,
       @PathVariable Long sessionId,
       @RequestBody SessionUpdateRequest request) {
-    OffsetDateTime updatedAt = sessionService.updateSession(sessionId, request);
+    OffsetDateTime updatedAt = sessionService.updateSession(generationNumber, sessionId, request);
     return ResponseEntity.ok(new SessionUpdateResponse(sessionId, updatedAt));
   }
 
   @DeleteMapping("/{sessionId}")
   public ResponseEntity<Void> deleteSession(
       @PathVariable Integer generationNumber, @PathVariable Long sessionId) {
-    sessionService.deleteSession(sessionId);
+    sessionService.deleteSession(generationNumber, sessionId);
     return ResponseEntity.noContent().build();
   }
 }
