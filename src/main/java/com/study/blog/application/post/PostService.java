@@ -113,9 +113,15 @@ public class PostService {
   }
 
   public PostResponse getPost(Long postId, Long requesterId) {
+    return getPost(postId, requesterId, false);
+  }
+
+  public PostResponse getPost(Long postId, Long requesterId, boolean isAdmin) {
     Post post = findById(postId);
 
-    if (post.getStatus() != PostStatus.PUBLISHED && !post.getUserId().equals(requesterId)) {
+    if (post.getStatus() != PostStatus.PUBLISHED
+        && !isAdmin
+        && !post.getUserId().equals(requesterId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 
