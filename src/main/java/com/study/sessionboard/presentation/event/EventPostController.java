@@ -1,5 +1,7 @@
 package com.study.sessionboard.presentation.event;
 
+import com.study.auth.infrastructure.security.CurrentUser;
+import com.study.auth.infrastructure.security.CustomUserDetails;
 import com.study.sessionboard.application.event.EventPostService;
 import com.study.sessionboard.application.event.dto.*;
 import com.study.sessionboard.domain.event.EventPostType;
@@ -8,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,8 +38,8 @@ public class EventPostController {
   public ResponseEntity<LikeToggleResponse> toggleLike(
           @PathVariable Long generationNumber,
           @PathVariable Long eventPostId,
-          @RequestParam Long memberId) {
-    return ResponseEntity.ok(eventPostService.toggleLike(eventPostId, memberId));
+          @CurrentUser CustomUserDetails authUser) {
+    return ResponseEntity.ok(eventPostService.toggleLike(eventPostId, authUser.userId()));
   }
 
   @GetMapping("/{eventPostId}/comments")
@@ -50,9 +53,9 @@ public class EventPostController {
   public ResponseEntity<CommentResponse> createComment(
           @PathVariable Long generationNumber,
           @PathVariable Long eventPostId,
-          @RequestParam Long memberId,
+          @CurrentUser CustomUserDetails authUser,
           @RequestBody @Valid CommentRequest request) {
-    return ResponseEntity.status(201).body(eventPostService.createComment(eventPostId, memberId, request));
+    return ResponseEntity.status(201).body(eventPostService.createComment(eventPostId, authUser.userId(), request));
   }
 
   @PatchMapping("/{eventPostId}/comments/{commentId}")
@@ -60,9 +63,9 @@ public class EventPostController {
           @PathVariable Long generationNumber,
           @PathVariable Long eventPostId,
           @PathVariable Long commentId,
-          @RequestParam Long memberId,
+          @CurrentUser CustomUserDetails authUser,
           @RequestBody @Valid CommentRequest request) {
-    eventPostService.updateComment(commentId, memberId, request);
+    eventPostService.updateComment(commentId, authUser.userId(), request);
     return ResponseEntity.ok().build();
   }
 
@@ -71,8 +74,8 @@ public class EventPostController {
           @PathVariable Long generationNumber,
           @PathVariable Long eventPostId,
           @PathVariable Long commentId,
-          @RequestParam Long memberId) {
-    eventPostService.deleteComment(commentId, memberId);
+          @CurrentUser CustomUserDetails authUser) {
+    eventPostService.deleteComment(commentId, authUser.userId());
     return ResponseEntity.noContent().build();
   }
 
@@ -81,9 +84,9 @@ public class EventPostController {
           @PathVariable Long generationNumber,
           @PathVariable Long eventPostId,
           @PathVariable Long commentId,
-          @RequestParam Long memberId,
+          @CurrentUser CustomUserDetails authUser,
           @RequestBody @Valid CommentRequest request) {
-    return ResponseEntity.status(201).body(eventPostService.createReply(eventPostId, commentId, memberId, request));
+    return ResponseEntity.status(201).body(eventPostService.createReply(eventPostId, commentId, authUser.userId(), request));
   }
 
   @PatchMapping("/{eventPostId}/comments/{commentId}/replies/{replyId}")
@@ -92,9 +95,9 @@ public class EventPostController {
           @PathVariable Long eventPostId,
           @PathVariable Long commentId,
           @PathVariable Long replyId,
-          @RequestParam Long memberId,
+          @CurrentUser CustomUserDetails authUser,
           @RequestBody @Valid CommentRequest request) {
-    eventPostService.updateReply(replyId, memberId, request);
+    eventPostService.updateReply(replyId, authUser.userId(), request);
     return ResponseEntity.ok().build();
   }
 
@@ -104,8 +107,8 @@ public class EventPostController {
           @PathVariable Long eventPostId,
           @PathVariable Long commentId,
           @PathVariable Long replyId,
-          @RequestParam Long memberId) {
-    eventPostService.deleteReply(replyId, memberId);
+          @CurrentUser CustomUserDetails authUser) {
+    eventPostService.deleteReply(replyId, authUser.userId());
     return ResponseEntity.noContent().build();
   }
 }
