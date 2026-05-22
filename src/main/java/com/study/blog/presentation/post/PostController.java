@@ -51,7 +51,8 @@ public class PostController {
   public ResponseEntity<PostResponse> getPost(
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
     Long requesterId = user != null ? user.userId() : null;
-    return ResponseEntity.ok(postService.getPost(id, requesterId));
+    boolean isAdmin = user != null && user.role() == com.study.auth.domain.UserRole.ADMIN;
+    return ResponseEntity.ok(postService.getPost(id, requesterId, isAdmin));
   }
 
   @PostMapping
