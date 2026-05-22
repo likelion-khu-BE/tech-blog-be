@@ -106,7 +106,8 @@ class SessionIntegrationTest {
         .perform(get("/api/session-board/13/sessions/9999"))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.status").value(404))
-        .andExpect(jsonPath("$.message").value("해당 세션을 찾을 수 없습니다. ID: 9999"));
+        .andExpect(
+            jsonPath("$.message").value("해당 기수에서 세션을 찾을 수 없거나, 존재하지 않는 세션입니다. (요청 ID: 9999)"));
   }
 
   @Test
