@@ -1,0 +1,31 @@
+CREATE TABLE users (
+    id                   BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    login_email          TEXT        NOT NULL UNIQUE,
+    password_hash        TEXT        NOT NULL,
+    role                 VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+    status               VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    signup_requested_at  TIMESTAMPTZ NOT NULL,
+    approved_at          TIMESTAMPTZ,
+    approved_by          BIGINT      REFERENCES users(id) ON DELETE SET NULL,
+    expired_at           TIMESTAMPTZ,
+    last_login_at        TIMESTAMPTZ,
+    created_at           TIMESTAMPTZ NOT NULL,
+    updated_at           TIMESTAMPTZ NOT NULL
+);
+
+CREATE UNIQUE INDEX idx_user_login_email ON users(login_email);
+CREATE        INDEX idx_user_status      ON users(status);
+
+CREATE TABLE refresh_tokens (
+    id          BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT        NOT NULL UNIQUE,
+    family_id   UUID        NOT NULL,
+    status      VARCHAR(20) NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL
+);
+
+CREATE UNIQUE INDEX idx_refresh_token_hash   ON refresh_tokens(token_hash);
+CREATE        INDEX idx_refresh_token_family ON refresh_tokens(family_id);
+CREATE        INDEX idx_refresh_token_user   ON refresh_tokens(user_id);
