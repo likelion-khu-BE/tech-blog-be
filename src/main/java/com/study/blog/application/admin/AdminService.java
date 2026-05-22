@@ -2,6 +2,7 @@ package com.study.blog.application.admin;
 
 import com.study.blog.application.admin.dto.AdminPostResponse;
 import com.study.blog.application.admin.dto.AdminStatsResponse;
+import com.study.blog.application.admin.dto.PostStatusUpdateRequest;
 import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostStatus;
 import com.study.blog.domain.post.PostTag;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,17 +45,29 @@ public class AdminService {
 
   public AdminStatsResponse getStats() {
     long totalPosts = postRepository.count();
+    long draftPosts =
+        postRepository.count((root, query, cb) -> cb.equal(root.get("status"), PostStatus.DRAFT));
+    long pendingReviewPosts =
+        postRepository.count(
+            (root, query, cb) -> cb.equal(root.get("status"), PostStatus.PENDING_REVIEW));
     long publishedPosts =
         postRepository.count(
             (root, query, cb) -> cb.equal(root.get("status"), PostStatus.PUBLISHED));
-    long draftPosts = totalPosts - publishedPosts;
+    long rejectedPosts =
+        postRepository.count(
+            (root, query, cb) -> cb.equal(root.get("status"), PostStatus.REJECTED));
     long totalComments = commentRepository.count();
-    return AdminStatsResponse.of(totalPosts, publishedPosts, draftPosts, totalComments);
+    return AdminStatsResponse.of(
+        totalPosts, draftPosts, pendingReviewPosts, publishedPosts, rejectedPosts, totalComments);
   }
 
-  public Page<AdminPostResponse> getAllPosts(int page, int size) {
+  public Page<AdminPostResponse> getAllPosts(PostStatus status, int page, int size) {
+    Specification<Post> spec =
+        status == null
+            ? Specification.where(null)
+            : (root, query, cb) -> cb.equal(root.get("status"), status);
     Page<Post> posts =
-        postRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        postRepository.findAll(spec, PageRequest.of(page, size, Sort.by("createdAt").descending()));
 
     List<Long> postIds = posts.stream().map(Post::getId).toList();
     Map<Long, List<String>> tagsByPostId = batchTagsByPostId(postIds);
@@ -68,12 +82,21 @@ public class AdminService {
   }
 
   @Transactional
-  public AdminPostResponse changePostStatus(Long postId, PostStatus status) {
+  public AdminPostResponse changePostStatus(Long postId, PostStatusUpdateRequest req) {
     Post post =
         postRepository
             .findById(postId)
             .orElseThrow(() -> new BlogException(BlogErrorCode.POST_NOT_FOUND));
-    post.changeStatus(status);
+    switch (req.status()) {
+      case PUBLISHED -> post.publish();
+      case REJECTED -> {
+        if (req.reason() == null || req.reason().isBlank()) {
+          throw new BlogException(BlogErrorCode.REJECTION_REASON_REQUIRED);
+        }
+        post.reject(req.reason());
+      }
+      default -> post.changeStatus(req.status());
+    }
     List<String> tags =
         postTagRepository.findByPost(post).stream().map(PostTag::getTagName).toList();
     long likeCount = postLikeRepository.countByIdPostId(postId);

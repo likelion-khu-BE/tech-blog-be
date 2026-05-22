@@ -7,6 +7,7 @@ import com.study.blog.application.post.dto.PostCreateRequest;
 import com.study.blog.application.post.dto.PostResponse;
 import com.study.blog.application.post.dto.PostSummaryResponse;
 import com.study.blog.application.post.dto.PostUpdateRequest;
+import com.study.blog.domain.post.PostStatus;
 import jakarta.validation.Valid;
 import java.util.Map;
 import org.springframework.data.domain.Page;
@@ -84,6 +85,23 @@ public class PostController {
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
     boolean liked = postService.toggleLike(id, user.userId());
     return ResponseEntity.ok(Map.of("liked", liked));
+  }
+
+  @GetMapping("/me")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<Page<PostSummaryResponse>> getMyPosts(
+      @RequestParam(required = false) PostStatus status,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(postService.getMyPosts(user.userId(), status, page, size));
+  }
+
+  @PostMapping("/{id}/submit")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<PostResponse> submitPost(
+      @PathVariable Long id, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(postService.submitPost(id, user.userId()));
   }
 
   @GetMapping("/bookmarks")
