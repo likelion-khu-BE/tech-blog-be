@@ -212,6 +212,30 @@ class PostServiceTest {
     }
 
     @Test
+    @DisplayName("PENDING_REVIEW 포스트 - 어드민 조회 가능")
+    void pendingReviewPost_admin_accessible() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PENDING_REVIEW);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, OTHER_USER_ID);
+
+      PostResponse res = postService.getPost(POST_ID, OTHER_USER_ID, true);
+
+      assertThat(res.status()).isEqualTo(PostStatus.PENDING_REVIEW);
+    }
+
+    @Test
+    @DisplayName("REJECTED 포스트 - 어드민 조회 가능")
+    void rejectedPost_admin_accessible() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.REJECTED);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, OTHER_USER_ID);
+
+      PostResponse res = postService.getPost(POST_ID, OTHER_USER_ID, true);
+
+      assertThat(res.status()).isEqualTo(PostStatus.REJECTED);
+    }
+
+    @Test
     @DisplayName("존재하지 않는 포스트 → POST_NOT_FOUND")
     void notFound_throwsPostNotFound() {
       when(postRepository.findById(999L)).thenReturn(Optional.empty());
