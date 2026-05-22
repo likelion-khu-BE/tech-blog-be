@@ -929,4 +929,177 @@ class PostApiTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.generation").doesNotExist());
   }
+
+  // ── POST /api/blog/posts/{id}/submit ────────────────────────────────────
+
+  @Test
+  @DisplayName("POST /posts/{id}/submit - DRAFT → PENDING_REVIEW 성공")
+  void submitPost_draft_returnsPendingReview() throws Exception {
+    mvc.perform(
+            post("/api/blog/posts/{id}/submit", postD.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("PENDING_REVIEW"));
+
+    Post updated = postRepository.findById(postD.getId()).orElseThrow();
+    assertThat(updated.getStatus()).isEqualTo(PostStatus.PENDING_REVIEW);
+  }
+
+  @Test
+  @DisplayName("POST /posts/{id}/submit - PUBLISHED 포스트 → 400")
+  void submitPost_published_returns400() throws Exception {
+    mvc.perform(
+            post("/api/blog/posts/{id}/submit", postA.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("POST /posts/{id}/submit - 타인 포스트 → 403")
+  void submitPost_othersPost_returns403() throws Exception {
+    mvc.perform(
+            post("/api/blog/posts/{id}/submit", postD.getId())
+                .with(TestAuth.asMember(OTHER_USER_ID)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("POST /posts/{id}/submit - 비인증 → 401")
+  void submitPost_unauthenticated_returns401() throws Exception {
+    mvc.perform(post("/api/blog/posts/{id}/submit", postD.getId()))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("POST /posts/{id}/submit - PENDING_REVIEW 포스트 재제출 → 400")
+  void submitPost_pendingReview_returns400() throws Exception {
+    // Submit once first
+    mvc.perform(
+            post("/api/blog/posts/{id}/submit", postD.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk());
+
+    // Submit again → INVALID_STATUS_TRANSITION
+    mvc.perform(
+            post("/api/blog/posts/{id}/submit", postD.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isBadRequest());
+  }
+
+  // ── GET /api/blog/posts/me ───────────────────────────────────────────────
+
+  @Test
+  @DisplayName("GET /posts/me - 본인 포스트 전체 조회 (DRAFT 포함)")
+  void getMyPosts_returnsAllOwnPosts() throws Exception {
+    // MOCK_USER: postA (PUBLISHED), postD (DRAFT), postE (PUBLISHED)
+    mvc.perform(get("/api/blog/posts/me").with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(3));
+  }
+
+  @Test
+  @DisplayName("GET /posts/me?status=DRAFT - DRAFT 포스트만 조회")
+  void getMyPosts_filterByDraft_returnsDraftOnly() throws Exception {
+    mvc.perform(
+            get("/api/blog/posts/me")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .param("status", "DRAFT"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].status").value("DRAFT"));
+  }
+
+  @Test
+  @DisplayName("GET /posts/me?status=PENDING_REVIEW - 검토 대기 포스트 조회")
+  void getMyPosts_filterByPendingReview_returnsPendingReviewOnly() throws Exception {
+    // Submit postD to PENDING_REVIEW first
+    mvc.perform(
+        post("/api/blog/posts/{id}/submit", postD.getId())
+            .with(TestAuth.asMember(MOCK_USER_ID)));
+
+    mvc.perform(
+            get("/api/blog/posts/me")
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .param("status", "PENDING_REVIEW"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].status").value("PENDING_REVIEW"));
+  }
+
+  @Test
+  @DisplayName("GET /posts/me - 비인증 → 401")
+  void getMyPosts_unauthenticated_returns401() throws Exception {
+    mvc.perform(get("/api/blog/posts/me")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("GET /posts/me - 타인 포스트는 포함되지 않음")
+  void getMyPosts_doesNotIncludeOtherUsersPosts() throws Exception {
+    // OTHER_USER: postB (PUBLISHED), postC (PUBLISHED)
+    mvc.perform(get("/api/blog/posts/me").with(TestAuth.asMember(OTHER_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(2));
+  }
+
+  // ── GET /posts/{id} - PENDING_REVIEW / REJECTED 가시성 ──────────────────
+
+  @Test
+  @DisplayName("GET /posts/{id} - PENDING_REVIEW 포스트 - 본인 조회 가능")
+  void getPost_pendingReviewPost_ownerCanView() throws Exception {
+    // Submit postD to PENDING_REVIEW
+    mvc.perform(
+        post("/api/blog/posts/{id}/submit", postD.getId())
+            .with(TestAuth.asMember(MOCK_USER_ID)));
+
+    mvc.perform(get("/api/blog/posts/{id}", postD.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("PENDING_REVIEW"));
+  }
+
+  @Test
+  @DisplayName("GET /posts/{id} - PENDING_REVIEW 포스트 - 타인 403")
+  void getPost_pendingReviewPost_otherUserForbidden() throws Exception {
+    mvc.perform(
+        post("/api/blog/posts/{id}/submit", postD.getId())
+            .with(TestAuth.asMember(MOCK_USER_ID)));
+
+    mvc.perform(get("/api/blog/posts/{id}", postD.getId()).with(TestAuth.asMember(OTHER_USER_ID)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("PUT /posts/{id} - REJECTED 포스트 수정 → DRAFT로 전환")
+  void updatePost_rejectedPost_resetsToDraft() throws Exception {
+    // Create a REJECTED post for MOCK_USER
+    Post rejected =
+        postRepository.save(
+            Post.builder()
+                .userId(MOCK_USER_ID)
+                .title("거부된 포스트")
+                .content("검토 거부된 내용입니다.")
+                .board("백엔드")
+                .category("JPA")
+                .status(PostStatus.REJECTED)
+                .generation("13기")
+                .build());
+    rejected.reject("내용이 부족합니다");
+
+    String body =
+        """
+        {
+          "title": "수정된 거부 포스트",
+          "content": "내용을 보강했습니다.",
+          "board": "백엔드",
+          "category": "JPA"
+        }
+        """;
+
+    mvc.perform(
+            put("/api/blog/posts/{id}", rejected.getId())
+                .with(TestAuth.asMember(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("DRAFT"));
+  }
 }

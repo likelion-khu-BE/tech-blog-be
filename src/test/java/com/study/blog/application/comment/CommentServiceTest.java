@@ -17,6 +17,8 @@ import com.study.blog.infrastructure.comment.CommentLikeRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
+import com.study.shared.extevent.blog.BlogCommentCreated;
+import com.study.shared.extevent.blog.BlogCommentDeleted;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,9 +29,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("CommentService")
 class CommentServiceTest {
 
@@ -39,6 +45,7 @@ class CommentServiceTest {
 
   @Mock CommentRepository commentRepository;
   @Mock CommentLikeRepository commentLikeRepository;
+  @Mock ApplicationEventPublisher eventPublisher;
   @InjectMocks CommentService commentService;
 
   // ── 헬퍼 ──────────────────────────────────────────────────────────────────
@@ -388,6 +395,36 @@ class CommentServiceTest {
               e ->
                   assertThat(((BlogException) e).getErrorCode())
                       .isEqualTo(BlogErrorCode.COMMENT_NOT_FOUND));
+    }
+  }
+
+  // ── 이벤트 발행 ────────────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("이벤트 발행")
+  class EventPublishing {
+
+    @Test
+    @DisplayName("createComment - BlogCommentCreated 이벤트 발행")
+    void createComment_publishesBlogCommentCreated() {
+      CommentCreateRequest req = new CommentCreateRequest("내용", null);
+      Comment saved = commentWithId(1L, POST_ID, USER_ID, "내용");
+      when(commentRepository.save(any())).thenReturn(saved);
+
+      commentService.createComment(POST_ID, req, USER_ID);
+
+      verify(eventPublisher).publishEvent(any(BlogCommentCreated.class));
+    }
+
+    @Test
+    @DisplayName("deleteComment - BlogCommentDeleted 이벤트 발행")
+    void deleteComment_publishesBlogCommentDeleted() {
+      Comment c = commentWithId(1L, POST_ID, USER_ID, "내용");
+      when(commentRepository.findById(1L)).thenReturn(Optional.of(c));
+
+      commentService.deleteComment(1L, USER_ID);
+
+      verify(eventPublisher).publishEvent(any(BlogCommentDeleted.class));
     }
   }
 }

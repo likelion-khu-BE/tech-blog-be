@@ -14,6 +14,11 @@ import com.study.blog.application.post.dto.PostCreateRequest;
 import com.study.blog.application.post.dto.PostResponse;
 import com.study.blog.application.post.dto.PostSummaryResponse;
 import com.study.blog.application.post.dto.PostUpdateRequest;
+import com.study.shared.extevent.blog.BlogPostCreated;
+import com.study.shared.extevent.blog.BlogPostDeleted;
+import com.study.shared.extevent.blog.BlogPostLiked;
+import com.study.shared.extevent.blog.BlogPostUnliked;
+import org.springframework.context.ApplicationEventPublisher;
 import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostBookmark;
 import com.study.blog.domain.post.PostLike;
@@ -62,6 +67,7 @@ class PostServiceTest {
   @Mock PostBookmarkRepository postBookmarkRepository;
   @Mock MemberRepository memberRepository;
   @Mock MemberGenerationRepository memberGenerationRepository;
+  @Mock ApplicationEventPublisher eventPublisher;
   @InjectMocks PostService postService;
 
   // ── 헬퍼 ──────────────────────────────────────────────────────────────────
@@ -146,6 +152,58 @@ class PostServiceTest {
       when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
 
       assertThatThrownBy(() -> postService.getPost(POST_ID, null))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
+    }
+
+    @Test
+    @DisplayName("PENDING_REVIEW 포스트 - 작성자 본인 조회 가능")
+    void pendingReviewPost_owner_accessible() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PENDING_REVIEW);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, USER_ID);
+
+      PostResponse res = postService.getPost(POST_ID, USER_ID);
+
+      assertThat(res.status()).isEqualTo(PostStatus.PENDING_REVIEW);
+    }
+
+    @Test
+    @DisplayName("PENDING_REVIEW 포스트 - 타인 요청 → FORBIDDEN")
+    void pendingReviewPost_otherUser_throwsForbidden() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PENDING_REVIEW);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> postService.getPost(POST_ID, OTHER_USER_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
+    }
+
+    @Test
+    @DisplayName("REJECTED 포스트 - 작성자 본인 조회 가능")
+    void rejectedPost_owner_accessible() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.REJECTED);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, USER_ID);
+
+      PostResponse res = postService.getPost(POST_ID, USER_ID);
+
+      assertThat(res.status()).isEqualTo(PostStatus.REJECTED);
+    }
+
+    @Test
+    @DisplayName("REJECTED 포스트 - 타인 요청 → FORBIDDEN")
+    void rejectedPost_otherUser_throwsForbidden() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.REJECTED);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> postService.getPost(POST_ID, OTHER_USER_ID))
           .isInstanceOf(BlogException.class)
           .satisfies(
               e ->
@@ -298,6 +356,35 @@ class PostServiceTest {
               e ->
                   assertThat(((BlogException) e).getErrorCode())
                       .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("REJECTED 포스트 수정 → DRAFT로 전환, rejectedReason 유지")
+    void rejectedPost_update_resetsToDraftPreservingReason() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.REJECTED);
+      post.reject("내용 부족");
+      PostUpdateRequest req =
+          new PostUpdateRequest("수정된 제목", "수정된 내용", "백엔드", "Spring", List.of());
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, USER_ID);
+
+      postService.updatePost(POST_ID, req, USER_ID);
+
+      assertThat(post.getStatus()).isEqualTo(PostStatus.DRAFT);
+      assertThat(post.getRejectedReason()).isEqualTo("내용 부족");
+    }
+
+    @Test
+    @DisplayName("DRAFT 포스트 수정 → 상태 변경 없음")
+    void draftPost_update_statusUnchanged() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      PostUpdateRequest req = new PostUpdateRequest("새 제목", "새 내용", "백엔드", "Spring", List.of());
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, USER_ID);
+
+      postService.updatePost(POST_ID, req, USER_ID);
+
+      assertThat(post.getStatus()).isEqualTo(PostStatus.DRAFT);
     }
   }
 
@@ -637,6 +724,202 @@ class PostServiceTest {
       PostResponse res = postService.getPost(POST_ID, null);
 
       assertThat(res.authorName()).isNull();
+    }
+  }
+
+  // ── submitPost ─────────────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("submitPost")
+  class SubmitPost {
+
+    @Test
+    @DisplayName("DRAFT → PENDING_REVIEW 성공")
+    void draft_toPendingReview_success() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      stubToResponse(post, USER_ID);
+
+      PostResponse res = postService.submitPost(POST_ID, USER_ID);
+
+      assertThat(res.status()).isEqualTo(PostStatus.PENDING_REVIEW);
+      assertThat(post.getStatus()).isEqualTo(PostStatus.PENDING_REVIEW);
+    }
+
+    @Test
+    @DisplayName("PENDING_REVIEW 포스트 → INVALID_STATUS_TRANSITION")
+    void pendingReview_throwsInvalidStatusTransition() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PENDING_REVIEW);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> postService.submitPost(POST_ID, USER_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.INVALID_STATUS_TRANSITION));
+    }
+
+    @Test
+    @DisplayName("PUBLISHED 포스트 → INVALID_STATUS_TRANSITION")
+    void published_throwsInvalidStatusTransition() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> postService.submitPost(POST_ID, USER_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.INVALID_STATUS_TRANSITION));
+    }
+
+    @Test
+    @DisplayName("타인 포스트 제출 → FORBIDDEN")
+    void otherUser_throwsForbidden() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> postService.submitPost(POST_ID, OTHER_USER_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.FORBIDDEN));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 포스트 → POST_NOT_FOUND")
+    void notFound_throwsPostNotFound() {
+      when(postRepository.findById(999L)).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> postService.submitPost(999L, USER_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_FOUND));
+    }
+  }
+
+  // ── getMyPosts ─────────────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("getMyPosts")
+  class GetMyPosts {
+
+    private void stubMyPostsPage(Post post) {
+      when(postRepository.findAll(any(Specification.class), any(Pageable.class)))
+          .thenReturn(new PageImpl<>(List.of(post)));
+      when(postTagRepository.findByIdPostIdIn(any())).thenReturn(List.of());
+      when(postLikeRepository.countGroupedByPostId(any())).thenReturn(List.of());
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+    }
+
+    @Test
+    @DisplayName("본인 포스트 목록 반환")
+    void returnsUserPosts() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      stubMyPostsPage(post);
+
+      Page<PostSummaryResponse> result = postService.getMyPosts(USER_ID, null, 0, 10);
+
+      assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("DRAFT 상태 필터 결과 반환")
+    void withDraftFilter_returnsDraftPosts() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      stubMyPostsPage(post);
+
+      Page<PostSummaryResponse> result = postService.getMyPosts(USER_ID, PostStatus.DRAFT, 0, 10);
+
+      assertThat(result.getContent().get(0).status()).isEqualTo(PostStatus.DRAFT);
+    }
+
+    @Test
+    @DisplayName("PENDING_REVIEW 상태 필터 결과 반환")
+    void withPendingReviewFilter_returnsPendingReviewPosts() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PENDING_REVIEW);
+      stubMyPostsPage(post);
+
+      Page<PostSummaryResponse> result =
+          postService.getMyPosts(USER_ID, PostStatus.PENDING_REVIEW, 0, 10);
+
+      assertThat(result.getContent().get(0).status()).isEqualTo(PostStatus.PENDING_REVIEW);
+    }
+
+    @Test
+    @DisplayName("포스트 없으면 빈 페이지 반환")
+    void noPosts_returnsEmptyPage() {
+      when(postRepository.findAll(any(Specification.class), any(Pageable.class)))
+          .thenReturn(Page.empty());
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+      Page<PostSummaryResponse> result = postService.getMyPosts(USER_ID, null, 0, 10);
+
+      assertThat(result.getTotalElements()).isZero();
+    }
+  }
+
+  // ── 이벤트 발행 ────────────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("이벤트 발행")
+  class EventPublishing {
+
+    @Test
+    @DisplayName("createPost - BlogPostCreated 이벤트 발행")
+    void createPost_publishesBlogPostCreated() {
+      PostCreateRequest req =
+          new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
+      Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
+      when(postRepository.save(any())).thenReturn(saved);
+      when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+      stubToResponse(saved, USER_ID);
+
+      postService.createPost(req, USER_ID);
+
+      verify(eventPublisher).publishEvent(any(BlogPostCreated.class));
+    }
+
+    @Test
+    @DisplayName("deletePost - BlogPostDeleted 이벤트 발행")
+    void deletePost_publishesBlogPostDeleted() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+
+      postService.deletePost(POST_ID, USER_ID);
+
+      verify(eventPublisher).publishEvent(any(BlogPostDeleted.class));
+    }
+
+    @Test
+    @DisplayName("toggleLike 추가 - BlogPostLiked 이벤트 발행")
+    void toggleLike_add_publishesBlogPostLiked() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      when(postLikeRepository.findByIdPostIdAndIdUserId(POST_ID, USER_ID))
+          .thenReturn(Optional.empty());
+
+      postService.toggleLike(POST_ID, USER_ID);
+
+      verify(eventPublisher).publishEvent(any(BlogPostLiked.class));
+    }
+
+    @Test
+    @DisplayName("toggleLike 취소 - BlogPostUnliked 이벤트 발행")
+    void toggleLike_remove_publishesBlogPostUnliked() {
+      Post post = postWithId(POST_ID, USER_ID, PostStatus.PUBLISHED);
+      PostLike existing = new PostLike(post, USER_ID);
+      when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
+      when(postLikeRepository.findByIdPostIdAndIdUserId(POST_ID, USER_ID))
+          .thenReturn(Optional.of(existing));
+
+      postService.toggleLike(POST_ID, USER_ID);
+
+      verify(eventPublisher).publishEvent(any(BlogPostUnliked.class));
     }
   }
 
