@@ -1,10 +1,12 @@
 package com.study.sessionboard.application.event;
 
-import com.study.profile.domain.member.Member;
 import com.study.sessionboard.application.event.dto.*;
 import com.study.profile.application.GenerationService;
 import com.study.profile.application.MemberService;
 import com.study.profile.domain.generation.Generation;
+import com.study.profile.domain.member.Member;
+import com.study.sessionboard.application.event.dto.EventPostSummaryResponse;
+import com.study.sessionboard.application.event.dto.PageWrapper;
 import com.study.sessionboard.domain.event.EventPost;
 import com.study.sessionboard.domain.event.EventPostImage;
 import com.study.sessionboard.domain.event.EventPostStatus;
@@ -41,9 +43,9 @@ public class EventPostService {
   private final EventPostCommentRepository eventPostCommentRepository;
   private final EventPostLikeRepository eventPostLikeRepository;
   private final MemberRepository memberRepository;
-
   private final MemberService memberService;
   private final GenerationService generationService;
+
 
   public PageWrapper<EventPostSummaryResponse> getEventPosts(
       Integer generationNumber, EventPostType type, Pageable pageable) { // generation number로 시현 수정
@@ -80,10 +82,10 @@ public class EventPostService {
 
     return PageWrapper.from(responsePage);
   }
+
   @Transactional
   public LikeToggleResponse toggleLike(Long postId, Long userId) {
-    Member member = memberRepository.findByUserId(userId)
-            .orElseThrow(() -> new EventPostException(EventPostErrorCode.MEMBER_NOT_FOUND));
+    Member member = memberService.getMemberToUserId(userId);
 
     EventPost post = eventPostRepository.findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
@@ -126,9 +128,8 @@ public class EventPostService {
 
   @Transactional
   public CommentResponse createComment(Long postId, Long userId, CommentRequest request) {
-    Member author = memberRepository.findByUserId(userId)
-            .orElseThrow(() -> new EventPostException(EventPostErrorCode.MEMBER_NOT_FOUND));
-
+    Member author = memberService.getMemberToUserId(userId);
+    
     EventPost post = eventPostRepository.findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
@@ -140,8 +141,7 @@ public class EventPostService {
 
   @Transactional
   public void updateComment(Long commentId, Long userId, CommentRequest request) {
-    Member member = memberRepository.findByUserId(userId)
-            .orElseThrow(() -> new EventPostException(EventPostErrorCode.MEMBER_NOT_FOUND));
+    Member member = memberService.getMemberToUserId(userId);
 
     EventPostComment comment = eventPostCommentRepository.findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
@@ -155,9 +155,8 @@ public class EventPostService {
 
   @Transactional
   public void deleteComment(Long commentId, Long userId) {
-    Member member = memberRepository.findByUserId(userId)
-            .orElseThrow(() -> new EventPostException(EventPostErrorCode.MEMBER_NOT_FOUND));
-
+    Member member = memberService.getMemberToUserId(userId);
+    
     EventPostComment comment = eventPostCommentRepository.findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
@@ -170,8 +169,7 @@ public class EventPostService {
 
   @Transactional
   public CommentResponse createReply(Long postId, Long commentId, Long userId, CommentRequest request) {
-    Member author = memberRepository.findByUserId(userId)
-            .orElseThrow(() -> new EventPostException(EventPostErrorCode.MEMBER_NOT_FOUND));
+    Member author = memberService.getMemberToUserId(userId);
 
     EventPost post = eventPostRepository.findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
@@ -187,9 +185,8 @@ public class EventPostService {
 
   @Transactional
   public void updateReply(Long replyId, Long userId, CommentRequest request) {
-    Member member = memberRepository.findByUserId(userId)
-            .orElseThrow(() -> new EventPostException(EventPostErrorCode.MEMBER_NOT_FOUND));
-
+    Member member = memberService.getMemberToUserId(userId);
+    
     EventPostComment reply = eventPostCommentRepository.findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
@@ -202,8 +199,7 @@ public class EventPostService {
 
   @Transactional
   public void deleteReply(Long replyId, Long userId) {
-    Member member = memberRepository.findByUserId(userId)
-            .orElseThrow(() -> new EventPostException(EventPostErrorCode.MEMBER_NOT_FOUND));
+    Member member = memberService.getMemberToUserId(userId);
 
     EventPostComment reply = eventPostCommentRepository.findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
