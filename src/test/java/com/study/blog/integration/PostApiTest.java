@@ -808,6 +808,30 @@ class PostApiTest {
         .andExpect(jsonPath("$.content[0].id").value(postA.getId()));
   }
 
+  @Test
+  @DisplayName("GET /posts/bookmarks - 본인 북마크만 반환, 타인 북마크 격리")
+  void getBookmarkedPosts_returnsOnlyCallerBookmarks() throws Exception {
+    // OTHER_USER도 postB를 북마크한 상태에서 MOCK_USER 요청 → postA만, postB는 안 나와야 함
+    postBookmarkRepository.save(new PostBookmark(postB, OTHER_USER_ID));
+
+    mvc.perform(get("/api/blog/posts/bookmarks").with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].id").value(postA.getId()));
+  }
+
+  @Test
+  @DisplayName("GET /posts/bookmarks - DRAFT 글은 북마크 목록에서 제외")
+  void getBookmarkedPosts_excludesDraftPosts() throws Exception {
+    // MOCK_USER가 DRAFT인 postD도 북마크 → PUBLISHED인 postA만 나와야 함
+    postBookmarkRepository.save(new PostBookmark(postD, MOCK_USER_ID));
+
+    mvc.perform(get("/api/blog/posts/bookmarks").with(TestAuth.asMember(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].id").value(postA.getId()));
+  }
+
   // ── authorName 표시 ──────────────────────────────────────────────────────
 
   @Test

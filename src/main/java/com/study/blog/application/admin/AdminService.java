@@ -12,10 +12,12 @@ import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
+import com.study.shared.extevent.blog.BlogPostCreated;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -31,16 +33,19 @@ public class AdminService {
   private final PostTagRepository postTagRepository;
   private final PostLikeRepository postLikeRepository;
   private final CommentRepository commentRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   public AdminService(
       PostRepository postRepository,
       PostTagRepository postTagRepository,
       PostLikeRepository postLikeRepository,
-      CommentRepository commentRepository) {
+      CommentRepository commentRepository,
+      ApplicationEventPublisher eventPublisher) {
     this.postRepository = postRepository;
     this.postTagRepository = postTagRepository;
     this.postLikeRepository = postLikeRepository;
     this.commentRepository = commentRepository;
+    this.eventPublisher = eventPublisher;
   }
 
   public AdminStatsResponse getStats() {
@@ -88,7 +93,10 @@ public class AdminService {
             .findById(postId)
             .orElseThrow(() -> new BlogException(BlogErrorCode.POST_NOT_FOUND));
     switch (req.status()) {
-      case PUBLISHED -> post.publish();
+      case PUBLISHED -> {
+        post.publish();
+        eventPublisher.publishEvent(new BlogPostCreated(post.getUserId(), postId));
+      }
       case REJECTED -> {
         if (req.reason() == null || req.reason().isBlank()) {
           throw new BlogException(BlogErrorCode.REJECTION_REASON_REQUIRED);

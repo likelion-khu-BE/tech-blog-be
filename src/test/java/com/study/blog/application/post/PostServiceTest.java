@@ -894,8 +894,8 @@ class PostServiceTest {
   class EventPublishing {
 
     @Test
-    @DisplayName("createPost - BlogPostCreated 이벤트 발행")
-    void createPost_publishesBlogPostCreated() {
+    @DisplayName("createPost - DRAFT 저장 시 BlogPostCreated 이벤트 미발행")
+    void createPost_draft_doesNotPublishBlogPostCreated() {
       PostCreateRequest req =
           new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
@@ -905,7 +905,7 @@ class PostServiceTest {
 
       postService.createPost(req, USER_ID);
 
-      verify(eventPublisher).publishEvent(any(BlogPostCreated.class));
+      verify(eventPublisher, never()).publishEvent(any(BlogPostCreated.class));
     }
 
     @Test

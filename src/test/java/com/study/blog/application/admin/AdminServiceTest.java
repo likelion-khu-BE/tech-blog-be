@@ -17,6 +17,7 @@ import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
+import com.study.shared.extevent.blog.BlogPostCreated;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -40,6 +42,7 @@ class AdminServiceTest {
   @Mock PostTagRepository postTagRepository;
   @Mock PostLikeRepository postLikeRepository;
   @Mock CommentRepository commentRepository;
+  @Mock ApplicationEventPublisher eventPublisher;
   @InjectMocks AdminService adminService;
 
   private Post postWithId(Long id, Long userId, PostStatus status) {
@@ -100,8 +103,8 @@ class AdminServiceTest {
     }
 
     @Test
-    @DisplayName("PENDING_REVIEW → PUBLISHED: publish() 호출로 rejectedReason 초기화")
-    void pendingReview_toPublished_callsPublish() {
+    @DisplayName("PENDING_REVIEW → PUBLISHED: publish() 호출로 rejectedReason 초기화 + BlogPostCreated 이벤트 발행")
+    void pendingReview_toPublished_callsPublishAndPublishesEvent() {
       Post post = postWithId(1L, 10L, PostStatus.PENDING_REVIEW);
       post.reject("이전 거부 사유");
       when(postRepository.findById(1L)).thenReturn(Optional.of(post));
@@ -113,6 +116,7 @@ class AdminServiceTest {
       assertThat(res.status()).isEqualTo(PostStatus.PUBLISHED);
       assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
       assertThat(post.getRejectedReason()).isNull();
+      verify(eventPublisher).publishEvent(any(BlogPostCreated.class));
     }
 
     @Test
