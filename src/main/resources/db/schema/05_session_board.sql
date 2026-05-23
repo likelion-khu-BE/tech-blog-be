@@ -1,4 +1,6 @@
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+-- NOTE: pg_trgm 설치는 superuser 권한이 필요합니다.
+-- RDS 등 매니지드 환경에서는 아래 구문을 별도 superuser 세션 또는 프로비저닝 단계에서 실행하세요.
+-- CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 CREATE TYPE post_status AS ENUM ('DRAFT', 'PUBLISHED', 'HIDDEN');
 

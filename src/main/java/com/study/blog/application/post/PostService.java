@@ -153,7 +153,6 @@ public class PostService {
     post = postRepository.save(post);
 
     saveTags(post, req.tags());
-    eventPublisher.publishEvent(new BlogPostCreated(userId, post.getId()));
     return toResponse(post, userId);
   }
 
