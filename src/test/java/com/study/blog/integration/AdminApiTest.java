@@ -354,7 +354,8 @@ class AdminApiTest {
   @Test
   @DisplayName("PATCH /admin/posts/status - 게시→임시저장")
   void changePostStatus_publishedToDraft_succeeds() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "DRAFT"}
         """;
 
@@ -374,7 +375,8 @@ class AdminApiTest {
   @Test
   @DisplayName("PATCH /admin/posts/status - 검토대기→게시: publish() 호출로 rejectedReason null")
   void changePostStatus_pendingReviewToPublished_clearsRejectedReason() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "PUBLISHED"}
         """;
 
@@ -395,7 +397,8 @@ class AdminApiTest {
   @Test
   @DisplayName("PATCH /admin/posts/status - 검토대기→거부: 사유 포함")
   void changePostStatus_pendingReviewToRejected_withReason_succeeds() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "REJECTED", "reason": "내용이 너무 짧습니다"}
         """;
 
@@ -416,7 +419,8 @@ class AdminApiTest {
   @Test
   @DisplayName("PATCH /admin/posts/status - 거부 사유 없으면 400")
   void changePostStatus_rejectedWithoutReason_returns400() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "REJECTED"}
         """;
 
@@ -431,7 +435,8 @@ class AdminApiTest {
   @Test
   @DisplayName("PATCH /admin/posts/status - 임시저장→게시")
   void changePostStatus_draftToPublished_succeeds() throws Exception {
-    String body = """
+    String body =
+        """
         {"status": "PUBLISHED"}
         """;
 

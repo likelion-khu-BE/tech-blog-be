@@ -71,10 +71,10 @@ class AdminServiceTest {
     void aggregatesAllSixCountsFromRepositories() {
       when(postRepository.count()).thenReturn(20L);
       when(postRepository.count(any(Specification.class)))
-          .thenReturn(2L)   // DRAFT
-          .thenReturn(5L)   // PENDING_REVIEW
-          .thenReturn(10L)  // PUBLISHED
-          .thenReturn(3L);  // REJECTED
+          .thenReturn(2L) // DRAFT
+          .thenReturn(5L) // PENDING_REVIEW
+          .thenReturn(10L) // PUBLISHED
+          .thenReturn(3L); // REJECTED
       when(commentRepository.count()).thenReturn(30L);
 
       AdminStatsResponse res = adminService.getStats();
@@ -103,7 +103,8 @@ class AdminServiceTest {
     }
 
     @Test
-    @DisplayName("PENDING_REVIEW → PUBLISHED: publish() 호출로 rejectedReason 초기화 + BlogPostCreated 이벤트 발행")
+    @DisplayName(
+        "PENDING_REVIEW → PUBLISHED: publish() 호출로 rejectedReason 초기화 + BlogPostCreated 이벤트 발행")
     void pendingReview_toPublished_callsPublishAndPublishesEvent() {
       Post post = postWithId(1L, 10L, PostStatus.PENDING_REVIEW);
       post.reject("이전 거부 사유");
@@ -140,8 +141,7 @@ class AdminServiceTest {
       when(postTagRepository.findByPost(post)).thenReturn(List.of());
       when(postLikeRepository.countByIdPostId(1L)).thenReturn(0L);
 
-      AdminPostResponse res =
-          adminService.changePostStatus(1L, req(PostStatus.REJECTED, "내용 부족"));
+      AdminPostResponse res = adminService.changePostStatus(1L, req(PostStatus.REJECTED, "내용 부족"));
 
       assertThat(res.status()).isEqualTo(PostStatus.REJECTED);
       assertThat(post.getRejectedReason()).isEqualTo("내용 부족");
@@ -167,8 +167,7 @@ class AdminServiceTest {
       Post post = postWithId(1L, 10L, PostStatus.PENDING_REVIEW);
       when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
-      assertThatThrownBy(
-              () -> adminService.changePostStatus(1L, req(PostStatus.REJECTED, "   ")))
+      assertThatThrownBy(() -> adminService.changePostStatus(1L, req(PostStatus.REJECTED, "   ")))
           .isInstanceOf(BlogException.class)
           .satisfies(
               e ->
@@ -194,8 +193,7 @@ class AdminServiceTest {
     void notFound_throwsPostNotFound() {
       when(postRepository.findById(999L)).thenReturn(Optional.empty());
 
-      assertThatThrownBy(
-              () -> adminService.changePostStatus(999L, req(PostStatus.PUBLISHED)))
+      assertThatThrownBy(() -> adminService.changePostStatus(999L, req(PostStatus.PUBLISHED)))
           .isInstanceOf(BlogException.class)
           .satisfies(
               e ->

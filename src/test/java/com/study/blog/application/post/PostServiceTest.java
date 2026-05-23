@@ -14,11 +14,6 @@ import com.study.blog.application.post.dto.PostCreateRequest;
 import com.study.blog.application.post.dto.PostResponse;
 import com.study.blog.application.post.dto.PostSummaryResponse;
 import com.study.blog.application.post.dto.PostUpdateRequest;
-import com.study.shared.extevent.blog.BlogPostCreated;
-import com.study.shared.extevent.blog.BlogPostDeleted;
-import com.study.shared.extevent.blog.BlogPostLiked;
-import com.study.shared.extevent.blog.BlogPostUnliked;
-import org.springframework.context.ApplicationEventPublisher;
 import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostBookmark;
 import com.study.blog.domain.post.PostLike;
@@ -35,6 +30,10 @@ import com.study.profile.domain.generation.MemberGeneration;
 import com.study.profile.domain.member.Member;
 import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
+import com.study.shared.extevent.blog.BlogPostCreated;
+import com.study.shared.extevent.blog.BlogPostDeleted;
+import com.study.shared.extevent.blog.BlogPostLiked;
+import com.study.shared.extevent.blog.BlogPostUnliked;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -387,8 +387,7 @@ class PostServiceTest {
     void rejectedPost_update_resetsToDraftPreservingReason() {
       Post post = postWithId(POST_ID, USER_ID, PostStatus.REJECTED);
       post.reject("내용 부족");
-      PostUpdateRequest req =
-          new PostUpdateRequest("수정된 제목", "수정된 내용", "백엔드", "Spring", List.of());
+      PostUpdateRequest req = new PostUpdateRequest("수정된 제목", "수정된 내용", "백엔드", "Spring", List.of());
       when(postRepository.findById(POST_ID)).thenReturn(Optional.of(post));
       stubToResponse(post, USER_ID);
 
@@ -896,8 +895,7 @@ class PostServiceTest {
     @Test
     @DisplayName("createPost - DRAFT 저장 시 BlogPostCreated 이벤트 미발행")
     void createPost_draft_doesNotPublishBlogPostCreated() {
-      PostCreateRequest req =
-          new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
+      PostCreateRequest req = new PostCreateRequest("제목", "내용", "백엔드", "Spring", List.of(), null);
       Post saved = postWithId(POST_ID, USER_ID, PostStatus.DRAFT);
       when(postRepository.save(any())).thenReturn(saved);
       when(memberRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());

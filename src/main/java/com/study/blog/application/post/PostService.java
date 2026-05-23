@@ -18,7 +18,6 @@ import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
 import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
-import com.study.shared.extevent.blog.BlogPostCreated;
 import com.study.shared.extevent.blog.BlogPostDeleted;
 import com.study.shared.extevent.blog.BlogPostLiked;
 import com.study.shared.extevent.blog.BlogPostUnliked;
@@ -242,8 +241,7 @@ public class PostService {
             : postRepository.findAllById(replyToIds).stream()
                 .collect(Collectors.toMap(Post::getId, Post::getTitle));
 
-    String authorName =
-        memberRepository.findByUserId(userId).map(m -> m.getName()).orElse(null);
+    String authorName = memberRepository.findByUserId(userId).map(m -> m.getName()).orElse(null);
 
     return posts.map(
         post ->

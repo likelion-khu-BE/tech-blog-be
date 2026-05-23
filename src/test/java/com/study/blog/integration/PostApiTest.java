@@ -1038,8 +1038,7 @@ class PostApiTest {
   void getMyPosts_filterByPendingReview_returnsPendingReviewOnly() throws Exception {
     // Submit postD to PENDING_REVIEW first
     mvc.perform(
-        post("/api/blog/posts/{id}/submit", postD.getId())
-            .with(TestAuth.asMember(MOCK_USER_ID)));
+        post("/api/blog/posts/{id}/submit", postD.getId()).with(TestAuth.asMember(MOCK_USER_ID)));
 
     mvc.perform(
             get("/api/blog/posts/me")
@@ -1072,8 +1071,7 @@ class PostApiTest {
   void getPost_pendingReviewPost_ownerCanView() throws Exception {
     // Submit postD to PENDING_REVIEW
     mvc.perform(
-        post("/api/blog/posts/{id}/submit", postD.getId())
-            .with(TestAuth.asMember(MOCK_USER_ID)));
+        post("/api/blog/posts/{id}/submit", postD.getId()).with(TestAuth.asMember(MOCK_USER_ID)));
 
     mvc.perform(get("/api/blog/posts/{id}", postD.getId()).with(TestAuth.asMember(MOCK_USER_ID)))
         .andExpect(status().isOk())
@@ -1084,8 +1082,7 @@ class PostApiTest {
   @DisplayName("GET /posts/{id} - PENDING_REVIEW 포스트 - 타인 403")
   void getPost_pendingReviewPost_otherUserForbidden() throws Exception {
     mvc.perform(
-        post("/api/blog/posts/{id}/submit", postD.getId())
-            .with(TestAuth.asMember(MOCK_USER_ID)));
+        post("/api/blog/posts/{id}/submit", postD.getId()).with(TestAuth.asMember(MOCK_USER_ID)));
 
     mvc.perform(get("/api/blog/posts/{id}", postD.getId()).with(TestAuth.asMember(OTHER_USER_ID)))
         .andExpect(status().isForbidden());
