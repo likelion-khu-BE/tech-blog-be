@@ -93,7 +93,7 @@ public class EventPostService {
         EventPost.of(
             author,
             generation,
-            EventPostType.valueOf(request.type()),
+            EventPostType.from(request.type()),
             request.title(),
             request.body(),
             request.tags() != null ? request.tags().toArray(new String[0]) : null);
