@@ -36,6 +36,10 @@ public class SessionService {
   private final MemberRepository memberRepository;
 
   public List<SessionResponse> getSessions(Integer generationNumber, SessionStatus status) {
+    if (!generationRepository.existsById(generationNumber)) {
+      throw new IllegalArgumentException("존재하지 않는 기수 번호입니다.");
+    }
+
     List<Session> sessions =
         (status == null)
             ? sessionRepository.findAllByGenerationNumber(generationNumber)
