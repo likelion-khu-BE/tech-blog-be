@@ -51,6 +51,9 @@ public class Post {
   @Column(name = "reply_to_id")
   private Long replyToId;
 
+  @Column(name = "rejected_reason", columnDefinition = "TEXT")
+  private String rejectedReason;
+
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -90,5 +93,20 @@ public class Post {
 
   public void changeStatus(PostStatus status) {
     this.status = status;
+  }
+
+  public void publish() {
+    this.status = PostStatus.PUBLISHED;
+    this.rejectedReason = null;
+  }
+
+  public void reject(String reason) {
+    this.status = PostStatus.REJECTED;
+    this.rejectedReason = reason;
+  }
+
+  public void resetToDraft() {
+    this.status = PostStatus.DRAFT;
+    // rejectedReason 유지 — 작성자가 수정 중에도 피드백을 볼 수 있어야 함
   }
 }

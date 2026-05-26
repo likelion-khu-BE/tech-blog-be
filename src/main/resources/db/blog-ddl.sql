@@ -9,17 +9,18 @@
 -- BLOG_POSTS
 -- ------------------------------------------------------------
 CREATE TABLE blog_posts (
-    id              BIGSERIAL         PRIMARY KEY,
-    user_id         BIGINT            NOT NULL,
-    title           VARCHAR(255)      NOT NULL,
-    content         TEXT              NOT NULL,
-    board           VARCHAR(20)       NOT NULL,
-    category        VARCHAR(20)       NOT NULL,
-    status          VARCHAR(20)       NOT NULL,
+    id              BIGSERIAL     PRIMARY KEY,
+    user_id         BIGINT        NOT NULL,
+    title           VARCHAR(255)  NOT NULL,
+    content         TEXT          NOT NULL,
+    board           VARCHAR(20)   NOT NULL,
+    category        VARCHAR(20)   NOT NULL,
+    status          VARCHAR(20)   NOT NULL CHECK (status IN ('DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'REJECTED')),
     generation      VARCHAR(10),
     reply_to_id     BIGINT,
-    created_at      TIMESTAMP(6)      NOT NULL,
-    updated_at      TIMESTAMP(6)      NOT NULL
+    rejected_reason TEXT,
+    created_at      TIMESTAMP(6)  NOT NULL,
+    updated_at      TIMESTAMP(6)  NOT NULL
 );
 
 CREATE INDEX idx_blog_post_user           ON blog_posts (user_id);

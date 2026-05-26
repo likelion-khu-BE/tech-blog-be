@@ -18,12 +18,16 @@ import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
 import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
+import com.study.shared.extevent.blog.BlogPostDeleted;
+import com.study.shared.extevent.blog.BlogPostLiked;
+import com.study.shared.extevent.blog.BlogPostUnliked;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +46,7 @@ public class PostService {
   private final PostBookmarkRepository postBookmarkRepository;
   private final MemberRepository memberRepository;
   private final MemberGenerationRepository memberGenerationRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   public PostService(
       PostRepository postRepository,
@@ -49,13 +54,15 @@ public class PostService {
       PostLikeRepository postLikeRepository,
       PostBookmarkRepository postBookmarkRepository,
       MemberRepository memberRepository,
-      MemberGenerationRepository memberGenerationRepository) {
+      MemberGenerationRepository memberGenerationRepository,
+      ApplicationEventPublisher eventPublisher) {
     this.postRepository = postRepository;
     this.postTagRepository = postTagRepository;
     this.postLikeRepository = postLikeRepository;
     this.postBookmarkRepository = postBookmarkRepository;
     this.memberRepository = memberRepository;
     this.memberGenerationRepository = memberGenerationRepository;
+    this.eventPublisher = eventPublisher;
   }
 
   public Page<PostSummaryResponse> getPosts(
@@ -105,9 +112,15 @@ public class PostService {
   }
 
   public PostResponse getPost(Long postId, Long requesterId) {
+    return getPost(postId, requesterId, false);
+  }
+
+  public PostResponse getPost(Long postId, Long requesterId, boolean isAdmin) {
     Post post = findById(postId);
 
-    if (post.getStatus() == PostStatus.DRAFT && !post.getUserId().equals(requesterId)) {
+    if (post.getStatus() != PostStatus.PUBLISHED
+        && !isAdmin
+        && !post.getUserId().equals(requesterId)) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 
@@ -149,6 +162,9 @@ public class PostService {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 
+    if (post.getStatus() == PostStatus.REJECTED) {
+      post.resetToDraft();
+    }
     post.update(req.title(), req.content(), req.board(), req.category(), post.getStatus());
 
     postTagRepository.deleteByPost(post);
@@ -165,27 +181,76 @@ public class PostService {
     }
     postTagRepository.deleteByPost(post);
     postRepository.delete(post);
+    eventPublisher.publishEvent(new BlogPostDeleted(userId, postId));
   }
 
   @Transactional
   public boolean toggleLike(Long postId, Long userId) {
     Post post = findById(postId);
+    Long postOwnerId = post.getUserId();
     return postLikeRepository
         .findByIdPostIdAndIdUserId(postId, userId)
         .map(
             like -> {
               postLikeRepository.delete(like);
+              eventPublisher.publishEvent(new BlogPostUnliked(userId, postId, postOwnerId));
               return false;
             })
         .orElseGet(
             () -> {
               try {
                 postLikeRepository.saveAndFlush(new PostLike(post, userId));
+                eventPublisher.publishEvent(new BlogPostLiked(userId, postId, postOwnerId));
               } catch (DataIntegrityViolationException ignored) {
                 // concurrent insert — already liked
               }
               return true;
             });
+  }
+
+  @Transactional
+  public PostResponse submitPost(Long postId, Long userId) {
+    Post post = findById(postId);
+    if (!post.getUserId().equals(userId)) {
+      throw new BlogException(BlogErrorCode.FORBIDDEN);
+    }
+    if (post.getStatus() != PostStatus.DRAFT) {
+      throw new BlogException(BlogErrorCode.INVALID_STATUS_TRANSITION);
+    }
+    post.changeStatus(PostStatus.PENDING_REVIEW);
+    return toResponse(post, userId);
+  }
+
+  public Page<PostSummaryResponse> getMyPosts(Long userId, PostStatus status, int page, int size) {
+    Specification<Post> spec =
+        Specification.where(PostSpecification.withAuthor(userId))
+            .and(PostSpecification.withStatus(status));
+
+    Page<Post> posts =
+        postRepository.findAll(spec, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+
+    List<Long> postIds = posts.stream().map(Post::getId).toList();
+    Map<Long, List<String>> tagsByPostId = batchTagsByPostId(postIds);
+    Map<Long, Long> likeCountByPostId = batchLikeCountByPostId(postIds);
+
+    List<Long> replyToIds =
+        posts.stream().map(Post::getReplyToId).filter(Objects::nonNull).distinct().toList();
+    Map<Long, String> replyTitleById =
+        replyToIds.isEmpty()
+            ? Collections.emptyMap()
+            : postRepository.findAllById(replyToIds).stream()
+                .collect(Collectors.toMap(Post::getId, Post::getTitle));
+
+    String authorName = memberRepository.findByUserId(userId).map(m -> m.getName()).orElse(null);
+
+    return posts.map(
+        post ->
+            PostSummaryResponse.of(
+                post,
+                authorName,
+                replyTitleById.get(post.getReplyToId()),
+                tagsByPostId.getOrDefault(post.getId(), List.of()),
+                likeCountByPostId.getOrDefault(post.getId(), 0L)));
   }
 
   public Page<PostSummaryResponse> getBookmarkedPosts(Long userId, int page, int size) {

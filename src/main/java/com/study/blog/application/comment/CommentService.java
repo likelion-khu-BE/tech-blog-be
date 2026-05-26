@@ -9,10 +9,13 @@ import com.study.blog.infrastructure.comment.CommentLikeRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
+import com.study.shared.extevent.blog.BlogCommentCreated;
+import com.study.shared.extevent.blog.BlogCommentDeleted;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +26,15 @@ public class CommentService {
 
   private final CommentRepository commentRepository;
   private final CommentLikeRepository commentLikeRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   public CommentService(
-      CommentRepository commentRepository, CommentLikeRepository commentLikeRepository) {
+      CommentRepository commentRepository,
+      CommentLikeRepository commentLikeRepository,
+      ApplicationEventPublisher eventPublisher) {
     this.commentRepository = commentRepository;
     this.commentLikeRepository = commentLikeRepository;
+    this.eventPublisher = eventPublisher;
   }
 
   public List<CommentResponse> getComments(Long postId, Long requesterId) {
@@ -81,6 +88,7 @@ public class CommentService {
             .content(req.content())
             .build();
     comment = commentRepository.save(comment);
+    eventPublisher.publishEvent(new BlogCommentCreated(userId, postId, comment.getId()));
     return CommentResponse.of(comment, 0, false, List.of());
   }
 
@@ -104,6 +112,7 @@ public class CommentService {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
     comment.softDelete();
+    eventPublisher.publishEvent(new BlogCommentDeleted(userId, comment.getPostId(), commentId));
   }
 
   @Transactional

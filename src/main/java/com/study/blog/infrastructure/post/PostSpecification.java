@@ -32,6 +32,11 @@ public class PostSpecification {
         authorId == null ? cb.conjunction() : cb.equal(root.get("userId"), authorId);
   }
 
+  public static Specification<Post> withStatus(PostStatus status) {
+    return (root, query, cb) ->
+        status == null ? cb.conjunction() : cb.equal(root.get("status"), status);
+  }
+
   public static Specification<Post> withKeyword(String keyword) {
     return (root, query, cb) -> {
       if (keyword == null || keyword.isBlank()) return cb.conjunction();
