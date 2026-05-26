@@ -141,12 +141,10 @@ public class EventPostService {
 
   @Transactional
   public void updateComment(Long commentId, Long userId, CommentRequest request) {
-    Member member = memberService.getMemberToUserId(userId);
-
     EventPostComment comment = eventPostCommentRepository.findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!comment.getAuthor().getId().equals(member.getId())) {
+    if (!comment.getAuthor().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
@@ -155,12 +153,10 @@ public class EventPostService {
 
   @Transactional
   public void deleteComment(Long commentId, Long userId) {
-    Member member = memberService.getMemberToUserId(userId);
-    
     EventPostComment comment = eventPostCommentRepository.findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!comment.getAuthor().getId().equals(member.getId())) {
+    if (!comment.getAuthor().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
@@ -185,12 +181,11 @@ public class EventPostService {
 
   @Transactional
   public void updateReply(Long replyId, Long userId, CommentRequest request) {
-    Member member = memberService.getMemberToUserId(userId);
-    
+
     EventPostComment reply = eventPostCommentRepository.findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!reply.getAuthor().getId().equals(member.getId())) {
+    if (!reply.getAuthor().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
@@ -199,12 +194,11 @@ public class EventPostService {
 
   @Transactional
   public void deleteReply(Long replyId, Long userId) {
-    Member member = memberService.getMemberToUserId(userId);
 
     EventPostComment reply = eventPostCommentRepository.findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!reply.getAuthor().getId().equals(member.getId())) {
+    if (!reply.getAuthor().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
