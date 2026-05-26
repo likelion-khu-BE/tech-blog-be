@@ -100,6 +100,10 @@ public class Question {
     this.status = QuestionStatus.RESOLVED;
   }
 
+  public void reopen() {
+    this.status = QuestionStatus.OPEN;
+  }
+
   public void addTag(Tag tag) {
     boolean exists =
         this.questionTags.stream()

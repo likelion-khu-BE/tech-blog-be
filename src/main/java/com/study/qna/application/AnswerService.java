@@ -11,6 +11,7 @@ import com.study.qna.application.dto.response.common.MemberSummaryResponse;
 import com.study.qna.domain.Answer;
 import com.study.qna.domain.Question;
 import com.study.qna.domain.QuestionStatus;
+import com.study.qna.domain.exception.AnswerNotAcceptedException;
 import com.study.qna.domain.exception.AnswerNotFoundException;
 import com.study.qna.domain.exception.ForbiddenQnaActionException;
 import com.study.qna.domain.exception.QuestionAlreadyClosedException;
@@ -115,10 +116,7 @@ public class AnswerService {
       throw new ForbiddenQnaActionException();
     }
 
-    if (question.getStatus() == QuestionStatus.RESOLVED) {
-      throw new QuestionAlreadyClosedException(question.getId());
-    }
-
+    // 기존 채택 답변이 있으면 자동 취소 (중복 채택 교체 허용)
     answerRepository.findByQuestionId(question.getId()).stream()
         .filter(a -> a.isAccepted() && !a.getId().equals(answerId))
         .findFirst()
@@ -136,6 +134,31 @@ public class AnswerService {
     if (question.getStatus() == QuestionStatus.OPEN) {
       question.resolve();
     }
+
+    return AnswerDetailResponse.from(answer, buildAuthor(answer.getUserId()));
+  }
+
+  @Transactional
+  public AnswerDetailResponse cancelAcceptAnswer(Long answerId, Long userId) {
+    Answer answer =
+        answerRepository
+            .findById(answerId)
+            .orElseThrow(() -> new AnswerNotFoundException(answerId));
+
+    Question question = answer.getQuestion();
+
+    if (!question.isAuthor(userId)) {
+      throw new ForbiddenQnaActionException();
+    }
+
+    if (!answer.isAccepted()) {
+      throw new AnswerNotAcceptedException(answerId);
+    }
+
+    answer.cancelAccept();
+    question.reopen();
+    eventPublisher.publishEvent(
+        new QnaAnswerUnaccepted(answer.getUserId(), question.getId(), answerId));
 
     return AnswerDetailResponse.from(answer, buildAuthor(answer.getUserId()));
   }

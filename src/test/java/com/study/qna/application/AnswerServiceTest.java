@@ -315,15 +315,20 @@ class AnswerServiceTest {
     }
 
     @Test
-    @DisplayName("이미 RESOLVED 질문 → QuestionAlreadyClosedException")
-    void alreadyResolved_throws() {
+    @DisplayName("이미 RESOLVED 질문 → 채택 교체 허용, 질문 상태 RESOLVED 유지")
+    void alreadyResolved_allowsReaccept() {
       Question question = resolvedQuestion(QUESTION_ID, USER_ID);
       Answer answer = answerWithId(ANSWER_ID, OTHER_USER_ID, question);
 
       when(answerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(answer));
+      when(answerRepository.findByQuestionId(QUESTION_ID)).thenReturn(List.of(answer));
+      stubAuthorSingle(OTHER_USER_ID);
 
-      assertThatThrownBy(() -> answerService.acceptAnswer(ANSWER_ID, USER_ID))
-          .isInstanceOf(QuestionAlreadyClosedException.class);
+      AnswerDetailResponse res = answerService.acceptAnswer(ANSWER_ID, USER_ID);
+
+      assertThat(res.accepted()).isTrue();
+      assertThat(question.getStatus()).isEqualTo(QuestionStatus.RESOLVED);
+      verify(eventPublisher).publishEvent(any(QnaAnswerAccepted.class));
     }
 
     @Test
@@ -332,6 +337,60 @@ class AnswerServiceTest {
       when(answerRepository.findById(ANSWER_ID)).thenReturn(Optional.empty());
 
       assertThatThrownBy(() -> answerService.acceptAnswer(ANSWER_ID, USER_ID))
+          .isInstanceOf(AnswerNotFoundException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("cancelAcceptAnswer")
+  class CancelAcceptAnswer {
+
+    @Test
+    @DisplayName("채택 취소 → accepted false, 질문 OPEN 복구, QnaAnswerUnaccepted 발행")
+    void normal_cancelsAndReopens() {
+      Question question = resolvedQuestion(QUESTION_ID, USER_ID);
+      Answer answer = acceptedAnswerWithId(ANSWER_ID, OTHER_USER_ID, question);
+
+      when(answerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(answer));
+      stubAuthorSingle(OTHER_USER_ID);
+
+      AnswerDetailResponse res = answerService.cancelAcceptAnswer(ANSWER_ID, USER_ID);
+
+      assertThat(res.accepted()).isFalse();
+      assertThat(question.getStatus()).isEqualTo(QuestionStatus.OPEN);
+      verify(eventPublisher).publishEvent(any(QnaAnswerUnaccepted.class));
+    }
+
+    @Test
+    @DisplayName("채택되지 않은 답변 취소 → AnswerNotAcceptedException")
+    void notAccepted_throws() {
+      Question question = questionWithId(QUESTION_ID, USER_ID);
+      Answer answer = answerWithId(ANSWER_ID, OTHER_USER_ID, question);
+
+      when(answerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(answer));
+
+      assertThatThrownBy(() -> answerService.cancelAcceptAnswer(ANSWER_ID, USER_ID))
+          .isInstanceOf(com.study.qna.domain.exception.AnswerNotAcceptedException.class);
+    }
+
+    @Test
+    @DisplayName("질문 작성자가 아닌 경우 → ForbiddenQnaActionException")
+    void notQuestionAuthor_throws() {
+      Question question = questionWithId(QUESTION_ID, USER_ID);
+      Answer answer = acceptedAnswerWithId(ANSWER_ID, OTHER_USER_ID, question);
+
+      when(answerRepository.findById(ANSWER_ID)).thenReturn(Optional.of(answer));
+
+      assertThatThrownBy(() -> answerService.cancelAcceptAnswer(ANSWER_ID, OTHER_USER_ID))
+          .isInstanceOf(ForbiddenQnaActionException.class);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 답변 → AnswerNotFoundException")
+    void answerNotFound_throws() {
+      when(answerRepository.findById(ANSWER_ID)).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> answerService.cancelAcceptAnswer(ANSWER_ID, USER_ID))
           .isInstanceOf(AnswerNotFoundException.class);
     }
   }

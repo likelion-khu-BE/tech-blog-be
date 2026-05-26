@@ -55,6 +55,12 @@ public class AnswerController {
     return ResponseEntity.ok(answerService.acceptAnswer(answerId, user.userId()));
   }
 
+  @DeleteMapping("/answers/{answerId}/accept")
+  public ResponseEntity<AnswerDetailResponse> cancelAcceptAnswer(
+      @PathVariable Long answerId, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(answerService.cancelAcceptAnswer(answerId, user.userId()));
+  }
+
   @DeleteMapping("/answers/{answerId}")
   public ResponseEntity<Void> deleteAnswer(
       @PathVariable Long answerId, @CurrentUser CustomUserDetails user) {
