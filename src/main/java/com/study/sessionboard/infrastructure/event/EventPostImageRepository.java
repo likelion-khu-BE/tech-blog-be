@@ -20,6 +20,4 @@ public interface EventPostImageRepository extends JpaRepository<EventPostImage, 
   List<EventPostImage> findFirstImagesByPostIdIn(@Param("postIds") List<Long> postIds);
 
   void deleteByPostId(Long postId);
-
-  List<EventPostImage> findAllByPostIdOrderByOrderAsc(Long postId);
 }
