@@ -147,15 +147,16 @@ public class EventPostService {
     EventPost post = eventPostRepository.findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
+    Member member = memberService.getMemberToUserId(userId);
     Optional<EventPostLike> existing =
-            eventPostLikeRepository.findByMemberIdAndPostId(userId, postId);
+            eventPostLikeRepository.findByMemberIdAndPostId(member.getId(), postId);
 
     if (existing.isPresent()) {
       eventPostLikeRepository.delete(existing.get());
       post.decrementLikeCount();
       return new LikeToggleResponse(false, post.getLikeCount());
     } else {
-      eventPostLikeRepository.save(EventPostLike.of(memberRepository.getReferenceById(userId), post));
+      eventPostLikeRepository.save(EventPostLike.of(member, post));
       post.incrementLikeCount();
       return new LikeToggleResponse(true, post.getLikeCount());
     }
@@ -188,7 +189,7 @@ public class EventPostService {
     EventPost post = eventPostRepository.findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    Member author = memberRepository.getReferenceById(userId);
+    Member author = memberService.getMemberToUserId(userId);
 
     EventPostComment comment = EventPostComment.of(post, author, request.content());
     eventPostCommentRepository.save(comment);
@@ -201,7 +202,7 @@ public class EventPostService {
     EventPostComment comment = eventPostCommentRepository.findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!comment.getAuthor().getId().equals(userId)) {
+    if (!comment.getAuthor().getUser().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
@@ -213,7 +214,7 @@ public class EventPostService {
     EventPostComment comment = eventPostCommentRepository.findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!comment.getAuthor().getId().equals(userId)) {
+    if (!comment.getAuthor().getUser().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
@@ -228,7 +229,7 @@ public class EventPostService {
     EventPostComment parent = eventPostCommentRepository.findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    Member author = memberRepository.getReferenceById(userId);
+    Member author = memberService.getMemberToUserId(userId);
 
     EventPostComment reply = EventPostComment.ofReply(post, author, parent, request.content());
     eventPostCommentRepository.save(reply);
@@ -242,7 +243,7 @@ public class EventPostService {
     EventPostComment reply = eventPostCommentRepository.findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!reply.getAuthor().getId().equals(userId)) {
+    if (!reply.getAuthor().getUser().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
@@ -255,7 +256,7 @@ public class EventPostService {
     EventPostComment reply = eventPostCommentRepository.findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    if (!reply.getAuthor().getId().equals(userId)) {
+    if (!reply.getAuthor().getUser().getId().equals(userId)) {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 

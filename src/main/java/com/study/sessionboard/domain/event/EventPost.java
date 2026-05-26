@@ -98,7 +98,7 @@ package com.study.sessionboard.domain.event;
       return post;
     }
 
-    public void incrementLikeCount() { 
+    public void incrementLikeCount() {
       this.likeCount++;
     }
 
