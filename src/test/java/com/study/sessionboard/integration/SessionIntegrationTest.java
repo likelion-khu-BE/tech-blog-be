@@ -84,6 +84,17 @@ class SessionIntegrationTest {
   }
 
   @Test
+  @DisplayName("세션 목록 조회 실패 - 존재하지 않는 기수")
+  @WithMockUser
+  void getSessions_InvalidGeneration() throws Exception {
+    mockMvc
+        .perform(get("/api/session-board/999/sessions"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400));
+    // Not checking message here because GlobalExceptionHandler might overwrite it
+  }
+
+  @Test
   @DisplayName("세션 단건 조회 성공")
   @WithMockUser
   void getSession_Success() throws Exception {
