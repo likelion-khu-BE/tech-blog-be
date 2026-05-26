@@ -193,6 +193,7 @@ public class EventPostService {
 
     EventPostComment comment = EventPostComment.of(post, author, request.content());
     eventPostCommentRepository.save(comment);
+    post.incrementCommentCount();
 
     return CommentResponse.of(comment, List.of());
   }
@@ -219,6 +220,7 @@ public class EventPostService {
     }
 
     eventPostCommentRepository.delete(comment);
+    comment.getPost().decrementCommentCount();
   }
 
   @Transactional
@@ -233,6 +235,7 @@ public class EventPostService {
 
     EventPostComment reply = EventPostComment.ofReply(post, author, parent, request.content());
     eventPostCommentRepository.save(reply);
+    post.incrementCommentCount();
 
     return CommentResponse.of(reply, List.of());
   }
@@ -261,5 +264,6 @@ public class EventPostService {
     }
 
     eventPostCommentRepository.delete(reply);
+    reply.getPost().decrementCommentCount();
   }
 }

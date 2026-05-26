@@ -106,6 +106,14 @@ package com.study.sessionboard.domain.event;
       if (this.likeCount > 0) this.likeCount--;
     }
 
+    public void incrementCommentCount() {
+      this.commentCount++;
+    }
+
+    public void decrementCommentCount() {
+      if (this.commentCount > 0) this.commentCount--;
+    }
+
     public void update(EventPostType type, String title,
   String body, String[] tags) {
       this.type = type;
