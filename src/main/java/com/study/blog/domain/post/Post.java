@@ -62,6 +62,9 @@ public class Post {
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
 
+  @Column(name = "hidden_at")
+  private LocalDateTime hiddenAt;
+
   @Builder
   public Post(
       Long userId,
@@ -93,6 +96,11 @@ public class Post {
 
   public void changeStatus(PostStatus status) {
     this.status = status;
+  }
+
+  public void hide() {
+    this.status = PostStatus.HIDDEN;
+    this.hiddenAt = LocalDateTime.now();
   }
 
   public void publish() {

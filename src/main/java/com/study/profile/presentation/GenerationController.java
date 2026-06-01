@@ -1,6 +1,7 @@
 package com.study.profile.presentation;
 
 import com.study.profile.application.GenerationService;
+import com.study.profile.application.dto.GenerationCloseRequest;
 import com.study.profile.application.dto.GenerationCreateRequest;
 import com.study.profile.application.dto.GenerationDto;
 import com.study.profile.application.dto.GenerationMemberAddRequest;
@@ -35,7 +36,7 @@ public class GenerationController {
   }
 
   @PostMapping
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('PRESIDENT')")
   public ResponseEntity<Map<String, Integer>> createGeneration(
       @Valid @RequestBody GenerationCreateRequest req) {
     return ResponseEntity.status(HttpStatus.CREATED).body(generationService.createGeneration(req));
@@ -47,10 +48,17 @@ public class GenerationController {
   }
 
   @PatchMapping("/{generationId}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('PRESIDENT')")
   public ResponseEntity<Map<String, Integer>> updateGeneration(
       @PathVariable Integer generationId, @Valid @RequestBody GenerationCreateRequest req) {
     return ResponseEntity.ok(generationService.updateGeneration(generationId, req));
+  }
+
+  @PatchMapping("/{generationId}/close")
+  @PreAuthorize("hasRole('PRESIDENT')")
+  public ResponseEntity<Map<String, Integer>> closeGeneration(
+      @PathVariable Integer generationId, @Valid @RequestBody GenerationCloseRequest req) {
+    return ResponseEntity.ok(generationService.closeGeneration(generationId, req));
   }
 
   @GetMapping("/{generationId}/members")
@@ -61,7 +69,7 @@ public class GenerationController {
 
   @PostMapping("/{generationId}/members")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Integer>> addMemberToGeneration(
+  public ResponseEntity<Map<String, Long>> addMemberToGeneration(
       @PathVariable Integer generationId, @Valid @RequestBody GenerationMemberAddRequest req) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(generationService.addMemberToGeneration(generationId, req));

@@ -19,6 +19,7 @@ import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.config.TestcontainersConfig;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -533,21 +535,28 @@ class AdminApiTest {
 
   // ── DELETE /api/blog/admin/posts/{id} ────────────────────────────────────
 
+  /** HIDDEN 상태 + hiddenAt을 25시간 전으로 설정한 포스트를 저장하는 헬퍼. */
+  private Post saveHiddenPostOlderThan24h(String title, Long userId) {
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(userId)
+                .title(title)
+                .content("내용")
+                .board("테스트")
+                .category("기타")
+                .status(PostStatus.PUBLISHED)
+                .generation("12기")
+                .build());
+    post.hide();
+    ReflectionTestUtils.setField(post, "hiddenAt", LocalDateTime.now().minusHours(25));
+    return postRepository.saveAndFlush(post);
+  }
+
   @Test
   @DisplayName("DELETE /admin/posts - 의존 데이터 없음 204")
   void forceDeletePost_noDependents_returns204AndRemovesPost() throws Exception {
-    // Create a fresh post with no tags, likes, or comments
-    Post toDelete =
-        postRepository.save(
-            Post.builder()
-                .userId(OTHER_USER_ID)
-                .title("어드민 강제 삭제 대상 포스트")
-                .content("어드민이 삭제할 포스트입니다. 의존 데이터가 없습니다.")
-                .board("테스트")
-                .category("기타")
-                .status(PostStatus.DRAFT)
-                .generation("12기")
-                .build());
+    Post toDelete = saveHiddenPostOlderThan24h("어드민 강제 삭제 대상 포스트", OTHER_USER_ID);
     Long toDeleteId = toDelete.getId();
 
     mvc.perform(
@@ -560,17 +569,7 @@ class AdminApiTest {
   @Test
   @DisplayName("DELETE /admin/posts - 태그 있는 포스트 204")
   void forceDeletePost_withTags_deleteTagsAndPost() throws Exception {
-    Post toDelete =
-        postRepository.save(
-            Post.builder()
-                .userId(MOCK_USER_ID)
-                .title("태그 있는 포스트 강제 삭제 테스트")
-                .content("태그가 있는 포스트를 어드민이 삭제합니다.")
-                .board("백엔드")
-                .category("JPA")
-                .status(PostStatus.PUBLISHED)
-                .generation("13기")
-                .build());
+    Post toDelete = saveHiddenPostOlderThan24h("태그 있는 포스트 강제 삭제 테스트", MOCK_USER_ID);
     postTagRepository.save(new PostTag(toDelete, "JPA"));
     postTagRepository.save(new PostTag(toDelete, "Hibernate"));
     Long toDeleteId = toDelete.getId();
@@ -593,17 +592,7 @@ class AdminApiTest {
   @Test
   @DisplayName("DELETE /admin/posts - 좋아요·댓글 있는 포스트 204")
   void forceDeletePost_withLikesAndComments_returns204() throws Exception {
-    Post richPost =
-        postRepository.save(
-            Post.builder()
-                .userId(MOCK_USER_ID)
-                .title("의존 데이터 총집합 (어드민 강제 삭제)")
-                .content("태그, 좋아요, 댓글이 모두 달린 포스트입니다. 어드민이 삭제합니다.")
-                .board("백엔드")
-                .category("기타")
-                .status(PostStatus.PUBLISHED)
-                .generation("13기")
-                .build());
+    Post richPost = saveHiddenPostOlderThan24h("의존 데이터 총집합 (어드민 강제 삭제)", MOCK_USER_ID);
     postTagRepository.save(new PostTag(richPost, "cascade-admin"));
     postLikeRepository.save(new PostLike(richPost, OTHER_USER_ID));
     commentRepository.save(
@@ -617,6 +606,36 @@ class AdminApiTest {
             delete("/api/blog/admin/posts/{id}", richPost.getId())
                 .with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
+  }
+
+  @Test
+  @DisplayName("DELETE /admin/posts - HIDDEN 아닌 포스트 400")
+  void forceDeletePost_notHidden_returns400() throws Exception {
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", p1.getId()).with(TestAuth.asAdmin(MOCK_USER_ID)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("DELETE /admin/posts - 숨김 후 24시간 미경과 400")
+  void forceDeletePost_tooEarly_returns400() throws Exception {
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(MOCK_USER_ID)
+                .title("방금 숨김 처리한 포스트")
+                .content("내용")
+                .board("테스트")
+                .category("기타")
+                .status(PostStatus.PUBLISHED)
+                .generation("12기")
+                .build());
+    post.hide();
+    postRepository.saveAndFlush(post);
+
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", post.getId()).with(TestAuth.asAdmin(MOCK_USER_ID)))
+        .andExpect(status().isBadRequest());
   }
 
   @Test

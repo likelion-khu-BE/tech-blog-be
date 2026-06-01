@@ -56,7 +56,7 @@ public class PostController {
   }
 
   @PostMapping
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<PostResponse> createPost(
       @Valid @RequestBody PostCreateRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.status(HttpStatus.CREATED)
@@ -64,7 +64,7 @@ public class PostController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<PostResponse> updatePost(
       @PathVariable Long id,
       @Valid @RequestBody PostUpdateRequest req,
@@ -73,7 +73,7 @@ public class PostController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<Void> deletePost(
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
     postService.deletePost(id, user.userId());
@@ -81,7 +81,7 @@ public class PostController {
   }
 
   @PostMapping("/{id}/like")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<Map<String, Boolean>> toggleLike(
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
     boolean liked = postService.toggleLike(id, user.userId());
@@ -115,7 +115,7 @@ public class PostController {
   }
 
   @PostMapping("/{id}/bookmark")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<Map<String, Boolean>> toggleBookmark(
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
     boolean bookmarked = postService.toggleBookmark(id, user.userId());

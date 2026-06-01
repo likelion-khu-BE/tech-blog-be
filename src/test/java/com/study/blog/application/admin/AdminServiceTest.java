@@ -11,6 +11,7 @@ import com.study.blog.application.admin.dto.AdminStatsResponse;
 import com.study.blog.application.admin.dto.PostStatusUpdateRequest;
 import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostStatus;
+import com.study.blog.infrastructure.admin.AdminActionLogRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
@@ -42,8 +43,11 @@ class AdminServiceTest {
   @Mock PostTagRepository postTagRepository;
   @Mock PostLikeRepository postLikeRepository;
   @Mock CommentRepository commentRepository;
+  @Mock AdminActionLogRepository adminActionLogRepository;
   @Mock ApplicationEventPublisher eventPublisher;
   @InjectMocks AdminService adminService;
+
+  private static final Long ACTOR_ID = 99L;
 
   private Post postWithId(Long id, Long userId, PostStatus status) {
     Post p =
@@ -209,15 +213,49 @@ class AdminServiceTest {
   class ForceDeletePost {
 
     @Test
-    @DisplayName("태그 삭제 후 포스트 삭제")
+    @DisplayName("HIDDEN 상태 + 24시간 경과 → 태그 삭제 후 포스트 삭제")
     void deletesTagsThenPost() {
-      Post post = postWithId(1L, 10L, PostStatus.PUBLISHED);
+      Post post = postWithId(1L, 10L, PostStatus.HIDDEN);
+      // hiddenAt을 25시간 전으로 설정
+      ReflectionTestUtils.setField(
+          post, "hiddenAt", java.time.LocalDateTime.now().minusHours(25));
       when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+      when(adminActionLogRepository.save(any())).thenReturn(null);
 
-      adminService.forceDeletePost(1L);
+      adminService.forceDeletePost(1L, ACTOR_ID);
 
       verify(postTagRepository).deleteByPost(post);
       verify(postRepository).delete(post);
+    }
+
+    @Test
+    @DisplayName("HIDDEN 아닌 포스트 → POST_NOT_HIDDEN")
+    void notHidden_throwsPostNotHidden() {
+      Post post = postWithId(1L, 10L, PostStatus.PUBLISHED);
+      when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> adminService.forceDeletePost(1L, ACTOR_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_NOT_HIDDEN));
+    }
+
+    @Test
+    @DisplayName("숨김 후 24시간 미경과 → POST_DELETE_TOO_EARLY")
+    void tooEarly_throwsPostDeleteTooEarly() {
+      Post post = postWithId(1L, 10L, PostStatus.HIDDEN);
+      ReflectionTestUtils.setField(
+          post, "hiddenAt", java.time.LocalDateTime.now().minusHours(1));
+      when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+
+      assertThatThrownBy(() -> adminService.forceDeletePost(1L, ACTOR_ID))
+          .isInstanceOf(BlogException.class)
+          .satisfies(
+              e ->
+                  assertThat(((BlogException) e).getErrorCode())
+                      .isEqualTo(BlogErrorCode.POST_DELETE_TOO_EARLY));
     }
 
     @Test
@@ -225,7 +263,7 @@ class AdminServiceTest {
     void notFound_throwsPostNotFound() {
       when(postRepository.findById(999L)).thenReturn(Optional.empty());
 
-      assertThatThrownBy(() -> adminService.forceDeletePost(999L))
+      assertThatThrownBy(() -> adminService.forceDeletePost(999L, ACTOR_ID))
           .isInstanceOf(BlogException.class)
           .satisfies(
               e ->
