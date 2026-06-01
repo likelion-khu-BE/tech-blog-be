@@ -53,6 +53,7 @@ public class UserAdminController {
   @PostMapping("/{id}/transfer-president")
   @PreAuthorize("hasRole('PRESIDENT')")
   public ResponseEntity<UserResponse> transferPresident(@PathVariable Long id) {
-    return ResponseEntity.ok(userAdminService.transferPresident(id, SecurityUtils.getCurrentUserId()));
+    return ResponseEntity.ok(
+        userAdminService.transferPresident(id, SecurityUtils.getCurrentUserId()));
   }
 }

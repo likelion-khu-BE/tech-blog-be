@@ -1,5 +1,6 @@
 package com.study.blog.application.post;
 
+import com.study.auth.infrastructure.security.SecurityUtils;
 import com.study.blog.application.post.dto.PostCreateRequest;
 import com.study.blog.application.post.dto.PostResponse;
 import com.study.blog.application.post.dto.PostSummaryResponse;
@@ -8,7 +9,6 @@ import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostBookmark;
 import com.study.blog.domain.post.PostLike;
 import com.study.blog.domain.post.PostStatus;
-import com.study.auth.infrastructure.security.SecurityUtils;
 import com.study.blog.domain.post.PostTag;
 import com.study.blog.infrastructure.post.PostBookmarkRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;

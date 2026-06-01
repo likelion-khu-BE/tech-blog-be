@@ -217,8 +217,7 @@ class AdminServiceTest {
     void deletesTagsThenPost() {
       Post post = postWithId(1L, 10L, PostStatus.HIDDEN);
       // hiddenAt을 25시간 전으로 설정
-      ReflectionTestUtils.setField(
-          post, "hiddenAt", java.time.LocalDateTime.now().minusHours(25));
+      ReflectionTestUtils.setField(post, "hiddenAt", java.time.LocalDateTime.now().minusHours(25));
       when(postRepository.findById(1L)).thenReturn(Optional.of(post));
       when(adminActionLogRepository.save(any())).thenReturn(null);
 
@@ -246,8 +245,7 @@ class AdminServiceTest {
     @DisplayName("숨김 후 24시간 미경과 → POST_DELETE_TOO_EARLY")
     void tooEarly_throwsPostDeleteTooEarly() {
       Post post = postWithId(1L, 10L, PostStatus.HIDDEN);
-      ReflectionTestUtils.setField(
-          post, "hiddenAt", java.time.LocalDateTime.now().minusHours(1));
+      ReflectionTestUtils.setField(post, "hiddenAt", java.time.LocalDateTime.now().minusHours(1));
       when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
       assertThatThrownBy(() -> adminService.forceDeletePost(1L, ACTOR_ID))

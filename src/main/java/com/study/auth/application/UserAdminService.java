@@ -68,7 +68,8 @@ public class UserAdminService {
     }
     User target = findOrThrow(targetId);
     if (target.getRole() == UserRole.PRESIDENT) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "PRESIDENT에게는 admin 권한을 부여할 수 없습니다");
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "PRESIDENT에게는 admin 권한을 부여할 수 없습니다");
     }
     target.promoteToAdmin();
     Long memberId = memberRepository.findByUserId(targetId).map(m -> m.getId()).orElse(null);
