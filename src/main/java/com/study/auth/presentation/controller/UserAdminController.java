@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'PRESIDENT')")
 @RequiredArgsConstructor
 public class UserAdminController {
 
@@ -36,5 +36,23 @@ public class UserAdminController {
   @PostMapping("/{id}/reject")
   public ResponseEntity<UserResponse> rejectUser(@PathVariable Long id) {
     return ResponseEntity.ok(userAdminService.rejectUser(id));
+  }
+
+  @PostMapping("/{id}/grant-admin")
+  @PreAuthorize("hasRole('PRESIDENT')")
+  public ResponseEntity<UserResponse> grantAdmin(@PathVariable Long id) {
+    return ResponseEntity.ok(userAdminService.grantAdmin(id, SecurityUtils.getCurrentUserId()));
+  }
+
+  @PostMapping("/{id}/revoke-admin")
+  @PreAuthorize("hasRole('PRESIDENT')")
+  public ResponseEntity<UserResponse> revokeAdmin(@PathVariable Long id) {
+    return ResponseEntity.ok(userAdminService.revokeAdmin(id, SecurityUtils.getCurrentUserId()));
+  }
+
+  @PostMapping("/{id}/transfer-president")
+  @PreAuthorize("hasRole('PRESIDENT')")
+  public ResponseEntity<UserResponse> transferPresident(@PathVariable Long id) {
+    return ResponseEntity.ok(userAdminService.transferPresident(id, SecurityUtils.getCurrentUserId()));
   }
 }

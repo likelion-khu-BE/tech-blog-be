@@ -8,6 +8,7 @@ import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostBookmark;
 import com.study.blog.domain.post.PostLike;
 import com.study.blog.domain.post.PostStatus;
+import com.study.auth.infrastructure.security.SecurityUtils;
 import com.study.blog.domain.post.PostTag;
 import com.study.blog.infrastructure.post.PostBookmarkRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
@@ -118,9 +119,10 @@ public class PostService {
   public PostResponse getPost(Long postId, Long requesterId, boolean isAdmin) {
     Post post = findById(postId);
 
-    if (post.getStatus() != PostStatus.PUBLISHED
-        && !isAdmin
-        && !post.getUserId().equals(requesterId)) {
+    boolean isAuthor = requesterId != null && post.getUserId().equals(requesterId);
+    boolean isAdminRole = SecurityUtils.isAdmin() || isAdmin;
+
+    if (post.getStatus() != PostStatus.PUBLISHED && !isAuthor && !isAdminRole) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 

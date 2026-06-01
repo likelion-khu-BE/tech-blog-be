@@ -3,9 +3,14 @@ package com.study.blog.application.admin;
 import com.study.blog.application.admin.dto.AdminPostResponse;
 import com.study.blog.application.admin.dto.AdminStatsResponse;
 import com.study.blog.application.admin.dto.PostStatusUpdateRequest;
+import com.study.blog.domain.admin.AdminActionLog;
+import com.study.blog.domain.admin.AdminActionType;
+import com.study.blog.domain.admin.AdminTargetType;
+import com.study.blog.domain.comment.Comment;
 import com.study.blog.domain.post.Post;
 import com.study.blog.domain.post.PostStatus;
 import com.study.blog.domain.post.PostTag;
+import com.study.blog.infrastructure.admin.AdminActionLogRepository;
 import com.study.blog.infrastructure.comment.CommentRepository;
 import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
@@ -13,6 +18,7 @@ import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.blog.shared.exception.BlogErrorCode;
 import com.study.blog.shared.exception.BlogException;
 import com.study.shared.extevent.blog.BlogPostCreated;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +39,7 @@ public class AdminService {
   private final PostTagRepository postTagRepository;
   private final PostLikeRepository postLikeRepository;
   private final CommentRepository commentRepository;
+  private final AdminActionLogRepository adminActionLogRepository;
   private final ApplicationEventPublisher eventPublisher;
 
   public AdminService(
@@ -40,11 +47,13 @@ public class AdminService {
       PostTagRepository postTagRepository,
       PostLikeRepository postLikeRepository,
       CommentRepository commentRepository,
+      AdminActionLogRepository adminActionLogRepository,
       ApplicationEventPublisher eventPublisher) {
     this.postRepository = postRepository;
     this.postTagRepository = postTagRepository;
     this.postLikeRepository = postLikeRepository;
     this.commentRepository = commentRepository;
+    this.adminActionLogRepository = adminActionLogRepository;
     this.eventPublisher = eventPublisher;
   }
 
@@ -111,12 +120,91 @@ public class AdminService {
     return AdminPostResponse.of(post, tags, likeCount);
   }
 
+  // ── 댓글 관리 ──
+
   @Transactional
-  public void forceDeletePost(Long postId) {
+  public void hideComment(Long commentId, Long actorId) {
+    Comment comment =
+        commentRepository
+            .findById(commentId)
+            .orElseThrow(() -> new BlogException(BlogErrorCode.COMMENT_NOT_FOUND));
+    comment.hide();
+    adminActionLogRepository.save(
+        AdminActionLog.of(
+            actorId,
+            AdminTargetType.COMMENT,
+            String.valueOf(commentId),
+            AdminActionType.HIDE_COMMENT,
+            null,
+            "HIDDEN"));
+  }
+
+  @Transactional
+  public void forceDeleteComment(Long commentId, Long actorId) {
+    Comment comment =
+        commentRepository
+            .findById(commentId)
+            .orElseThrow(() -> new BlogException(BlogErrorCode.COMMENT_NOT_FOUND));
+    if (!comment.isHidden()) {
+      throw new BlogException(BlogErrorCode.COMMENT_NOT_HIDDEN);
+    }
+    if (comment.getHiddenAt() != null
+        && comment.getHiddenAt().isAfter(LocalDateTime.now().minusHours(24))) {
+      throw new BlogException(BlogErrorCode.COMMENT_DELETE_TOO_EARLY);
+    }
+    adminActionLogRepository.save(
+        AdminActionLog.of(
+            actorId,
+            AdminTargetType.COMMENT,
+            String.valueOf(commentId),
+            AdminActionType.DELETE_COMMENT,
+            "HIDDEN",
+            "DELETED"));
+    commentRepository.delete(comment);
+  }
+
+  @Transactional
+  public AdminPostResponse hidePost(Long postId, Long actorId) {
     Post post =
         postRepository
             .findById(postId)
             .orElseThrow(() -> new BlogException(BlogErrorCode.POST_NOT_FOUND));
+    post.hide();
+    adminActionLogRepository.save(
+        AdminActionLog.of(
+            actorId,
+            AdminTargetType.POST,
+            String.valueOf(postId),
+            AdminActionType.HIDE_POST,
+            post.getStatus().name(),
+            "HIDDEN"));
+    List<String> tags =
+        postTagRepository.findByPost(post).stream().map(PostTag::getTagName).toList();
+    long likeCount = postLikeRepository.countByIdPostId(postId);
+    return AdminPostResponse.of(post, tags, likeCount);
+  }
+
+  @Transactional
+  public void forceDeletePost(Long postId, Long actorId) {
+    Post post =
+        postRepository
+            .findById(postId)
+            .orElseThrow(() -> new BlogException(BlogErrorCode.POST_NOT_FOUND));
+    if (post.getStatus() != PostStatus.HIDDEN) {
+      throw new BlogException(BlogErrorCode.POST_NOT_HIDDEN);
+    }
+    if (post.getHiddenAt() != null
+        && post.getHiddenAt().isAfter(LocalDateTime.now().minusHours(24))) {
+      throw new BlogException(BlogErrorCode.POST_DELETE_TOO_EARLY);
+    }
+    adminActionLogRepository.save(
+        AdminActionLog.of(
+            actorId,
+            AdminTargetType.POST,
+            String.valueOf(postId),
+            AdminActionType.DELETE_POST,
+            "HIDDEN",
+            "DELETED"));
     postTagRepository.deleteByPost(post);
     postRepository.delete(post);
   }

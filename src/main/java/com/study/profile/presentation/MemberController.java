@@ -39,28 +39,28 @@ public class MemberController {
 
   @Operation(summary = "내 프로필 조회")
   @GetMapping("/me")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<MemberDto> getMyProfile(@CurrentUser CustomUserDetails user) {
     return ResponseEntity.ok(memberService.getMyProfile(user.userId()));
   }
 
   @Operation(summary = "내가 속한 팀 목록 조회", description = "로그인한 멤버가 accepted 상태로 참여 중인 팀 목록을 반환합니다.")
   @GetMapping("/me/teams")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<List<MyTeamResponse>> getMyTeams(@CurrentUser CustomUserDetails user) {
     return ResponseEntity.ok(teamService.getMyTeams(user.userId()));
   }
 
   @Operation(summary = "내 기술 스택 수정", description = "기존 목록을 전체 교체합니다. 빈 배열 []이면 전체 삭제.")
   @PutMapping("/me/tech-stacks")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<List<TechStackItemDto>> updateMyTechStacks(
       @RequestBody List<MemberTechStackUpdateRequest> req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.ok(memberService.updateMyTechStacks(user.userId(), req));
   }
 
   @PatchMapping("/me")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<MemberUpdateResponse> updateMyProfile(
       @Valid @RequestBody MemberUpdateRequest req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.ok(memberService.updateMyProfile(user.userId(), req));
@@ -80,7 +80,7 @@ public class MemberController {
 
   @Operation(summary = "멤버 기술 스택 조회", description = "특정 멤버가 보유한 기술 스택 목록을 반환합니다.")
   @GetMapping("/{memberId}/tech-stacks")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
   public ResponseEntity<List<TechStackItemDto>> getMemberTechStacks(@PathVariable Long memberId) {
     return ResponseEntity.ok(memberService.getMemberTechStacks(memberId));
   }

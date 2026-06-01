@@ -69,9 +69,9 @@ public final class SecurityUtils {
     return getCurrentUser() != null;
   }
 
-  /** 현재 사용자가 ADMIN인지 확인. */
+  /** 현재 사용자가 ADMIN 이상(ADMIN 또는 PRESIDENT)인지 확인. */
   public static boolean isAdmin() {
     CustomUserDetails user = getCurrentUser();
-    return user != null && user.role() == UserRole.ADMIN;
+    return user != null && (user.role() == UserRole.ADMIN || user.role() == UserRole.PRESIDENT);
   }
 }

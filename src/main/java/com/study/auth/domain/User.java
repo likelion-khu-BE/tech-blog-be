@@ -100,6 +100,26 @@ public class User {
     this.role = UserRole.ADMIN;
   }
 
+  public void revokeAdmin() {
+    this.role = UserRole.MEMBER;
+  }
+
+  public void promoteToPresident() {
+    this.role = UserRole.PRESIDENT;
+  }
+
+  public void demoteFromPresident() {
+    this.role = UserRole.MEMBER;
+  }
+
+  public boolean isPresident() {
+    return this.role == UserRole.PRESIDENT;
+  }
+
+  public boolean isAdmin() {
+    return this.role == UserRole.ADMIN || this.role == UserRole.PRESIDENT;
+  }
+
   public void reject() {
     this.status = UserStatus.REJECTED;
   }
@@ -107,6 +127,10 @@ public class User {
   public void expire() {
     this.status = UserStatus.EXPIRED;
     this.expiredAt = Instant.now();
+  }
+
+  public void convertToAlumni() {
+    this.status = UserStatus.ALUMNI;
   }
 
   public void updateLastLogin() {

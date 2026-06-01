@@ -1,5 +1,6 @@
 package com.study.profile.application;
 
+import com.study.profile.application.dto.GenerationCloseRequest;
 import com.study.profile.application.dto.GenerationCreateRequest;
 import com.study.profile.application.dto.GenerationDto;
 import com.study.profile.application.dto.GenerationMemberAddRequest;
@@ -53,7 +54,7 @@ public class GenerationService {
       generationRepository.flush();
     }
     Generation g = Generation.create(req.number(), req.startDate(), req.endDate(), req.isCurrent());
-    return Map.of("id", generationRepository.save(g).getNumber());
+    return Map.of("number", generationRepository.save(g).getNumber());
   }
 
   @Transactional
@@ -63,8 +64,8 @@ public class GenerationService {
       unmarkCurrentGeneration(generationId);
       generationRepository.flush();
     }
-    g.update(req.number(), req.startDate(), req.endDate(), req.isCurrent());
-    return Map.of("id", g.getNumber());
+    g.update(req.startDate(), req.endDate(), req.isCurrent());
+    return Map.of("number", g.getNumber());
   }
 
   public List<GenerationMemberDto> getGenerationMembers(Integer generationId) {
@@ -75,7 +76,7 @@ public class GenerationService {
   }
 
   @Transactional
-  public Map<String, Integer> addMemberToGeneration(
+  public Map<String, Long> addMemberToGeneration(
       Integer generationId, GenerationMemberAddRequest req) {
     Generation generation = findById(generationId);
     Member member =
@@ -89,7 +90,14 @@ public class GenerationService {
               throw new IllegalStateException("이미 해당 기수에 등록된 멤버입니다.");
             });
     MemberGeneration mg = MemberGeneration.create(member, generation, req.roleInGen());
-    return Map.of("id", memberGenerationRepository.save(mg).getId().intValue());
+    return Map.of("id", memberGenerationRepository.save(mg).getId());
+  }
+
+  @Transactional
+  public Map<String, Integer> closeGeneration(Integer generationId, GenerationCloseRequest req) {
+    Generation g = findById(generationId);
+    g.close(req.endDate());
+    return Map.of("number", g.getNumber());
   }
 
   private Generation findById(Integer generationId) {
@@ -102,6 +110,6 @@ public class GenerationService {
     generationRepository
         .findCurrentGeneration()
         .filter(g -> !g.getNumber().equals(excludeId))
-        .ifPresent(g -> g.update(g.getNumber(), g.getStartDate(), g.getEndDate(), false));
+        .ifPresent(g -> g.update(g.getStartDate(), g.getEndDate(), false));
   }
 }

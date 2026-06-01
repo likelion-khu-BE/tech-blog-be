@@ -52,8 +52,7 @@ public class Generation {
     return generation;
   }
 
-  public void update(Integer number, LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
-    this.number = number;
+  public void update(LocalDate startDate, LocalDate endDate, Boolean isCurrent) {
     this.startDate = startDate;
     this.endDate = endDate;
     this.isCurrent = isCurrent != null ? isCurrent : false;
