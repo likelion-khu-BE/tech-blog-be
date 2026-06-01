@@ -507,6 +507,51 @@ Authorization: Bearer {accessToken}
 
 ---
 
+### 내가 작성한 아티클 목록 (로그인 필요)
+
+```http
+GET /api/blog/posts/me
+Authorization: Bearer {accessToken}
+```
+
+> 근거: `PostController.java:91`, `@PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")`
+
+**Query Parameters** (모두 선택)
+
+| 파라미터 | 타입 | 설명 | 기본값 |
+|----------|------|------|--------|
+| `status` | PostStatus | 상태 필터 (`DRAFT` \| `PENDING_REVIEW` \| `PUBLISHED` \| `REJECTED`) | 전체 |
+| `page` | int | 페이지 번호 (0-indexed) | `0` |
+| `size` | int | 페이지 크기 | `10` |
+
+**Response** `200 OK` — `Page<PostSummaryResponse>` (게시글 목록 조회와 동일한 구조)
+
+> 본인 글이므로 `DRAFT`, `PENDING_REVIEW`, `REJECTED` 상태 글도 포함됩니다.
+
+---
+
+### 내가 북마크한 아티클 목록 (로그인 필요)
+
+```http
+GET /api/blog/posts/bookmarks
+Authorization: Bearer {accessToken}
+```
+
+> 근거: `PostController.java:108`, `@PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")`
+
+**Query Parameters** (모두 선택)
+
+| 파라미터 | 타입 | 설명 | 기본값 |
+|----------|------|------|--------|
+| `page` | int | 페이지 번호 (0-indexed) | `0` |
+| `size` | int | 페이지 크기 | `10` |
+
+**Response** `200 OK` — `Page<PostSummaryResponse>` (게시글 목록 조회와 동일한 구조)
+
+> `PUBLISHED` 상태 글만 반환됩니다. 북마크했더라도 비공개/심사 중인 글은 제외됩니다.
+
+---
+
 ## 5. 댓글 API
 
 ### 댓글 목록 조회
@@ -973,7 +1018,7 @@ const data = await api.delete(`/api/blog/posts/${id}`).then(r => r.data)
 ```ts
 type UserRole = 'PRESIDENT' | 'ADMIN' | 'MEMBER'
 type UserStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'EXPIRED' | 'ALUMNI'
-type PostStatus = 'DRAFT' | 'PUBLISHED' | 'HIDDEN'
+type PostStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'HIDDEN'
 ```
 
 > - `PRESIDENT`: 서비스 최상위 관리자. DB에서 직접 초기 지정.
@@ -1101,6 +1146,8 @@ export { api, accessToken }
 | DELETE | `/api/blog/posts/{id}` | MEMBER/ADMIN/PRESIDENT | **204** | |
 | POST | `/api/blog/posts/{id}/like` | MEMBER/ADMIN/PRESIDENT | 200 | |
 | POST | `/api/blog/posts/{id}/bookmark` | MEMBER/ADMIN/PRESIDENT | 200 | |
+| GET | `/api/blog/posts/me` | MEMBER/ADMIN/PRESIDENT | 200 | status 필터 가능, 전체 상태 포함 |
+| GET | `/api/blog/posts/bookmarks` | MEMBER/ADMIN/PRESIDENT | 200 | PUBLISHED만 반환 |
 | GET | `/api/blog/posts/{postId}/comments` | 불필요 | 200 | HIDDEN 댓글 제외 |
 | POST | `/api/blog/posts/{postId}/comments` | MEMBER/ADMIN/PRESIDENT | 201 | |
 | PUT | `/api/blog/comments/{id}` | MEMBER/ADMIN/PRESIDENT | 200 | |
