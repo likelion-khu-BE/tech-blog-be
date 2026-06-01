@@ -520,7 +520,7 @@ Authorization: Bearer {accessToken}
 
 | 파라미터 | 타입 | 설명 | 기본값 |
 |----------|------|------|--------|
-| `status` | PostStatus | 상태 필터 (`DRAFT` \| `PENDING_REVIEW` \| `PUBLISHED` \| `REJECTED`) | 전체 |
+| `status` | PostStatus | 상태 필터 (`DRAFT` \| `PENDING_REVIEW` \| `PUBLISHED` \| `REJECTED` \| `HIDDEN`) | 전체 |
 | `page` | int | 페이지 번호 (0-indexed) | `0` |
 | `size` | int | 페이지 크기 | `10` |
 
