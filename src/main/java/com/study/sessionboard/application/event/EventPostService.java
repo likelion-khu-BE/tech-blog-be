@@ -43,13 +43,12 @@ public class EventPostService {
   private final MemberService memberService;
   private final GenerationService generationService;
 
-
   public PageWrapper<EventPostSummaryResponse> getEventPosts(
-          Integer generationNumber, EventPostType type, Pageable pageable) { // generation number로 시현 수정
+      Integer generationNumber, EventPostType type, Pageable pageable) { // generation number로 시현 수정
 
     Page<EventPost> posts =
-            eventPostRepository.findAllWithFilters(
-                    generationNumber, EventPostStatus.PUBLISHED, type, pageable);
+        eventPostRepository.findAllWithFilters(
+            generationNumber, EventPostStatus.PUBLISHED, type, pageable);
 
     List<Long> postIds = posts.map(EventPost::getId).toList();
 
@@ -57,25 +56,25 @@ public class EventPostService {
     Map<Long, String> thumbMap = new HashMap<>();
     if (!postIds.isEmpty()) {
       eventPostImageRepository
-              .findFirstImagesByPostIdIn(postIds)
-              .forEach(img -> thumbMap.put(img.getPost().getId(), img.getUrl()));
+          .findFirstImagesByPostIdIn(postIds)
+          .forEach(img -> thumbMap.put(img.getPost().getId(), img.getUrl()));
     }
 
     // 댓글 수: 게시글별 배치 조회
     Map<Long, Integer> commentCountMap = new HashMap<>();
     if (!postIds.isEmpty()) {
       eventPostCommentRepository
-              .countByPostIdIn(postIds)
-              .forEach(row -> commentCountMap.put((Long) row[0], ((Long) row[1]).intValue()));
+          .countByPostIdIn(postIds)
+          .forEach(row -> commentCountMap.put((Long) row[0], ((Long) row[1]).intValue()));
     }
 
     Page<EventPostSummaryResponse> responsePage =
-            posts.map(
-                    post ->
-                            EventPostSummaryResponse.of(
-                                    post,
-                                    thumbMap.get(post.getId()),
-                                    commentCountMap.getOrDefault(post.getId(), 0)));
+        posts.map(
+            post ->
+                EventPostSummaryResponse.of(
+                    post,
+                    thumbMap.get(post.getId()),
+                    commentCountMap.getOrDefault(post.getId(), 0)));
 
     return PageWrapper.from(responsePage);
   }
@@ -144,12 +143,14 @@ public class EventPostService {
 
   @Transactional
   public LikeToggleResponse toggleLike(Long postId, Long userId) {
-    EventPost post = eventPostRepository.findById(postId)
+    EventPost post =
+        eventPostRepository
+            .findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
     Member member = memberService.getMemberToUserId(userId);
     Optional<EventPostLike> existing =
-            eventPostLikeRepository.findByMemberIdAndPostId(member.getId(), postId);
+        eventPostLikeRepository.findByMemberIdAndPostId(member.getId(), postId);
 
     if (existing.isPresent()) {
       eventPostLikeRepository.delete(existing.get());
@@ -164,29 +165,31 @@ public class EventPostService {
 
   public List<CommentResponse> getComments(Long postId) {
     List<EventPostComment> parents =
-            eventPostCommentRepository.findByPostIdAndParentIsNullOrderByCreatedAtAsc(postId);
+        eventPostCommentRepository.findByPostIdAndParentIsNullOrderByCreatedAtAsc(postId);
 
     List<Long> parentIds = parents.stream().map(EventPostComment::getId).toList();
 
     Map<Long, List<CommentResponse>> repliesMap = new HashMap<>();
     if (!parentIds.isEmpty()) {
       eventPostCommentRepository
-              .findByParentIdInOrderByCreatedAtAsc(parentIds)
-              .forEach(
-                      reply ->
-                              repliesMap
-                                      .computeIfAbsent(reply.getParent().getId(), k -> new java.util.ArrayList<>())
-                                      .add(CommentResponse.of(reply, List.of())));
+          .findByParentIdInOrderByCreatedAtAsc(parentIds)
+          .forEach(
+              reply ->
+                  repliesMap
+                      .computeIfAbsent(reply.getParent().getId(), k -> new java.util.ArrayList<>())
+                      .add(CommentResponse.of(reply, List.of())));
     }
 
     return parents.stream()
-            .map(p -> CommentResponse.of(p, repliesMap.getOrDefault(p.getId(), List.of())))
-            .toList();
+        .map(p -> CommentResponse.of(p, repliesMap.getOrDefault(p.getId(), List.of())))
+        .toList();
   }
 
   @Transactional
   public CommentResponse createComment(Long postId, Long userId, CommentRequest request) {
-    EventPost post = eventPostRepository.findById(postId)
+    EventPost post =
+        eventPostRepository
+            .findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
     Member author = memberService.getMemberToUserId(userId);
@@ -200,7 +203,9 @@ public class EventPostService {
 
   @Transactional
   public void updateComment(Long commentId, Long userId, CommentRequest request) {
-    EventPostComment comment = eventPostCommentRepository.findById(commentId)
+    EventPostComment comment =
+        eventPostCommentRepository
+            .findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
     if (!comment.getAuthor().getUser().getId().equals(userId)) {
@@ -212,7 +217,9 @@ public class EventPostService {
 
   @Transactional
   public void deleteComment(Long commentId, Long userId) {
-    EventPostComment comment = eventPostCommentRepository.findById(commentId)
+    EventPostComment comment =
+        eventPostCommentRepository
+            .findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
     if (!comment.getAuthor().getUser().getId().equals(userId)) {
@@ -224,11 +231,16 @@ public class EventPostService {
   }
 
   @Transactional
-  public CommentResponse createReply(Long postId, Long commentId, Long userId, CommentRequest request) {
-    EventPost post = eventPostRepository.findById(postId)
+  public CommentResponse createReply(
+      Long postId, Long commentId, Long userId, CommentRequest request) {
+    EventPost post =
+        eventPostRepository
+            .findById(postId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
-    EventPostComment parent = eventPostCommentRepository.findById(commentId)
+    EventPostComment parent =
+        eventPostCommentRepository
+            .findById(commentId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
     Member author = memberService.getMemberToUserId(userId);
@@ -243,7 +255,9 @@ public class EventPostService {
   @Transactional
   public void updateReply(Long replyId, Long userId, CommentRequest request) {
 
-    EventPostComment reply = eventPostCommentRepository.findById(replyId)
+    EventPostComment reply =
+        eventPostCommentRepository
+            .findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
     if (!reply.getAuthor().getUser().getId().equals(userId)) {
@@ -256,7 +270,9 @@ public class EventPostService {
   @Transactional
   public void deleteReply(Long replyId, Long userId) {
 
-    EventPostComment reply = eventPostCommentRepository.findById(replyId)
+    EventPostComment reply =
+        eventPostCommentRepository
+            .findById(replyId)
             .orElseThrow(() -> new EventPostException(EventPostErrorCode.POST_NOT_FOUND));
 
     if (!reply.getAuthor().getUser().getId().equals(userId)) {

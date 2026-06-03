@@ -12,7 +12,6 @@ import com.study.sessionboard.infrastructure.session.SessionNoteRepository;
 import com.study.sessionboard.infrastructure.session.SessionRepository;
 import com.study.sessionboard.infrastructure.session.SessionSpeakerRepository;
 import com.study.sessionboard.presentation.dto.session.*;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -132,10 +131,13 @@ public class SessionService {
   }
 
   public List<ResourceResponse> getResources(Long sessionId, String type) {
-    Session session = sessionRepository.findById(sessionId)
+    Session session =
+        sessionRepository
+            .findById(sessionId)
             .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
-    List<Resource> resources = (type == null)
+    List<Resource> resources =
+        (type == null)
             ? resourceRepository.findAllBySession(session)
             : resourceRepository.findAllBySessionAndType(session, type);
 
@@ -143,26 +145,26 @@ public class SessionService {
   }
 
   @Transactional
-  public ResourceResponse createResource(Long sessionId, Long userId, ResourceCreateRequest request) {
-    Session session = sessionRepository.findById(sessionId)
+  public ResourceResponse createResource(
+      Long sessionId, Long userId, ResourceCreateRequest request) {
+    Session session =
+        sessionRepository
+            .findById(sessionId)
             .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
     Member uploader = memberRepository.getReferenceById(userId);
 
-    Resource resource = Resource.of(
-            session,
-            uploader,
-            request.type(),
-            request.name(),
-            request.url()
-    );
+    Resource resource =
+        Resource.of(session, uploader, request.type(), request.name(), request.url());
 
     return ResourceResponse.from(resourceRepository.save(resource));
   }
 
   @Transactional
   public void deleteResource(Long resourceId, Long userId) {
-    Resource resource = resourceRepository.findById(resourceId)
+    Resource resource =
+        resourceRepository
+            .findById(resourceId)
             .orElseThrow(() -> new IllegalArgumentException("해당 자료를 찾을 수 없습니다."));
 
     if (!resource.getUploader().getId().equals(userId)) {
@@ -173,16 +175,19 @@ public class SessionService {
   }
 
   public List<RetroResponse> getRetros(Long sessionId) {
-    Session session = sessionRepository.findById(sessionId)
+    Session session =
+        sessionRepository
+            .findById(sessionId)
             .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
-    return retroRepository.findAllBySession(session)
-            .stream().map(RetroResponse::from).toList();
+    return retroRepository.findAllBySession(session).stream().map(RetroResponse::from).toList();
   }
 
   @Transactional
   public RetroResponse createRetro(Long sessionId, Long userId, RetroCreateRequest request) {
-    Session session = sessionRepository.findById(sessionId)
+    Session session =
+        sessionRepository
+            .findById(sessionId)
             .orElseThrow(() -> new SessionNotFoundException(sessionId));
 
     if (retroRepository.existsBySessionAndAuthorId(session, userId)) {
@@ -197,7 +202,9 @@ public class SessionService {
 
   @Transactional
   public RetroResponse updateRetro(Long retroId, Long userId, RetroCreateRequest request) {
-    Retro retro = retroRepository.findById(retroId)
+    Retro retro =
+        retroRepository
+            .findById(retroId)
             .orElseThrow(() -> new IllegalArgumentException("해당 회고를 찾을 수 없습니다."));
 
     if (!retro.getAuthor().getId().equals(userId)) {
@@ -207,5 +214,4 @@ public class SessionService {
     retro.update(request.rating(), request.body());
     return RetroResponse.from(retro);
   }
-
 }

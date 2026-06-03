@@ -7,8 +7,8 @@ import com.study.sessionboard.domain.session.SessionStatus;
 import com.study.sessionboard.presentation.dto.session.*;
 import com.study.sessionboard.presentation.dto.session.RetroCreateRequest;
 import com.study.sessionboard.presentation.dto.session.RetroResponse;
-import java.util.List;
 import java.time.OffsetDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,56 +68,55 @@ public class SessionController {
 
   @GetMapping("/{sessionId}/resources")
   public ResponseEntity<List<ResourceResponse>> getResources(
-          @PathVariable Integer generationNumber,
-          @PathVariable Long sessionId,
-          @RequestParam(required = false) String type) {
+      @PathVariable Integer generationNumber,
+      @PathVariable Long sessionId,
+      @RequestParam(required = false) String type) {
     return ResponseEntity.ok(sessionService.getResources(sessionId, type));
   }
 
   @PostMapping("/{sessionId}/resources")
   public ResponseEntity<ResourceResponse> createResource(
-          @PathVariable Integer generationNumber,
-          @PathVariable Long sessionId,
-          @CurrentUser CustomUserDetails authUser,
-          @RequestBody ResourceCreateRequest request) {
+      @PathVariable Integer generationNumber,
+      @PathVariable Long sessionId,
+      @CurrentUser CustomUserDetails authUser,
+      @RequestBody ResourceCreateRequest request) {
     return ResponseEntity.status(201)
-            .body(sessionService.createResource(sessionId, authUser.userId(), request));
+        .body(sessionService.createResource(sessionId, authUser.userId(), request));
   }
 
   @DeleteMapping("/{sessionId}/resources/{resourceId}")
   public ResponseEntity<Void> deleteResource(
-          @PathVariable Integer generationNumber,
-          @PathVariable Long sessionId,
-          @PathVariable Long resourceId,
-          @CurrentUser CustomUserDetails authUser) {
+      @PathVariable Integer generationNumber,
+      @PathVariable Long sessionId,
+      @PathVariable Long resourceId,
+      @CurrentUser CustomUserDetails authUser) {
     sessionService.deleteResource(resourceId, authUser.userId());
     return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/{sessionId}/retros")
   public ResponseEntity<List<RetroResponse>> getRetros(
-          @PathVariable Integer generationNumber,
-          @PathVariable Long sessionId) {
+      @PathVariable Integer generationNumber, @PathVariable Long sessionId) {
     return ResponseEntity.ok(sessionService.getRetros(sessionId));
   }
 
   @PostMapping("/{sessionId}/retros")
   public ResponseEntity<RetroResponse> createRetro(
-          @PathVariable Integer generationNumber,
-          @PathVariable Long sessionId,
-          @CurrentUser CustomUserDetails authUser,
-          @RequestBody RetroCreateRequest request) {
+      @PathVariable Integer generationNumber,
+      @PathVariable Long sessionId,
+      @CurrentUser CustomUserDetails authUser,
+      @RequestBody RetroCreateRequest request) {
     return ResponseEntity.status(201)
-            .body(sessionService.createRetro(sessionId, authUser.userId(), request));
+        .body(sessionService.createRetro(sessionId, authUser.userId(), request));
   }
 
   @PutMapping("/{sessionId}/retros/{retroId}")
   public ResponseEntity<RetroResponse> updateRetro(
-          @PathVariable Integer generationNumber,
-          @PathVariable Long sessionId,
-          @PathVariable Long retroId,
-          @CurrentUser CustomUserDetails authUser,
-          @RequestBody RetroCreateRequest request) {
+      @PathVariable Integer generationNumber,
+      @PathVariable Long sessionId,
+      @PathVariable Long retroId,
+      @CurrentUser CustomUserDetails authUser,
+      @RequestBody RetroCreateRequest request) {
     return ResponseEntity.ok(sessionService.updateRetro(retroId, authUser.userId(), request));
   }
 }

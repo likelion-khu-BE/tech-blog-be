@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EventPostLikeRepository extends JpaRepository<EventPostLike, Long> {
 
-    Optional<EventPostLike> findByMemberIdAndPostId(Long memberId, Long postId);
+  Optional<EventPostLike> findByMemberIdAndPostId(Long memberId, Long postId);
 
-    boolean existsByMemberIdAndPostId(Long memberId, Long postId);
+  boolean existsByMemberIdAndPostId(Long memberId, Long postId);
 }

@@ -50,17 +50,16 @@ class EventPostServiceTest {
     given(post.getType()).willReturn(EventPostType.MEETUP);
     given(post.getAuthor()).willReturn(mockMember);
     given(post.getBody()).willReturn("본문 내용입니다.");
-    given(post.getTags()).willReturn(new String[]{});
+    given(post.getTags()).willReturn(new String[] {});
     given(post.getLikeCount()).willReturn(0);
     given(post.getCreatedAt()).willReturn(null);
 
-    given(eventPostRepository.findAllWithFilters(
-            eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
+    given(
+            eventPostRepository.findAllWithFilters(
+                eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
         .willReturn(new PageImpl<>(List.of(post), pageable, 1));
-    given(eventPostImageRepository.findFirstImagesByPostIdIn(List.of(10L)))
-        .willReturn(List.of());
-    given(eventPostCommentRepository.countByPostIdIn(List.of(10L)))
-        .willReturn(List.of());
+    given(eventPostImageRepository.findFirstImagesByPostIdIn(List.of(10L))).willReturn(List.of());
+    given(eventPostCommentRepository.countByPostIdIn(List.of(10L))).willReturn(List.of());
 
     PageWrapper<EventPostSummaryResponse> result =
         eventPostService.getEventPosts(generationId, null, pageable);
@@ -78,8 +77,9 @@ class EventPostServiceTest {
     Pageable pageable = PageRequest.of(0, 20);
     EventPostType filterType = EventPostType.HACKATHON;
 
-    given(eventPostRepository.findAllWithFilters(
-            eq(generationId), eq(EventPostStatus.PUBLISHED), eq(filterType), eq(pageable)))
+    given(
+            eventPostRepository.findAllWithFilters(
+                eq(generationId), eq(EventPostStatus.PUBLISHED), eq(filterType), eq(pageable)))
         .willReturn(new PageImpl<>(List.of(), pageable, 0));
 
     eventPostService.getEventPosts(generationId, filterType, pageable);
@@ -106,7 +106,7 @@ class EventPostServiceTest {
     given(post.getType()).willReturn(EventPostType.WORKSHOP);
     given(post.getAuthor()).willReturn(mockMember);
     given(post.getBody()).willReturn("본문");
-    given(post.getTags()).willReturn(new String[]{});
+    given(post.getTags()).willReturn(new String[] {});
     given(post.getLikeCount()).willReturn(0);
     given(post.getCreatedAt()).willReturn(null);
 
@@ -115,13 +115,13 @@ class EventPostServiceTest {
     given(image.getPost()).willReturn(post);
     given(image.getUrl()).willReturn(expectedUrl);
 
-    given(eventPostRepository.findAllWithFilters(
-            eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
+    given(
+            eventPostRepository.findAllWithFilters(
+                eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
         .willReturn(new PageImpl<>(List.of(post), pageable, 1));
     given(eventPostImageRepository.findFirstImagesByPostIdIn(List.of(10L)))
         .willReturn(List.of(image));
-    given(eventPostCommentRepository.countByPostIdIn(List.of(10L)))
-        .willReturn(List.of());
+    given(eventPostCommentRepository.countByPostIdIn(List.of(10L))).willReturn(List.of());
 
     PageWrapper<EventPostSummaryResponse> result =
         eventPostService.getEventPosts(generationId, null, pageable);
@@ -147,7 +147,7 @@ class EventPostServiceTest {
     given(postA.getType()).willReturn(EventPostType.PROJECT);
     given(postA.getAuthor()).willReturn(mockMember);
     given(postA.getBody()).willReturn("본문");
-    given(postA.getTags()).willReturn(new String[]{});
+    given(postA.getTags()).willReturn(new String[] {});
     given(postA.getLikeCount()).willReturn(0);
     given(postA.getCreatedAt()).willReturn(null);
 
@@ -157,17 +157,18 @@ class EventPostServiceTest {
     given(postB.getType()).willReturn(EventPostType.PROJECT);
     given(postB.getAuthor()).willReturn(mockMember);
     given(postB.getBody()).willReturn("본문");
-    given(postB.getTags()).willReturn(new String[]{});
+    given(postB.getTags()).willReturn(new String[] {});
     given(postB.getLikeCount()).willReturn(0);
     given(postB.getCreatedAt()).willReturn(null);
 
-    given(eventPostRepository.findAllWithFilters(
-            eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
+    given(
+            eventPostRepository.findAllWithFilters(
+                eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
         .willReturn(new PageImpl<>(List.of(postA, postB), pageable, 2));
     given(eventPostImageRepository.findFirstImagesByPostIdIn(List.of(10L, 20L)))
         .willReturn(List.of());
     given(eventPostCommentRepository.countByPostIdIn(List.of(10L, 20L)))
-        .willReturn(List.of(new Object[]{10L, 3L}, new Object[]{20L, 7L}));
+        .willReturn(List.of(new Object[] {10L, 3L}, new Object[] {20L, 7L}));
 
     PageWrapper<EventPostSummaryResponse> result =
         eventPostService.getEventPosts(generationId, null, pageable);
@@ -183,8 +184,9 @@ class EventPostServiceTest {
     Integer generationId = 1;
     Pageable pageable = PageRequest.of(0, 20);
 
-    given(eventPostRepository.findAllWithFilters(
-            eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
+    given(
+            eventPostRepository.findAllWithFilters(
+                eq(generationId), eq(EventPostStatus.PUBLISHED), eq(null), eq(pageable)))
         .willReturn(new PageImpl<>(List.of(), pageable, 0));
 
     PageWrapper<EventPostSummaryResponse> result =
