@@ -49,6 +49,9 @@ public class Comment {
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
+  @Column(name = "hidden_at")
+  private LocalDateTime hiddenAt;
+
   @Builder
   public Comment(Long postId, Long userId, Comment parent, String content) {
     this.postId = postId;
@@ -61,8 +64,16 @@ public class Comment {
     return deletedAt != null;
   }
 
+  public boolean isHidden() {
+    return hiddenAt != null;
+  }
+
   public void softDelete() {
     this.deletedAt = LocalDateTime.now();
+  }
+
+  public void hide() {
+    this.hiddenAt = LocalDateTime.now();
   }
 
   public Long getParentId() {

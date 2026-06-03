@@ -39,7 +39,7 @@ public class CommentController {
   }
 
   @PostMapping("/posts/{postId}/comments")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER', 'PRESIDENT')")
   public ResponseEntity<CommentResponse> createComment(
       @PathVariable Long postId,
       @Valid @RequestBody CommentCreateRequest req,
@@ -49,7 +49,7 @@ public class CommentController {
   }
 
   @PutMapping("/comments/{id}")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER', 'PRESIDENT')")
   public ResponseEntity<CommentResponse> updateComment(
       @PathVariable Long id,
       @Valid @RequestBody CommentUpdateRequest req,
@@ -58,7 +58,7 @@ public class CommentController {
   }
 
   @DeleteMapping("/comments/{id}")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER', 'PRESIDENT')")
   public ResponseEntity<Void> deleteComment(
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
     commentService.deleteComment(id, user.userId());
@@ -66,7 +66,7 @@ public class CommentController {
   }
 
   @PostMapping("/comments/{id}/like")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER', 'PRESIDENT')")
   public ResponseEntity<Map<String, Boolean>> toggleLike(
       @PathVariable Long id, @CurrentUser CustomUserDetails user) {
     boolean liked = commentService.toggleLike(id, user.userId());

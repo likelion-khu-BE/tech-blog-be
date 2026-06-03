@@ -1,5 +1,6 @@
 package com.study.blog.application.post;
 
+import com.study.auth.infrastructure.security.SecurityUtils;
 import com.study.blog.application.post.dto.PostCreateRequest;
 import com.study.blog.application.post.dto.PostResponse;
 import com.study.blog.application.post.dto.PostSummaryResponse;
@@ -118,9 +119,10 @@ public class PostService {
   public PostResponse getPost(Long postId, Long requesterId, boolean isAdmin) {
     Post post = findById(postId);
 
-    if (post.getStatus() != PostStatus.PUBLISHED
-        && !isAdmin
-        && !post.getUserId().equals(requesterId)) {
+    boolean isAuthor = requesterId != null && post.getUserId().equals(requesterId);
+    boolean isAdminRole = SecurityUtils.isAdmin() || isAdmin;
+
+    if (post.getStatus() != PostStatus.PUBLISHED && !isAuthor && !isAdminRole) {
       throw new BlogException(BlogErrorCode.FORBIDDEN);
     }
 

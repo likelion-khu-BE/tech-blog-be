@@ -278,10 +278,11 @@ GET /profile/generations
 
 ---
 
-### 2-2. 기수 생성 (관리자)
+### 2-2. 기수 생성 (PRESIDENT 전용)
 
 ```
 POST /profile/generations
+Authorization: Bearer {presidentToken}
 ```
 
 **Request Body**
@@ -327,13 +328,16 @@ GET /profile/generations/{generationId}
 
 ---
 
-### 2-4. 기수 수정 (관리자)
+### 2-4. 기수 수정 (PRESIDENT 전용)
 
 ```
 PATCH /profile/generations/{generationId}
+Authorization: Bearer {presidentToken}
 ```
 
-**Request Body** — 2-2와 동일 구조
+> **주의:** `number` 필드는 PK이므로 수정 불가. 요청에 포함해도 무시됩니다. `startDate`, `endDate`, `isCurrent`만 실제로 변경됩니다.
+
+**Request Body** — 2-2와 동일 구조 (number는 무시됨)
 
 **Response `200 OK`**
 ```json
@@ -342,7 +346,34 @@ PATCH /profile/generations/{generationId}
 
 ---
 
-### 2-5. 기수 멤버 목록 조회
+### 2-5. 기수 종료 (PRESIDENT 전용)
+
+```
+PATCH /profile/generations/{generationId}/close
+Authorization: Bearer {presidentToken}
+```
+
+기수를 종료합니다. `isCurrent`가 `false`로 변경되고 `endDate`가 설정됩니다.
+
+**Request Body**
+```json
+{
+  "endDate": "2026-06-01"
+}
+```
+
+| 필드 | 타입 | 필수 | 제약 |
+|------|------|------|------|
+| `endDate` | `string` | 예 | `yyyy-MM-dd` |
+
+**Response `200 OK`**
+```json
+{ "number": 13 }
+```
+
+---
+
+### 2-6. 기수 멤버 목록 조회
 
 ```
 GET /profile/generations/{generationId}/members
@@ -364,7 +395,7 @@ GET /profile/generations/{generationId}/members
 
 ---
 
-### 2-6. 기수에 멤버 등록 (관리자)
+### 2-7. 기수에 멤버 등록 (관리자)
 
 ```
 POST /profile/generations/{generationId}/members
@@ -1089,11 +1120,12 @@ GET /profile/ranking
 | ✅   | `GET` | `/profile/members` | 멤버 목록 | 세인 |
 | ✅   | `GET` | `/profile/members/{memberId}` | 멤버 상세 | 세인 |
 | ✅   | `GET` | `/profile/generations` | 기수 목록 | 세인 |
-| ✅   | `POST` | `/profile/generations` | 기수 생성 (관리자) | 세인 |
-| [x] | `GET` | `/profile/generations/{generationNumber}` | 기수 상세 | 세인 |
-| ✅   | `PATCH` | `/profile/generations/{generationNumber}` | 기수 수정 (관리자) | 세인 |
-| ✅   | `GET` | `/profile/generations/{generationNumber}/members` | 기수 멤버 목록 | 세인 |
-| ✅   | `POST` | `/profile/generations/{generationNumber}/members` | 기수에 멤버 등록 (관리자) | 세인 |
+| ✅   | `POST` | `/profile/generations` | 기수 생성 (**PRESIDENT 전용**) | 세인 |
+| ✅   | `GET` | `/profile/generations/{generationId}` | 기수 상세 | 세인 |
+| ✅   | `PATCH` | `/profile/generations/{generationId}` | 기수 수정 (**PRESIDENT 전용**, number 불변) | 세인 |
+| ✅   | `PATCH` | `/profile/generations/{generationId}/close` | 기수 종료 (**PRESIDENT 전용**) | 세인 |
+| ✅   | `GET` | `/profile/generations/{generationId}/members` | 기수 멤버 목록 | 세인 |
+| ✅   | `POST` | `/profile/generations/{generationId}/members` | 기수에 멤버 등록 (관리자) | 세인 |
 | ✅   | `GET` | `/profile/tech-stacks` | 기술 스택 목록 | 시현 |
 | ✅   | `POST` | `/profile/tech-stacks` | 기술 스택 등록 (관리자) | 근엽 |
 | ✅   | `PUT` | `/profile/tech-stacks/{techStackId}` | 기술 스택 수정 (관리자) | 근엽 |

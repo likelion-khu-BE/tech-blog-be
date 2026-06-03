@@ -1,6 +1,7 @@
 package com.study.auth.application;
 
 import com.study.auth.domain.User;
+import com.study.auth.domain.UserRole;
 import com.study.auth.domain.UserStatus;
 import com.study.auth.infrastructure.UserRepository;
 import com.study.auth.presentation.dto.UserResponse;
@@ -58,6 +59,52 @@ public class UserAdminService {
     user.reject();
     Long memberId = memberRepository.findByUserId(userId).map(m -> m.getId()).orElse(null);
     return toResponse(userRepository.save(user), memberId);
+  }
+
+  @Transactional
+  public UserResponse grantAdmin(Long targetId, Long actorId) {
+    if (targetId.equals(actorId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "자기 자신에게 admin 권한을 부여할 수 없습니다");
+    }
+    User target = findOrThrow(targetId);
+    if (target.getRole() == UserRole.PRESIDENT) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "PRESIDENT에게는 admin 권한을 부여할 수 없습니다");
+    }
+    target.promoteToAdmin();
+    Long memberId = memberRepository.findByUserId(targetId).map(m -> m.getId()).orElse(null);
+    return toResponse(userRepository.save(target), memberId);
+  }
+
+  @Transactional
+  public UserResponse revokeAdmin(Long targetId, Long actorId) {
+    if (targetId.equals(actorId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "자기 자신의 admin 권한은 해제할 수 없습니다");
+    }
+    User target = findOrThrow(targetId);
+    if (target.getRole() != UserRole.ADMIN) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "admin 권한이 없는 사용자입니다");
+    }
+    target.revokeAdmin();
+    Long memberId = memberRepository.findByUserId(targetId).map(m -> m.getId()).orElse(null);
+    return toResponse(userRepository.save(target), memberId);
+  }
+
+  @Transactional
+  public UserResponse transferPresident(Long targetId, Long actorId) {
+    if (targetId.equals(actorId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "자기 자신에게 권한을 이양할 수 없습니다");
+    }
+    User actor = findOrThrow(actorId);
+    User target = findOrThrow(targetId);
+    if (target.getStatus() != UserStatus.ACTIVE) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "활성 상태의 회원에게만 권한을 이양할 수 있습니다");
+    }
+    actor.demoteFromPresident();
+    target.promoteToPresident();
+    userRepository.save(actor);
+    Long memberId = memberRepository.findByUserId(targetId).map(m -> m.getId()).orElse(null);
+    return toResponse(userRepository.save(target), memberId);
   }
 
   private User findOrThrow(Long userId) {

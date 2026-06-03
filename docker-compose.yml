@@ -26,3 +26,29 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+
+  # 자체 호스팅 PostgreSQL — RDS에서 이전. 영속 볼륨(pgdata)으로 재배포에도 데이터 유지.
+  # 포트 미공개(내부 네트워크 전용) + mem_limit으로 app OOM 방지.
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      # RDS와 동일한 인코딩/로케일 — 정렬·인덱스 일관성 보장
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      TZ: UTC
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  pgdata:

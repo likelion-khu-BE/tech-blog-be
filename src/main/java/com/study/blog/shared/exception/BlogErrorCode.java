@@ -8,6 +8,10 @@ public enum BlogErrorCode {
   PARENT_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "부모 댓글을 찾을 수 없습니다"),
   FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다"),
   UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다"),
+  POST_NOT_HIDDEN(HttpStatus.BAD_REQUEST, "숨김 처리된 게시글만 삭제할 수 있습니다"),
+  POST_DELETE_TOO_EARLY(HttpStatus.BAD_REQUEST, "숨김 처리 후 24시간이 지나야 삭제할 수 있습니다"),
+  COMMENT_NOT_HIDDEN(HttpStatus.BAD_REQUEST, "숨김 처리된 댓글만 삭제할 수 있습니다"),
+  COMMENT_DELETE_TOO_EARLY(HttpStatus.BAD_REQUEST, "숨김 처리 후 24시간이 지나야 댓글을 삭제할 수 있습니다"),
   POST_NOT_PUBLISHED(HttpStatus.BAD_REQUEST, "발행된 게시글에만 북마크할 수 있습니다"),
   INVALID_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "현재 상태에서 허용되지 않는 상태 변경입니다"),
   REJECTION_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "거부 사유를 입력해주세요");

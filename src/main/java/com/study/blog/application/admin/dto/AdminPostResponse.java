@@ -16,7 +16,8 @@ public record AdminPostResponse(
     Long authorId,
     List<String> tags,
     long likeCount,
-    LocalDateTime createdAt) {
+    LocalDateTime createdAt,
+    LocalDateTime hiddenAt) {
 
   public static AdminPostResponse of(Post post, List<String> tags, long likeCount) {
     return new AdminPostResponse(
@@ -30,6 +31,7 @@ public record AdminPostResponse(
         post.getUserId(),
         tags,
         likeCount,
-        post.getCreatedAt());
+        post.getCreatedAt(),
+        post.getHiddenAt());
   }
 }
