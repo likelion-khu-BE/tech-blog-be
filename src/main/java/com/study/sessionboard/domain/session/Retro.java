@@ -15,6 +15,7 @@ import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 @Entity
 @Table(name = "retro")
@@ -47,10 +48,17 @@ public class Retro {
     createdAt = OffsetDateTime.now();
   }
 
-  public static Retro of(Session session, Member author) {
+  public static Retro of(Session session, Member author, Integer rating, String body) {
     Retro retro = new Retro();
     retro.session = session;
     retro.author = author;
+    retro.rating = rating;
+    retro.body = body;
     return retro;
+  }
+
+  public void update(Integer rating, String body) {
+    this.rating = rating;
+    this.body = body;
   }
 }
