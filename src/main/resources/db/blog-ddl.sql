@@ -9,17 +9,19 @@
 -- BLOG_POSTS
 -- ------------------------------------------------------------
 CREATE TABLE blog_posts (
-    id              BIGSERIAL         PRIMARY KEY,
-    user_id         BIGINT            NOT NULL,
-    title           VARCHAR(255)      NOT NULL,
-    content         TEXT              NOT NULL,
-    board           VARCHAR(20)       NOT NULL,
-    category        VARCHAR(20)       NOT NULL,
-    status          VARCHAR(20)       NOT NULL,
+    id              BIGSERIAL     PRIMARY KEY,
+    user_id         BIGINT        NOT NULL,
+    title           VARCHAR(255)  NOT NULL,
+    content         TEXT          NOT NULL,
+    board           VARCHAR(20)   NOT NULL,
+    category        VARCHAR(20)   NOT NULL,
+    status          VARCHAR(20)   NOT NULL CHECK (status IN ('DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'REJECTED', 'HIDDEN')),
     generation      VARCHAR(10),
     reply_to_id     BIGINT,
-    created_at      TIMESTAMP(6)      NOT NULL,
-    updated_at      TIMESTAMP(6)      NOT NULL
+    rejected_reason TEXT,
+    created_at      TIMESTAMP(6)  NOT NULL,
+    updated_at      TIMESTAMP(6)  NOT NULL,
+    hidden_at       TIMESTAMP(6)
 );
 
 CREATE INDEX idx_blog_post_user           ON blog_posts (user_id);
@@ -71,7 +73,8 @@ CREATE TABLE blog_comments (
     parent_id   BIGINT       REFERENCES blog_comments(id) ON DELETE CASCADE,
     content     TEXT         NOT NULL,
     created_at  TIMESTAMP(6) NOT NULL,
-    deleted_at  TIMESTAMP(6)
+    deleted_at  TIMESTAMP(6),
+    hidden_at   TIMESTAMP(6)
 );
 
 CREATE INDEX idx_blog_comment_post    ON blog_comments (post_id);
@@ -89,3 +92,22 @@ CREATE TABLE blog_comment_likes (
 );
 
 CREATE INDEX idx_blog_comment_like_user ON blog_comment_likes (user_id);
+
+-- ------------------------------------------------------------
+-- ADMIN_ACTION_LOGS
+-- ------------------------------------------------------------
+CREATE TABLE admin_action_logs (
+    id             BIGSERIAL    PRIMARY KEY,
+    actor_user_id  BIGINT       NOT NULL,
+    target_type    VARCHAR(20)  NOT NULL,
+    target_id      TEXT         NOT NULL,
+    action_type    VARCHAR(30)  NOT NULL,
+    before_value   TEXT,
+    after_value    TEXT,
+    reason         TEXT,
+    created_at     TIMESTAMP(6) NOT NULL
+);
+
+CREATE INDEX idx_admin_log_actor      ON admin_action_logs (actor_user_id);
+CREATE INDEX idx_admin_log_target     ON admin_action_logs (target_type, target_id);
+CREATE INDEX idx_admin_log_created    ON admin_action_logs (created_at DESC);

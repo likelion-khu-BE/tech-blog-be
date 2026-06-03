@@ -11,6 +11,7 @@ public record CommentResponse(
     Long parentId,
     long likeCount,
     boolean liked,
+    boolean hidden,
     LocalDateTime createdAt,
     List<CommentResponse> replies) {
 
@@ -24,6 +25,19 @@ public record CommentResponse(
           comment.getParentId(),
           0,
           false,
+          false,
+          comment.getCreatedAt(),
+          List.copyOf(replies));
+    }
+    if (comment.isHidden()) {
+      return new CommentResponse(
+          comment.getId(),
+          "숨김 처리된 댓글입니다.",
+          comment.getUserId(),
+          comment.getParentId(),
+          0,
+          false,
+          true,
           comment.getCreatedAt(),
           List.copyOf(replies));
     }
@@ -34,6 +48,7 @@ public record CommentResponse(
         comment.getParentId(),
         likeCount,
         liked,
+        false,
         comment.getCreatedAt(),
         List.copyOf(replies));
   }

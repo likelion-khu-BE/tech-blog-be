@@ -14,10 +14,11 @@
 4. [게시글 API](#4-게시글-api)
 5. [댓글 API](#5-댓글-api)
 6. [어드민 API](#6-어드민-api)
-7. [헬스체크 API](#7-헬스체크-api)
-8. [에러 처리](#8-에러-처리)
-9. [공통 타입 정의](#9-공통-타입-정의)
-10. [토큰 자동 갱신 구현 예시](#10-토큰-자동-갱신-구현-예시)
+7. [유저 권한 관리 API (PRESIDENT 전용)](#7-유저-권한-관리-api-president-전용)
+8. [헬스체크 API](#8-헬스체크-api)
+9. [에러 처리](#9-에러-처리)
+10. [공통 타입 정의](#10-공통-타입-정의)
+11. [토큰 자동 갱신 구현 예시](#11-토큰-자동-갱신-구현-예시)
 
 ---
 
@@ -506,6 +507,51 @@ Authorization: Bearer {accessToken}
 
 ---
 
+### 내가 작성한 아티클 목록 (로그인 필요)
+
+```http
+GET /api/blog/posts/me
+Authorization: Bearer {accessToken}
+```
+
+> 근거: `PostController.java:91`, `@PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")`
+
+**Query Parameters** (모두 선택)
+
+| 파라미터 | 타입 | 설명 | 기본값 |
+|----------|------|------|--------|
+| `status` | PostStatus | 상태 필터 (`DRAFT` \| `PENDING_REVIEW` \| `PUBLISHED` \| `REJECTED` \| `HIDDEN`) | 전체 |
+| `page` | int | 페이지 번호 (0-indexed) | `0` |
+| `size` | int | 페이지 크기 | `10` |
+
+**Response** `200 OK` — `Page<PostSummaryResponse>` (게시글 목록 조회와 동일한 구조)
+
+> 본인 글이므로 `DRAFT`, `PENDING_REVIEW`, `REJECTED` 상태 글도 포함됩니다.
+
+---
+
+### 내가 북마크한 아티클 목록 (로그인 필요)
+
+```http
+GET /api/blog/posts/bookmarks
+Authorization: Bearer {accessToken}
+```
+
+> 근거: `PostController.java:108`, `@PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")`
+
+**Query Parameters** (모두 선택)
+
+| 파라미터 | 타입 | 설명 | 기본값 |
+|----------|------|------|--------|
+| `page` | int | 페이지 번호 (0-indexed) | `0` |
+| `size` | int | 페이지 크기 | `10` |
+
+**Response** `200 OK` — `Page<PostSummaryResponse>` (게시글 목록 조회와 동일한 구조)
+
+> `PUBLISHED` 상태 글만 반환됩니다. 북마크했더라도 비공개/심사 중인 글은 제외됩니다.
+
+---
+
 ## 5. 댓글 API
 
 ### 댓글 목록 조회
@@ -634,8 +680,8 @@ Authorization: Bearer {accessToken}
 
 ## 6. 어드민 API
 
-> 모든 어드민 API는 `ADMIN` 역할 필요.  
-> 근거: `src/main/java/com/study/blog/presentation/admin/AdminController.java:22` — `@PreAuthorize("hasRole('ADMIN')")`  
+> 모든 어드민 API는 `ADMIN` 또는 `PRESIDENT` 역할 필요.  
+> 근거: `src/main/java/com/study/blog/presentation/admin/AdminController.java` — `@PreAuthorize("hasAnyRole('ADMIN', 'PRESIDENT')")`  
 > `MEMBER`가 호출하면 `403 Forbidden`.
 
 ### 블로그 통계 조회
@@ -730,15 +776,162 @@ DELETE /api/blog/admin/posts/{id}
 Authorization: Bearer {accessToken}
 ```
 
-> 근거: `AdminController.java:49`
+> 근거: `AdminController.java`
+
+**조건**: 게시글 상태가 `HIDDEN`이고, 숨김 처리 후 **24시간 이상** 경과해야 함.
+
+| 에러 | HTTP | 메시지 |
+|------|------|--------|
+| HIDDEN이 아닌 게시글 | `400` | 숨김 처리된 게시글만 삭제할 수 있습니다 |
+| 24시간 미경과 | `400` | 숨김 처리 후 24시간이 지나야 삭제할 수 있습니다 |
 
 **Response** `204 No Content` (body 없음)
 
-> 근거: `AdminController.java:52` — `ResponseEntity.noContent().build()`
+---
+
+### 게시글 숨김 처리
+
+```http
+PATCH /api/blog/admin/posts/{id}/hide
+Authorization: Bearer {accessToken}
+```
+
+> 근거: `AdminController.java`
+
+숨김 처리된 게시글은 일반 목록에서 제외됩니다. 작성자 본인은 단건 조회 가능.
+
+**Response** `200 OK` — `AdminPostResponse`
+
+```json
+{
+  "id": 278,
+  "title": "테스트 게시글",
+  "board": "백엔드",
+  "category": "Spring",
+  "generation": "15기",
+  "status": "HIDDEN",
+  "authorId": 1645,
+  "tags": [],
+  "likeCount": 0,
+  "createdAt": "2026-06-01T20:05:32",
+  "hiddenAt": "2026-06-01T20:24:55"
+}
+```
 
 ---
 
-## 7. 헬스체크 API
+### 댓글 숨김 처리
+
+```http
+PATCH /api/blog/admin/comments/{id}/hide
+Authorization: Bearer {accessToken}
+```
+
+> 근거: `AdminController.java`
+
+**Response** `204 No Content` (body 없음)
+
+---
+
+### 댓글 강제 삭제
+
+```http
+DELETE /api/blog/admin/comments/{id}
+Authorization: Bearer {accessToken}
+```
+
+> 근거: `AdminController.java`
+
+**조건**: 댓글 상태가 `HIDDEN`이고, 숨김 처리 후 **24시간 이상** 경과해야 함.
+
+| 에러 | HTTP | 메시지 |
+|------|------|--------|
+| HIDDEN이 아닌 댓글 | `400` | 숨김 처리된 댓글만 삭제할 수 있습니다 |
+| 24시간 미경과 | `400` | 숨김 처리 후 24시간이 지나야 댓글을 삭제할 수 있습니다 |
+
+**Response** `204 No Content` (body 없음)
+
+---
+
+## 7. 유저 권한 관리 API (PRESIDENT 전용)
+
+> 모든 엔드포인트는 `PRESIDENT` 역할 필요.  
+> 근거: `src/main/java/com/study/auth/presentation/controller/UserAdminController.java` — `@PreAuthorize("hasRole('PRESIDENT')")`  
+> `ADMIN` 또는 `MEMBER`가 호출하면 `403 Forbidden`.
+
+**Response 공통 구조**
+
+```json
+{
+  "id": 1612,
+  "email": "user@example.com",
+  "role": "ADMIN",
+  "status": "ACTIVE",
+  "signupRequestedAt": "2026-05-13T13:32:59.225965Z",
+  "approvedAt": null
+}
+```
+
+---
+
+### Admin 권한 부여
+
+```http
+POST /api/admin/users/{userId}/grant-admin
+Authorization: Bearer {presidentToken}
+```
+
+대상 유저에게 `ADMIN` 권한을 부여합니다.
+
+| 에러 조건 | HTTP |
+|-----------|------|
+| 자기 자신에게 부여 | `400` |
+| 이미 ADMIN인 유저 | `400` |
+| 비활성(ACTIVE 아님) 유저 | `400` |
+
+**Response** `200 OK` — 변경된 유저 정보
+
+---
+
+### Admin 권한 해제
+
+```http
+POST /api/admin/users/{userId}/revoke-admin
+Authorization: Bearer {presidentToken}
+```
+
+대상 유저의 `ADMIN` 권한을 `MEMBER`로 강등합니다.
+
+| 에러 조건 | HTTP |
+|-----------|------|
+| 자기 자신 해제 시도 | `400` |
+| ADMIN이 아닌 유저 | `400` |
+
+**Response** `200 OK` — 변경된 유저 정보
+
+---
+
+### PRESIDENT 권한 이양
+
+```http
+POST /api/admin/users/{userId}/transfer-president
+Authorization: Bearer {presidentToken}
+```
+
+`PRESIDENT` 권한을 대상 유저에게 이양합니다. 기존 회장은 `MEMBER`로 강등됩니다.
+
+| 에러 조건 | HTTP |
+|-----------|------|
+| 자기 자신에게 이양 | `400` |
+| 비활성(ACTIVE 아님) 유저 | `400` |
+
+**Response** `200 OK` — 변경된 유저 정보 (새 PRESIDENT)
+
+> **주의:** 이양 후 기존 PRESIDENT 토큰은 만료되지 않지만 권한이 `MEMBER`로 변경됩니다. 이양 즉시 재로그인을 권장합니다.
+
+---
+
+## 8. 헬스체크 API
 
 ### 라이브니스 프로브
 
@@ -772,7 +965,7 @@ GET /api/health/ready
 
 ---
 
-## 8. 에러 처리
+## 9. 에러 처리
 
 ### 에러 응답 구조
 
@@ -816,17 +1009,21 @@ const data = await api.delete(`/api/blog/posts/${id}`).then(r => r.data)
 
 ---
 
-## 9. 공통 타입 정의
+## 10. 공통 타입 정의
 
 ### Enum
 
 > 근거: `src/main/java/com/study/auth/domain/model/UserRole.java`, `UserStatus.java`, `src/main/java/com/study/blog/domain/model/PostStatus.java`
 
 ```ts
-type UserRole = 'ADMIN' | 'MEMBER'
-type UserStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'EXPIRED'
-type PostStatus = 'DRAFT' | 'PUBLISHED'
+type UserRole = 'PRESIDENT' | 'ADMIN' | 'MEMBER'
+type UserStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'EXPIRED' | 'ALUMNI'
+type PostStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'HIDDEN'
 ```
+
+> - `PRESIDENT`: 서비스 최상위 관리자. DB에서 직접 초기 지정.
+> - `ALUMNI`: 기수 종료 후 상태. `EXPIRED`는 가입 7일 내 미승인 만료에만 사용.
+> - `HIDDEN`: 관리자가 숨김 처리한 게시글. 작성자와 ADMIN/PRESIDENT만 단건 조회 가능.
 
 ### JWT Access Token Claims
 
@@ -860,7 +1057,7 @@ Access Token을 디코딩하면 아래 정보를 얻을 수 있습니다.
 
 ---
 
-## 10. 토큰 자동 갱신 구현 예시
+## 11. 토큰 자동 갱신 구현 예시
 
 Access Token(15분)이 만료되면 `401`이 반환됩니다.
 
@@ -936,27 +1133,35 @@ export { api, accessToken }
 
 ## 빠른 참조 — 엔드포인트 요약
 
-| Method | Path | 인증 | 응답 | 근거 |
+| Method | Path | 인증 | 응답 | 비고 |
 |--------|------|------|------|------|
-| POST | `/api/auth/signup` | 불필요 | 201 | `AuthController.java:52` |
-| POST | `/api/auth/login` | 불필요 | 200 | `AuthController.java:58` |
-| POST | `/api/auth/refresh` | 불필요 (쿠키) | 200 | `AuthController.java:70` |
-| POST | `/api/auth/logout` | 불필요 (쿠키) | **204** | `AuthController.java:84,100` |
-| GET | `/api/blog/posts` | 불필요 | 200 | `PostController.java:36` |
-| GET | `/api/blog/posts/{id}` | 불필요 | 200 | `PostController.java:49` |
-| POST | `/api/blog/posts` | MEMBER/ADMIN | 201 | `PostController.java:56` |
-| PUT | `/api/blog/posts/{id}` | MEMBER/ADMIN | 200 | `PostController.java:63` |
-| DELETE | `/api/blog/posts/{id}` | MEMBER/ADMIN | **204** | `PostController.java:72` |
-| POST | `/api/blog/posts/{id}/like` | MEMBER/ADMIN | 200 | `PostController.java:80` |
-| POST | `/api/blog/posts/{id}/bookmark` | MEMBER/ADMIN | 200 | `PostController.java:88` |
-| GET | `/api/blog/posts/{postId}/comments` | 불필요 | 200 | `CommentController.java:34` |
-| POST | `/api/blog/posts/{postId}/comments` | MEMBER/ADMIN | 201 | `CommentController.java:41` |
-| PUT | `/api/blog/comments/{id}` | MEMBER/ADMIN | 200 | `CommentController.java:51` |
-| DELETE | `/api/blog/comments/{id}` | MEMBER/ADMIN | **204** | `CommentController.java:60` |
-| POST | `/api/blog/comments/{id}/like` | MEMBER/ADMIN | 200 | `CommentController.java:68` |
-| GET | `/api/blog/admin/stats` | ADMIN | 200 | `AdminController.java:31` |
-| GET | `/api/blog/admin/posts` | ADMIN | 200 | `AdminController.java:36` |
-| PATCH | `/api/blog/admin/posts/{id}/status` | ADMIN | **200 + body** | `AdminController.java:43,46` |
-| DELETE | `/api/blog/admin/posts/{id}` | ADMIN | **204** | `AdminController.java:49,52` |
-| GET | `/api/health` | 불필요 | 200 | `SecurityConfig.java:59` |
-| GET | `/api/health/ready` | 불필요 | 200/503 | `SecurityConfig.java:60` |
+| POST | `/api/auth/signup` | 불필요 | 201 | |
+| POST | `/api/auth/login` | 불필요 | 200 | |
+| POST | `/api/auth/refresh` | 불필요 (쿠키) | 200 | |
+| POST | `/api/auth/logout` | 불필요 (쿠키) | **204** | |
+| GET | `/api/blog/posts` | 불필요 | 200 | HIDDEN 제외 |
+| GET | `/api/blog/posts/{id}` | 선택 | 200 | HIDDEN: 작성자·ADMIN·PRESIDENT만 |
+| POST | `/api/blog/posts` | MEMBER/ADMIN/PRESIDENT | 201 | |
+| PUT | `/api/blog/posts/{id}` | MEMBER/ADMIN/PRESIDENT | 200 | |
+| DELETE | `/api/blog/posts/{id}` | MEMBER/ADMIN/PRESIDENT | **204** | |
+| POST | `/api/blog/posts/{id}/like` | MEMBER/ADMIN/PRESIDENT | 200 | |
+| POST | `/api/blog/posts/{id}/bookmark` | MEMBER/ADMIN/PRESIDENT | 200 | |
+| GET | `/api/blog/posts/me` | MEMBER/ADMIN/PRESIDENT | 200 | status 필터 가능, 전체 상태 포함 |
+| GET | `/api/blog/posts/bookmarks` | MEMBER/ADMIN/PRESIDENT | 200 | PUBLISHED만 반환 |
+| GET | `/api/blog/posts/{postId}/comments` | 불필요 | 200 | HIDDEN 댓글 제외 |
+| POST | `/api/blog/posts/{postId}/comments` | MEMBER/ADMIN/PRESIDENT | 201 | |
+| PUT | `/api/blog/comments/{id}` | MEMBER/ADMIN/PRESIDENT | 200 | |
+| DELETE | `/api/blog/comments/{id}` | MEMBER/ADMIN/PRESIDENT | **204** | |
+| POST | `/api/blog/comments/{id}/like` | MEMBER/ADMIN/PRESIDENT | 200 | |
+| GET | `/api/blog/admin/stats` | ADMIN/PRESIDENT | 200 | |
+| GET | `/api/blog/admin/posts` | ADMIN/PRESIDENT | 200 | HIDDEN 포함 |
+| PATCH | `/api/blog/admin/posts/{id}/status` | ADMIN/PRESIDENT | **200 + body** | |
+| PATCH | `/api/blog/admin/posts/{id}/hide` | ADMIN/PRESIDENT | **200 + body** | 게시글 숨김 처리 |
+| DELETE | `/api/blog/admin/posts/{id}` | ADMIN/PRESIDENT | **204** | HIDDEN + 24h 경과 필요 |
+| PATCH | `/api/blog/admin/comments/{id}/hide` | ADMIN/PRESIDENT | **204** | 댓글 숨김 처리 |
+| DELETE | `/api/blog/admin/comments/{id}` | ADMIN/PRESIDENT | **204** | HIDDEN + 24h 경과 필요 |
+| POST | `/api/admin/users/{id}/grant-admin` | PRESIDENT | 200 | ADMIN 권한 부여 |
+| POST | `/api/admin/users/{id}/revoke-admin` | PRESIDENT | 200 | ADMIN 권한 해제 |
+| POST | `/api/admin/users/{id}/transfer-president` | PRESIDENT | 200 | 회장 권한 이양 |
+| GET | `/api/health` | 불필요 | 200 | |
+| GET | `/api/health/ready` | 불필요 | 200/503 | |

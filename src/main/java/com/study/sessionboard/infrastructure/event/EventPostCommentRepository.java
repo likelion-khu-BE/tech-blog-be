@@ -12,4 +12,8 @@ public interface EventPostCommentRepository extends JpaRepository<EventPostComme
       "SELECT c.post.id, COUNT(c) FROM EventPostComment c "
           + "WHERE c.post.id IN :postIds GROUP BY c.post.id")
   List<Object[]> countByPostIdIn(@Param("postIds") List<Long> postIds);
+
+  List<EventPostComment> findByPostIdAndParentIsNullOrderByCreatedAtAsc(Long postId);
+
+  List<EventPostComment> findByParentIdInOrderByCreatedAtAsc(List<Long> parentIds);
 }

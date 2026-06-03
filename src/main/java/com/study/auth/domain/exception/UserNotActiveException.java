@@ -1,6 +1,6 @@
 package com.study.auth.domain.exception;
 
-/** 로그인 시도했으나 계정이 ACTIVE 상태가 아닌 경우 (PENDING, REJECTED, EXPIRED). */
+/** 로그인 시도했으나 계정이 ACTIVE 상태가 아닌 경우 (PENDING, REJECTED, EXPIRED, ALUMNI). */
 public class UserNotActiveException extends AuthException {
 
   public UserNotActiveException() {

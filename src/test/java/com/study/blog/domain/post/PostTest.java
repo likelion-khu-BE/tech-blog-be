@@ -45,4 +45,53 @@ class PostTest {
     assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
     assertThat(post.getTitle()).isEqualTo("원본 제목");
   }
+
+  @Test
+  @DisplayName("publish() - 상태 PUBLISHED, rejectedReason null로 초기화")
+  void publish_setsPublishedAndClearsRejectedReason() {
+    post.reject("내용 부족");
+    post.publish();
+
+    assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
+    assertThat(post.getRejectedReason()).isNull();
+  }
+
+  @Test
+  @DisplayName("publish() - 기존 거부 사유 없어도 정상")
+  void publish_withoutPriorRejection_setsPublished() {
+    post.publish();
+
+    assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
+    assertThat(post.getRejectedReason()).isNull();
+  }
+
+  @Test
+  @DisplayName("reject(reason) - 상태 REJECTED, rejectedReason 저장")
+  void reject_setsRejectedAndStoresReason() {
+    post.reject("내용이 너무 짧습니다");
+
+    assertThat(post.getStatus()).isEqualTo(PostStatus.REJECTED);
+    assertThat(post.getRejectedReason()).isEqualTo("내용이 너무 짧습니다");
+  }
+
+  @Test
+  @DisplayName("resetToDraft() - 상태 DRAFT로, rejectedReason 유지")
+  void resetToDraft_setsDraftButPreservesRejectedReason() {
+    post.reject("내용이 너무 짧습니다");
+    post.resetToDraft();
+
+    assertThat(post.getStatus()).isEqualTo(PostStatus.DRAFT);
+    assertThat(post.getRejectedReason()).isEqualTo("내용이 너무 짧습니다");
+  }
+
+  @Test
+  @DisplayName("resetToDraft() → changeStatus(PENDING_REVIEW) → rejectedReason 유지")
+  void resetToDraft_thenPendingReview_reasonStillPreserved() {
+    post.reject("이유");
+    post.resetToDraft();
+    post.changeStatus(PostStatus.PENDING_REVIEW);
+
+    assertThat(post.getStatus()).isEqualTo(PostStatus.PENDING_REVIEW);
+    assertThat(post.getRejectedReason()).isEqualTo("이유");
+  }
 }

@@ -3,8 +3,7 @@ package com.study.sessionboard.presentation.event;
 import com.study.auth.infrastructure.security.CurrentUser;
 import com.study.auth.infrastructure.security.CustomUserDetails;
 import com.study.sessionboard.application.event.EventPostService;
-import com.study.sessionboard.application.event.dto.EventPostSummaryResponse;
-import com.study.sessionboard.application.event.dto.PageWrapper;
+import com.study.sessionboard.application.event.dto.*;
 import com.study.sessionboard.domain.event.EventPostType;
 import com.study.sessionboard.presentation.dto.EventPostCreateRequest;
 import com.study.sessionboard.presentation.dto.EventPostCreateResponse;
@@ -12,6 +11,7 @@ import com.study.sessionboard.presentation.dto.EventPostResponse;
 import com.study.sessionboard.presentation.dto.EventPostUpdateResponse;
 import jakarta.validation.Valid;
 import java.time.OffsetDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,6 +34,85 @@ public class EventPostController {
       @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
           Pageable pageable) {
     return ResponseEntity.ok(eventPostService.getEventPosts(generationNumber, type, pageable));
+  }
+
+  @PostMapping("/{eventPostId}/like")
+  public ResponseEntity<LikeToggleResponse> toggleLike(
+      @PathVariable Long generationNumber,
+      @PathVariable Long eventPostId,
+      @CurrentUser CustomUserDetails authUser) {
+    return ResponseEntity.ok(eventPostService.toggleLike(eventPostId, authUser.userId()));
+  }
+
+  @GetMapping("/{eventPostId}/comments")
+  public ResponseEntity<List<CommentResponse>> getComments(
+      @PathVariable Long generationNumber, @PathVariable Long eventPostId) {
+    return ResponseEntity.ok(eventPostService.getComments(eventPostId));
+  }
+
+  @PostMapping("/{eventPostId}/comments")
+  public ResponseEntity<CommentResponse> createComment(
+      @PathVariable Long generationNumber,
+      @PathVariable Long eventPostId,
+      @CurrentUser CustomUserDetails authUser,
+      @RequestBody @Valid CommentRequest request) {
+    return ResponseEntity.status(201)
+        .body(eventPostService.createComment(eventPostId, authUser.userId(), request));
+  }
+
+  @PatchMapping("/{eventPostId}/comments/{commentId}")
+  public ResponseEntity<Void> updateComment(
+      @PathVariable Long generationNumber,
+      @PathVariable Long eventPostId,
+      @PathVariable Long commentId,
+      @CurrentUser CustomUserDetails authUser,
+      @RequestBody @Valid CommentRequest request) {
+    eventPostService.updateComment(commentId, authUser.userId(), request);
+    return ResponseEntity.ok().build();
+  }
+
+  @DeleteMapping("/{eventPostId}/comments/{commentId}")
+  public ResponseEntity<Void> deleteComment(
+      @PathVariable Long generationNumber,
+      @PathVariable Long eventPostId,
+      @PathVariable Long commentId,
+      @CurrentUser CustomUserDetails authUser) {
+    eventPostService.deleteComment(commentId, authUser.userId());
+    return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/{eventPostId}/comments/{commentId}/replies")
+  public ResponseEntity<CommentResponse> createReply(
+      @PathVariable Long generationNumber,
+      @PathVariable Long eventPostId,
+      @PathVariable Long commentId,
+      @CurrentUser CustomUserDetails authUser,
+      @RequestBody @Valid CommentRequest request) {
+    return ResponseEntity.status(201)
+        .body(eventPostService.createReply(eventPostId, commentId, authUser.userId(), request));
+  }
+
+  @PatchMapping("/{eventPostId}/comments/{commentId}/replies/{replyId}")
+  public ResponseEntity<Void> updateReply(
+      @PathVariable Long generationNumber,
+      @PathVariable Long eventPostId,
+      @PathVariable Long commentId,
+      @PathVariable Long replyId,
+      @CurrentUser CustomUserDetails authUser,
+      @RequestBody @Valid CommentRequest request) {
+    eventPostService.updateReply(replyId, authUser.userId(), request);
+    return ResponseEntity.ok().build();
+  }
+
+  @DeleteMapping("/{eventPostId}/comments/{commentId}/replies/{replyId}")
+  public ResponseEntity<Void> deleteReply(
+      @PathVariable Long generationNumber,
+      @PathVariable Long eventPostId,
+      @PathVariable Long commentId,
+      @PathVariable Long replyId,
+      @CurrentUser CustomUserDetails authUser) {
+    eventPostService.deleteReply(replyId, authUser.userId());
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/{eventPostId}")

@@ -19,6 +19,7 @@ import com.study.blog.infrastructure.post.PostLikeRepository;
 import com.study.blog.infrastructure.post.PostRepository;
 import com.study.blog.infrastructure.post.PostTagRepository;
 import com.study.config.TestcontainersConfig;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +61,7 @@ class AdminApiTest {
   @Autowired PostLikeRepository postLikeRepository;
   @Autowired CommentRepository commentRepository;
 
-  Post p1, p2, p3, p4;
+  Post p1, p2, p3, p4, p5, p6;
 
   @BeforeEach
   void setUp() {
@@ -118,6 +120,33 @@ class AdminApiTest {
                 .generation("13기")
                 .build());
 
+    // p5: PENDING_REVIEW, 13기, 백엔드/JPA, MOCK_USER
+    p5 =
+        postRepository.save(
+            Post.builder()
+                .userId(MOCK_USER_ID)
+                .title("JPA N+1 문제 해결 방법 (검토 대기)")
+                .content("검토 대기 중인 포스트입니다.")
+                .board("백엔드")
+                .category("JPA")
+                .status(PostStatus.PENDING_REVIEW)
+                .generation("13기")
+                .build());
+
+    // p6: REJECTED, 13기, 백엔드/Redis, OTHER_USER — with rejectedReason
+    p6 =
+        postRepository.save(
+            Post.builder()
+                .userId(OTHER_USER_ID)
+                .title("Redis 캐시 전략 (거부됨)")
+                .content("거부된 포스트입니다.")
+                .board("백엔드")
+                .category("Redis")
+                .status(PostStatus.REJECTED)
+                .generation("13기")
+                .build());
+    p6.reject("내용이 너무 짧습니다");
+
     // 3 comments on p1: 2 roots + 1 reply
     Comment c1 =
         commentRepository.save(
@@ -144,13 +173,15 @@ class AdminApiTest {
   // ── GET /api/blog/admin/stats ────────────────────────────────────────────
 
   @Test
-  @DisplayName("GET /admin/stats - 정확한 카운트 반환")
+  @DisplayName("GET /admin/stats - 6개 필드 정확한 카운트 반환")
   void getStats_returnsCorrectCounts() throws Exception {
     mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalPosts").value(4))
+        .andExpect(jsonPath("$.totalPosts").value(6))
         .andExpect(jsonPath("$.publishedPosts").value(3))
         .andExpect(jsonPath("$.draftPosts").value(1))
+        .andExpect(jsonPath("$.pendingReviewPosts").value(1))
+        .andExpect(jsonPath("$.rejectedPosts").value(1))
         .andExpect(jsonPath("$.totalComments").value(3));
   }
 
@@ -170,7 +201,7 @@ class AdminApiTest {
 
     mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalPosts").value(5))
+        .andExpect(jsonPath("$.totalPosts").value(7))
         .andExpect(jsonPath("$.draftPosts").value(2))
         .andExpect(jsonPath("$.publishedPosts").value(3));
   }
@@ -196,6 +227,15 @@ class AdminApiTest {
   }
 
   @Test
+  @DisplayName("GET /admin/stats - pendingReviewPosts/rejectedPosts 필드 존재")
+  void getStats_includesPendingReviewAndRejectedFields() throws Exception {
+    mvc.perform(get("/api/blog/admin/stats").with(TestAuth.asAdmin(MOCK_USER_ID)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.pendingReviewPosts").isNumber())
+        .andExpect(jsonPath("$.rejectedPosts").isNumber());
+  }
+
+  @Test
   @DisplayName("GET /admin/stats - 소프트 삭제 댓글도 집계에 포함")
   void getStats_softDeletedComment_isCountedInTotalComments() throws Exception {
     Comment extra =
@@ -216,23 +256,21 @@ class AdminApiTest {
   // ── GET /api/blog/admin/posts ────────────────────────────────────────────
 
   @Test
-  @DisplayName("GET /admin/posts - 임시저장 포함 전체 조회")
-  void getAllPosts_includesDrafts() throws Exception {
+  @DisplayName("GET /admin/posts - 모든 상태 포함 전체 조회")
+  void getAllPosts_includesAllStatuses() throws Exception {
     mvc.perform(get("/api/blog/admin/posts").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
-        // Admin sees all 4 posts (including DRAFT)
-        .andExpect(jsonPath("$.totalElements").value(4))
+        .andExpect(jsonPath("$.totalElements").value(6))
         .andExpect(jsonPath("$.content").isArray());
   }
 
   @Test
   @DisplayName("GET /admin/posts - 기본 페이지 크기 20")
   void getAllPosts_pagination_defaultPage20() throws Exception {
-    // Default page size is 20 → all 4 fit on first page
     mvc.perform(get("/api/blog/admin/posts").with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.size").value(20))
-        .andExpect(jsonPath("$.numberOfElements").value(4))
+        .andExpect(jsonPath("$.numberOfElements").value(6))
         .andExpect(jsonPath("$.totalPages").value(1));
   }
 
@@ -245,23 +283,59 @@ class AdminApiTest {
                 .param("size", "2")
                 .param("page", "0"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalElements").value(4))
+        .andExpect(jsonPath("$.totalElements").value(6))
         .andExpect(jsonPath("$.content.length()").value(2))
-        .andExpect(jsonPath("$.totalPages").value(2));
+        .andExpect(jsonPath("$.totalPages").value(3));
   }
 
   @Test
-  @DisplayName("GET /admin/posts - 포스트 필드 검증 (임시저장 상태 포함)")
-  void getAllPosts_postFields_includeTagsAndLikeCount() throws Exception {
+  @DisplayName("GET /admin/posts - 포스트 필드 검증 (모든 상태 포함)")
+  void getAllPosts_postFields_includeAllStatuses() throws Exception {
     mvc.perform(
             get("/api/blog/admin/posts")
                 .with(TestAuth.asAdmin(MOCK_USER_ID))
-                .param("size", "10")
+                .param("size", "20")
                 .param("page", "0"))
         .andExpect(status().isOk())
-        // All 4 posts returned including p4 (DRAFT) — sort order may vary in H2 due to
-        // same-millisecond timestamps
-        .andExpect(jsonPath("$.content[*].status", hasItem("DRAFT")));
+        .andExpect(jsonPath("$.content[*].status", hasItem("DRAFT")))
+        .andExpect(jsonPath("$.content[*].status", hasItem("PENDING_REVIEW")))
+        .andExpect(jsonPath("$.content[*].status", hasItem("REJECTED")));
+  }
+
+  @Test
+  @DisplayName("GET /admin/posts?status=PENDING_REVIEW - 검토 대기 포스트만 조회")
+  void getAllPosts_filterByPendingReview_returnsOnlyPendingReview() throws Exception {
+    mvc.perform(
+            get("/api/blog/admin/posts")
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
+                .param("status", "PENDING_REVIEW"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].status").value("PENDING_REVIEW"))
+        .andExpect(jsonPath("$.content[0].title").value("JPA N+1 문제 해결 방법 (검토 대기)"));
+  }
+
+  @Test
+  @DisplayName("GET /admin/posts?status=REJECTED - 거부된 포스트만 조회")
+  void getAllPosts_filterByRejected_returnsOnlyRejected() throws Exception {
+    mvc.perform(
+            get("/api/blog/admin/posts")
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
+                .param("status", "REJECTED"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].status").value("REJECTED"));
+  }
+
+  @Test
+  @DisplayName("GET /admin/posts?status=PUBLISHED - 게시된 포스트만 조회")
+  void getAllPosts_filterByPublished_returnsOnlyPublished() throws Exception {
+    mvc.perform(
+            get("/api/blog/admin/posts")
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
+                .param("status", "PUBLISHED"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(3));
   }
 
   @Test
@@ -298,6 +372,66 @@ class AdminApiTest {
 
     Post updated = postRepository.findById(p1.getId()).orElseThrow();
     assertThat(updated.getStatus()).isEqualTo(PostStatus.DRAFT);
+  }
+
+  @Test
+  @DisplayName("PATCH /admin/posts/status - 검토대기→게시: publish() 호출로 rejectedReason null")
+  void changePostStatus_pendingReviewToPublished_clearsRejectedReason() throws Exception {
+    String body =
+        """
+        {"status": "PUBLISHED"}
+        """;
+
+    mvc.perform(
+            patch("/api/blog/admin/posts/{id}/status", p5.getId())
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("PUBLISHED"))
+        .andExpect(jsonPath("$.rejectedReason").isEmpty());
+
+    Post updated = postRepository.findById(p5.getId()).orElseThrow();
+    assertThat(updated.getStatus()).isEqualTo(PostStatus.PUBLISHED);
+    assertThat(updated.getRejectedReason()).isNull();
+  }
+
+  @Test
+  @DisplayName("PATCH /admin/posts/status - 검토대기→거부: 사유 포함")
+  void changePostStatus_pendingReviewToRejected_withReason_succeeds() throws Exception {
+    String body =
+        """
+        {"status": "REJECTED", "reason": "내용이 너무 짧습니다"}
+        """;
+
+    mvc.perform(
+            patch("/api/blog/admin/posts/{id}/status", p5.getId())
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("REJECTED"))
+        .andExpect(jsonPath("$.rejectedReason").value("내용이 너무 짧습니다"));
+
+    Post updated = postRepository.findById(p5.getId()).orElseThrow();
+    assertThat(updated.getStatus()).isEqualTo(PostStatus.REJECTED);
+    assertThat(updated.getRejectedReason()).isEqualTo("내용이 너무 짧습니다");
+  }
+
+  @Test
+  @DisplayName("PATCH /admin/posts/status - 거부 사유 없으면 400")
+  void changePostStatus_rejectedWithoutReason_returns400() throws Exception {
+    String body =
+        """
+        {"status": "REJECTED"}
+        """;
+
+    mvc.perform(
+            patch("/api/blog/admin/posts/{id}/status", p5.getId())
+                .with(TestAuth.asAdmin(MOCK_USER_ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -401,21 +535,28 @@ class AdminApiTest {
 
   // ── DELETE /api/blog/admin/posts/{id} ────────────────────────────────────
 
+  /** HIDDEN 상태 + hiddenAt을 25시간 전으로 설정한 포스트를 저장하는 헬퍼. */
+  private Post saveHiddenPostOlderThan24h(String title, Long userId) {
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(userId)
+                .title(title)
+                .content("내용")
+                .board("테스트")
+                .category("기타")
+                .status(PostStatus.PUBLISHED)
+                .generation("12기")
+                .build());
+    post.hide();
+    ReflectionTestUtils.setField(post, "hiddenAt", LocalDateTime.now().minusHours(25));
+    return postRepository.saveAndFlush(post);
+  }
+
   @Test
   @DisplayName("DELETE /admin/posts - 의존 데이터 없음 204")
   void forceDeletePost_noDependents_returns204AndRemovesPost() throws Exception {
-    // Create a fresh post with no tags, likes, or comments
-    Post toDelete =
-        postRepository.save(
-            Post.builder()
-                .userId(OTHER_USER_ID)
-                .title("어드민 강제 삭제 대상 포스트")
-                .content("어드민이 삭제할 포스트입니다. 의존 데이터가 없습니다.")
-                .board("테스트")
-                .category("기타")
-                .status(PostStatus.DRAFT)
-                .generation("12기")
-                .build());
+    Post toDelete = saveHiddenPostOlderThan24h("어드민 강제 삭제 대상 포스트", OTHER_USER_ID);
     Long toDeleteId = toDelete.getId();
 
     mvc.perform(
@@ -428,17 +569,7 @@ class AdminApiTest {
   @Test
   @DisplayName("DELETE /admin/posts - 태그 있는 포스트 204")
   void forceDeletePost_withTags_deleteTagsAndPost() throws Exception {
-    Post toDelete =
-        postRepository.save(
-            Post.builder()
-                .userId(MOCK_USER_ID)
-                .title("태그 있는 포스트 강제 삭제 테스트")
-                .content("태그가 있는 포스트를 어드민이 삭제합니다.")
-                .board("백엔드")
-                .category("JPA")
-                .status(PostStatus.PUBLISHED)
-                .generation("13기")
-                .build());
+    Post toDelete = saveHiddenPostOlderThan24h("태그 있는 포스트 강제 삭제 테스트", MOCK_USER_ID);
     postTagRepository.save(new PostTag(toDelete, "JPA"));
     postTagRepository.save(new PostTag(toDelete, "Hibernate"));
     Long toDeleteId = toDelete.getId();
@@ -461,17 +592,7 @@ class AdminApiTest {
   @Test
   @DisplayName("DELETE /admin/posts - 좋아요·댓글 있는 포스트 204")
   void forceDeletePost_withLikesAndComments_returns204() throws Exception {
-    Post richPost =
-        postRepository.save(
-            Post.builder()
-                .userId(MOCK_USER_ID)
-                .title("의존 데이터 총집합 (어드민 강제 삭제)")
-                .content("태그, 좋아요, 댓글이 모두 달린 포스트입니다. 어드민이 삭제합니다.")
-                .board("백엔드")
-                .category("기타")
-                .status(PostStatus.PUBLISHED)
-                .generation("13기")
-                .build());
+    Post richPost = saveHiddenPostOlderThan24h("의존 데이터 총집합 (어드민 강제 삭제)", MOCK_USER_ID);
     postTagRepository.save(new PostTag(richPost, "cascade-admin"));
     postLikeRepository.save(new PostLike(richPost, OTHER_USER_ID));
     commentRepository.save(
@@ -485,6 +606,36 @@ class AdminApiTest {
             delete("/api/blog/admin/posts/{id}", richPost.getId())
                 .with(TestAuth.asAdmin(MOCK_USER_ID)))
         .andExpect(status().isNoContent());
+  }
+
+  @Test
+  @DisplayName("DELETE /admin/posts - HIDDEN 아닌 포스트 400")
+  void forceDeletePost_notHidden_returns400() throws Exception {
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", p1.getId()).with(TestAuth.asAdmin(MOCK_USER_ID)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("DELETE /admin/posts - 숨김 후 24시간 미경과 400")
+  void forceDeletePost_tooEarly_returns400() throws Exception {
+    Post post =
+        postRepository.save(
+            Post.builder()
+                .userId(MOCK_USER_ID)
+                .title("방금 숨김 처리한 포스트")
+                .content("내용")
+                .board("테스트")
+                .category("기타")
+                .status(PostStatus.PUBLISHED)
+                .generation("12기")
+                .build());
+    post.hide();
+    postRepository.saveAndFlush(post);
+
+    mvc.perform(
+            delete("/api/blog/admin/posts/{id}", post.getId()).with(TestAuth.asAdmin(MOCK_USER_ID)))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
