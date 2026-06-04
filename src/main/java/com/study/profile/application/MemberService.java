@@ -199,9 +199,7 @@ public class MemberService {
   }
 
   public PresignedUrlResponse issueProfileImagePresignedUrl(Long userId, String filename) {
-    return memberS3Client
-        .issuePresignedUrls(userId, List.of(filename), "members/" + userId)
-        .get(0);
+    return memberS3Client.issuePresignedUrls(userId, List.of(filename), "members/" + userId).get(0);
   }
 
   private void deleteFromS3(String imageUrl) {

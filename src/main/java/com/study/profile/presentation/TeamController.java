@@ -147,8 +147,7 @@ public class TeamController {
 
   @Operation(
       summary = "팀 이미지 presigned URL 발급",
-      description =
-          "S3에 직접 업로드할 presigned PUT URL을 발급합니다. 반환된 key를 팀 생성/수정 요청의 imageKeys에 포함하세요.")
+      description = "S3에 직접 업로드할 presigned PUT URL을 발급합니다. 반환된 key를 팀 생성/수정 요청의 imageKeys에 포함하세요.")
   @PostMapping("/images/presigned-urls")
   @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
   public ResponseEntity<List<PresignedUrlResponse>> issuePresignedUrls(
