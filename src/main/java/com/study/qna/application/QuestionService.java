@@ -130,8 +130,7 @@ public class QuestionService {
     }
 
     // DB CASCADE 방지: 답변과 그 댓글을 서비스 레벨에서 먼저 삭제해 이벤트 발행
-    answerRepository.findByQuestionId(questionId)
-        .forEach(answerService::deleteAnswerCascade);
+    answerRepository.findByQuestionId(questionId).forEach(answerService::deleteAnswerCascade);
 
     questionRepository.delete(question);
     eventPublisher.publishEvent(new QnaQuestionDeleted(userId, questionId));
