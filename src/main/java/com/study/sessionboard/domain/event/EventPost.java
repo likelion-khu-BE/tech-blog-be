@@ -35,7 +35,7 @@ public class EventPost {
   private Member author;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "generation_number", nullable = false) // generation number로 시현 수정
+  @JoinColumn(name = "generation_number", nullable = false)
   private Generation generation;
 
   @Enumerated(EnumType.STRING)
@@ -93,8 +93,24 @@ public class EventPost {
     post.title = title;
     post.body = body;
     post.tags = tags != null ? tags : new String[0];
-    post.status = EventPostStatus.PUBLISHED; // Default to PUBLISHED for now as per spec 1-3
+    post.status = EventPostStatus.PUBLISHED;
     return post;
+  }
+
+  public void incrementLikeCount() {
+    this.likeCount++;
+  }
+
+  public void decrementLikeCount() {
+    if (this.likeCount > 0) this.likeCount--;
+  }
+
+  public void incrementCommentCount() {
+    this.commentCount++;
+  }
+
+  public void decrementCommentCount() {
+    if (this.commentCount > 0) this.commentCount--;
   }
 
   public void update(EventPostType type, String title, String body, String[] tags) {

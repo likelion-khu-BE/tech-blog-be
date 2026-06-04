@@ -35,10 +35,18 @@ public class NoteLink {
   @Column(name = "\"order\"", nullable = false)
   private int order = 0;
 
-  public static NoteLink of(SessionNote note, String url) {
+  public static NoteLink of(SessionNote note, String label, String url, int order) {
     NoteLink link = new NoteLink();
     link.note = note;
+    link.label = label;
     link.url = url;
+    link.order = order;
     return link;
+  }
+
+  public void update(String label, String url, int order) {
+    this.label = label;
+    this.url = url;
+    this.order = order;
   }
 }
