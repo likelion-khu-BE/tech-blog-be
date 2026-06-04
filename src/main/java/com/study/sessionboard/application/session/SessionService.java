@@ -12,9 +12,14 @@ import com.study.sessionboard.infrastructure.session.SessionNoteRepository;
 import com.study.sessionboard.infrastructure.session.SessionRepository;
 import com.study.sessionboard.infrastructure.session.SessionSpeakerRepository;
 import com.study.sessionboard.presentation.dto.session.*;
+import com.study.shared.extevent.sessionboard.SessionSpeakerRegistered;
+import com.study.shared.extevent.sessionboard.SessionSpeakerUnregistered;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +35,7 @@ public class SessionService {
   private final RetroRepository retroRepository;
   private final GenerationRepository generationRepository;
   private final MemberRepository memberRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   public List<SessionResponse> getSessions(Integer generationNumber, SessionStatus status) {
     if (!generationRepository.existsById(generationNumber)) {
@@ -79,6 +85,8 @@ public class SessionService {
       speakers.forEach(
           member -> {
             savedSession.addSpeaker(SessionSpeaker.of(savedSession, member));
+            eventPublisher.publishEvent(
+                new SessionSpeakerRegistered(member.getUser().getId(), savedSession.getId()));
           });
     }
 
@@ -96,6 +104,11 @@ public class SessionService {
     session.update(request.weekLabel(), request.title(), request.status(), request.startedAt());
 
     if (request.speakerIds() != null) {
+      Set<Long> existingUserIds =
+          session.getSpeakers().stream()
+              .map(s -> s.getMember().getUser().getId())
+              .collect(Collectors.toSet());
+
       session.getSpeakers().clear();
       List<Member> speakers = memberRepository.findAllById(request.speakerIds());
 
@@ -103,10 +116,22 @@ public class SessionService {
         throw new IllegalArgumentException("존재하지 않는 스피커 ID가 포함되어 있습니다.");
       }
 
-      speakers.forEach(
-          member -> {
-            session.addSpeaker(SessionSpeaker.of(session, member));
-          });
+      Set<Long> newUserIds =
+          speakers.stream().map(m -> m.getUser().getId()).collect(Collectors.toSet());
+
+      speakers.forEach(member -> session.addSpeaker(SessionSpeaker.of(session, member)));
+
+      existingUserIds.stream()
+          .filter(id -> !newUserIds.contains(id))
+          .forEach(
+              uid ->
+                  eventPublisher.publishEvent(new SessionSpeakerUnregistered(uid, sessionId)));
+
+      newUserIds.stream()
+          .filter(id -> !existingUserIds.contains(id))
+          .forEach(
+              uid ->
+                  eventPublisher.publishEvent(new SessionSpeakerRegistered(uid, sessionId)));
     }
 
     return OffsetDateTime.now(); // Updated at is not in the entity, using current time for response

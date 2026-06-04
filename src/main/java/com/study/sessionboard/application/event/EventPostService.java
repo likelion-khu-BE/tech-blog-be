@@ -24,7 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.study.shared.extevent.sessionboard.SessionEventCommentCreated;
+import com.study.shared.extevent.sessionboard.SessionEventCommentDeleted;
+import com.study.shared.extevent.sessionboard.SessionEventPostCreated;
+import com.study.shared.extevent.sessionboard.SessionEventPostDeleted;
+import com.study.shared.extevent.sessionboard.SessionEventPostLiked;
+import com.study.shared.extevent.sessionboard.SessionEventPostUnliked;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,6 +49,7 @@ public class EventPostService {
   private final MemberRepository memberRepository;
   private final MemberService memberService;
   private final GenerationService generationService;
+  private final ApplicationEventPublisher eventPublisher;
 
   public PageWrapper<EventPostSummaryResponse> getEventPosts(
       Integer generationNumber, EventPostType type, Pageable pageable) { // generation number로 시현 수정
@@ -106,7 +114,9 @@ public class EventPostService {
             request.body(),
             request.tags() != null ? request.tags().toArray(new String[0]) : null);
 
-    return eventPostRepository.save(post).getId();
+    Long postId = eventPostRepository.save(post).getId();
+    eventPublisher.publishEvent(new SessionEventPostCreated(userId, postId));
+    return postId;
   }
 
   @Transactional
@@ -139,6 +149,7 @@ public class EventPostService {
     }
 
     eventPostRepository.delete(post);
+    eventPublisher.publishEvent(new SessionEventPostDeleted(userId, eventPostId));
   }
 
   @Transactional
@@ -152,13 +163,17 @@ public class EventPostService {
     Optional<EventPostLike> existing =
         eventPostLikeRepository.findByMemberIdAndPostId(member.getId(), postId);
 
+    Long postOwnerId = post.getAuthor().getUser().getId();
+
     if (existing.isPresent()) {
       eventPostLikeRepository.delete(existing.get());
       post.decrementLikeCount();
+      eventPublisher.publishEvent(new SessionEventPostUnliked(userId, postId, postOwnerId));
       return new LikeToggleResponse(false, post.getLikeCount());
     } else {
       eventPostLikeRepository.save(EventPostLike.of(member, post));
       post.incrementLikeCount();
+      eventPublisher.publishEvent(new SessionEventPostLiked(userId, postId, postOwnerId));
       return new LikeToggleResponse(true, post.getLikeCount());
     }
   }
@@ -197,6 +212,7 @@ public class EventPostService {
     EventPostComment comment = EventPostComment.of(post, author, request.content());
     eventPostCommentRepository.save(comment);
     post.incrementCommentCount();
+    eventPublisher.publishEvent(new SessionEventCommentCreated(userId, postId, comment.getId()));
 
     return CommentResponse.of(comment, List.of());
   }
@@ -226,8 +242,10 @@ public class EventPostService {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
+    Long commentPostId = comment.getPost().getId();
     eventPostCommentRepository.delete(comment);
     comment.getPost().decrementCommentCount();
+    eventPublisher.publishEvent(new SessionEventCommentDeleted(userId, commentPostId, commentId));
   }
 
   @Transactional
@@ -248,6 +266,7 @@ public class EventPostService {
     EventPostComment reply = EventPostComment.ofReply(post, author, parent, request.content());
     eventPostCommentRepository.save(reply);
     post.incrementCommentCount();
+    eventPublisher.publishEvent(new SessionEventCommentCreated(userId, postId, reply.getId()));
 
     return CommentResponse.of(reply, List.of());
   }
@@ -279,7 +298,9 @@ public class EventPostService {
       throw new EventPostException(EventPostErrorCode.FORBIDDEN);
     }
 
+    Long replyPostId = reply.getPost().getId();
     eventPostCommentRepository.delete(reply);
     reply.getPost().decrementCommentCount();
+    eventPublisher.publishEvent(new SessionEventCommentDeleted(userId, replyPostId, replyId));
   }
 }
