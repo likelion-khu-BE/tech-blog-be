@@ -6,6 +6,7 @@ import com.study.profile.application.dto.TeamDto.MyTeamResponse;
 import com.study.profile.application.dto.TeamDto.TeamCreateRequest;
 import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
+import com.study.profile.application.dto.TeamDto.TeamImagePresignedUrlRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
@@ -17,6 +18,8 @@ import com.study.profile.application.dto.TeamDto.TeamMemberSummary;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TechStackSummary;
+import com.study.shared.s3.DomainS3Client;
+import com.study.shared.s3.PresignedUrlResponse;
 import com.study.profile.domain.generation.Generation;
 import com.study.profile.domain.member.Member;
 import com.study.profile.domain.team.TeamImage;
@@ -38,13 +41,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-@RequiredArgsConstructor
 public class TeamService {
 
   @PersistenceContext private EntityManager entityManager;
@@ -54,6 +57,22 @@ public class TeamService {
   private final MemberRepository memberRepository;
   private final GenerationRepository generationRepository;
   private final TechStackRepository techStackRepository;
+  private final DomainS3Client profileS3Client;
+
+  public TeamService(
+      TeamRepository teamRepository,
+      TeamMemberRepository teamMemberRepository,
+      MemberRepository memberRepository,
+      GenerationRepository generationRepository,
+      TechStackRepository techStackRepository,
+      @Qualifier("profileS3Client") DomainS3Client profileS3Client) {
+    this.teamRepository = teamRepository;
+    this.teamMemberRepository = teamMemberRepository;
+    this.memberRepository = memberRepository;
+    this.generationRepository = generationRepository;
+    this.techStackRepository = techStackRepository;
+    this.profileS3Client = profileS3Client;
+  }
 
   @Transactional
   public TeamCreateResponse createTeam(TeamCreateRequest req, Long userId) {
@@ -88,8 +107,9 @@ public class TeamService {
             inviteCode,
             inviteCodeExpiresAt);
 
-    // 5. 이미지 추가
-    team.updateImages(req.imageUrls());
+    // 5. 이미지 추가 (S3 key → 검증 후 공개 URL 변환)
+    List<String> imageUrls = resolveImageUrls(req.imageKeys());
+    team.updateImages(imageUrls);
 
     // 6. 기술 스택 추가
     if (req.techStackIds() != null && !req.techStackIds().isEmpty()) {
@@ -145,7 +165,21 @@ public class TeamService {
             ? team.getGithubUrl()
             : (req.githubUrl().isBlank() ? null : req.githubUrl()));
 
-    team.updateImages(req.imageUrls());
+    // keepImageUrls 또는 addImageKeys 중 하나라도 있으면 이미지 갱신
+    if (req.keepImageUrls() != null || req.addImageKeys() != null) {
+      List<String> keep = req.keepImageUrls() != null ? req.keepImageUrls() : List.of();
+      List<String> added = resolveImageUrls(req.addImageKeys());
+
+      // 유지 목록에 없는 기존 이미지 S3에서 삭제
+      team.getImages().stream()
+          .map(TeamImage::getImageUrl)
+          .filter(url -> !keep.contains(url))
+          .forEach(this::deleteFromS3);
+
+      List<String> finalUrls = new java.util.ArrayList<>(keep);
+      if (added != null) finalUrls.addAll(added);
+      team.updateImages(finalUrls);
+    }
 
     if (req.techStackIds() != null) {
       List<TechStack> techStacks =
@@ -351,6 +385,7 @@ public class TeamService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "팀장만 삭제할 수 있습니다.");
     }
 
+    team.getImages().forEach(img -> deleteFromS3(img.getImageUrl()));
     teamMemberRepository.deleteByTeamId(teamId);
     teamRepository.delete(team);
   }
@@ -503,5 +538,22 @@ public class TeamService {
         techStacks,
         memberCount,
         thumbUrl);
+  }
+
+  public List<PresignedUrlResponse> issuePresignedUrls(
+      TeamImagePresignedUrlRequest req, Long userId) {
+    return profileS3Client.issuePresignedUrls(userId, req.filenames());
+  }
+
+  private List<String> resolveImageUrls(List<String> imageKeys) {
+    if (imageKeys == null) return null;
+    return imageKeys.stream().map(profileS3Client::validateAndGetUrl).toList();
+  }
+
+  private void deleteFromS3(String imageUrl) {
+    int idx = imageUrl.indexOf(".amazonaws.com/");
+    if (idx < 0) return;
+    String key = imageUrl.substring(idx + ".amazonaws.com/".length());
+    profileS3Client.delete(key);
   }
 }

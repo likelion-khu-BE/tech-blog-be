@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record S3Properties(
     BucketProperties bucket, long presignedUrlExpiration, UploadConstraints upload) {
 
-  public record BucketProperties(String event, String session) {}
+  public record BucketProperties(String event, String session, String profile) {}
 
   /**
    * 업로드 제약 설정.
