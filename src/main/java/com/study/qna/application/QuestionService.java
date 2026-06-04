@@ -14,12 +14,16 @@ import com.study.qna.domain.Tag;
 import com.study.qna.domain.exception.ForbiddenQnaActionException;
 import com.study.qna.domain.exception.QuestionNotFoundException;
 import com.study.qna.domain.exception.TagNotFoundException;
+import com.study.qna.infrastructure.AnswerRepository;
 import com.study.qna.infrastructure.QuestionRepository;
 import com.study.qna.infrastructure.TagRepository;
+import com.study.shared.extevent.qna.QnaQuestionCreated;
+import com.study.shared.extevent.qna.QnaQuestionDeleted;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,9 @@ public class QuestionService {
 
   private final QuestionRepository questionRepository;
   private final TagRepository tagRepository;
+  private final AnswerRepository answerRepository;
+  private final AnswerService answerService;
+  private final ApplicationEventPublisher eventPublisher;
 
   public List<QuestionSummaryResponse> getQuestions(QuestionSearchCondition condition) {
     return questionRepository.searchQuestions(condition).stream()
@@ -62,6 +69,7 @@ public class QuestionService {
     }
 
     Question saved = questionRepository.save(question);
+    eventPublisher.publishEvent(new QnaQuestionCreated(userId, saved.getId()));
     return toDetailResponse(saved);
   }
 
@@ -121,7 +129,12 @@ public class QuestionService {
       throw new ForbiddenQnaActionException();
     }
 
+    // DB CASCADE 방지: 답변과 그 댓글을 서비스 레벨에서 먼저 삭제해 이벤트 발행
+    answerRepository.findByQuestionId(questionId)
+        .forEach(answerService::deleteAnswerCascade);
+
     questionRepository.delete(question);
+    eventPublisher.publishEvent(new QnaQuestionDeleted(userId, questionId));
   }
 
   private List<Tag> fetchAndValidateTags(List<Long> tagIds) {
