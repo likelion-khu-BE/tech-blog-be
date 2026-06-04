@@ -33,6 +33,10 @@ services:
     image: postgres:17
     container_name: postgres
     restart: unless-stopped
+    # 외부(pgAdmin 등)에서 직접 접속하기 위해 호스트 5432로 공개.
+    # 인터넷 노출이므로 접근 통제는 EC2 보안그룹에서 관리한다.
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
