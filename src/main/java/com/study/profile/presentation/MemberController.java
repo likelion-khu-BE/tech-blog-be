@@ -16,12 +16,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import com.study.shared.s3.PresignedUrlResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,6 +59,17 @@ public class MemberController {
   public ResponseEntity<List<TechStackItemDto>> updateMyTechStacks(
       @RequestBody List<MemberTechStackUpdateRequest> req, @CurrentUser CustomUserDetails user) {
     return ResponseEntity.ok(memberService.updateMyTechStacks(user.userId(), req));
+  }
+
+  @Operation(
+      summary = "프로필 이미지 presigned URL 발급",
+      description = "S3에 직접 업로드할 presigned PUT URL을 발급합니다. 반환된 key를 프로필 수정 요청의 profileImageKey에 포함하세요.")
+  @PostMapping("/me/profile-image/presigned-url")
+  @PreAuthorize("hasAnyRole('PRESIDENT', 'ADMIN', 'MEMBER')")
+  public ResponseEntity<PresignedUrlResponse> issueProfileImagePresignedUrl(
+      @RequestParam String filename, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(
+        memberService.issueProfileImagePresignedUrl(user.userId(), filename));
   }
 
   @PatchMapping("/me")
