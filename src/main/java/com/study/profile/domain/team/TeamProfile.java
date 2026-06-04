@@ -13,10 +13,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,9 +76,9 @@ public class TeamProfile {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt; // 마지막 수정 시각
 
-  // 시현 N+1 수정: List(Bag) → Set 전환 — MultipleBagFetchException 및 JOIN FETCH 중복 방지
   @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<TeamImage> images = new HashSet<>();
+  @OrderBy("id ASC")
+  private List<TeamImage> images = new ArrayList<>();
 
   @OneToMany(mappedBy = "team")
   private Set<TeamMember> members = new HashSet<>();
