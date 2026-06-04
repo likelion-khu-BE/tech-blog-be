@@ -19,10 +19,13 @@ import com.study.profile.infrastructure.MemberGenerationRepository;
 import com.study.profile.infrastructure.MemberRepository;
 import com.study.profile.infrastructure.MemberTechStackRepository;
 import com.study.profile.infrastructure.TechStackRepository;
+import com.study.shared.s3.DomainS3Client;
+import com.study.shared.s3.PresignedUrlResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,18 +42,21 @@ public class MemberService {
   private final UserRepository userRepository;
   private final TechStackRepository techStackRepository;
   private final MemberTechStackRepository memberTechStackRepository;
+  private final DomainS3Client memberS3Client;
 
   public MemberService(
       MemberRepository memberRepository,
       MemberGenerationRepository memberGenerationRepository,
       UserRepository userRepository,
       TechStackRepository techStackRepository,
-      MemberTechStackRepository memberTechStackRepository) {
+      MemberTechStackRepository memberTechStackRepository,
+      @Qualifier("profileS3Client") DomainS3Client memberS3Client) {
     this.memberRepository = memberRepository;
     this.memberGenerationRepository = memberGenerationRepository;
     this.userRepository = userRepository;
     this.techStackRepository = techStackRepository;
     this.memberTechStackRepository = memberTechStackRepository;
+    this.memberS3Client = memberS3Client;
   }
 
   public Member getMemberToUserId(Long userId) {
@@ -173,15 +179,34 @@ public class MemberService {
         memberRepository
             .findByUserId(userId)
             .orElseThrow(() -> new IllegalArgumentException("프로필을 찾을 수 없습니다."));
+
+    String profileImageUrl = member.getProfileImageUrl();
+    if (req.profileImageKey() != null) {
+      if (profileImageUrl != null) deleteFromS3(profileImageUrl);
+      profileImageUrl = memberS3Client.validateAndGetUrl(req.profileImageKey());
+    }
+
     member.update(
         req.name(),
         req.sessionType(),
         req.department(),
-        req.profileImageUrl(),
+        profileImageUrl,
         req.githubUrl(),
         req.displayedEmail(),
         req.intro(),
         req.linksJson());
     return MemberUpdateResponse.from(member);
+  }
+
+  public PresignedUrlResponse issueProfileImagePresignedUrl(Long userId, String filename) {
+    return memberS3Client
+        .issuePresignedUrls(userId, List.of(filename), "members/" + userId)
+        .get(0);
+  }
+
+  private void deleteFromS3(String imageUrl) {
+    int idx = imageUrl.indexOf(".amazonaws.com/");
+    if (idx < 0) return;
+    memberS3Client.delete(imageUrl.substring(idx + ".amazonaws.com/".length()));
   }
 }

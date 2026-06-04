@@ -64,6 +64,16 @@ public final class DomainS3Client {
     return s3Service.generatePresignedPutUrls(bucket, filenames);
   }
 
+  /** prefix 지정 버전 — S3 키를 {prefix}/{UUID}.{ext} 형태로 생성. */
+  public List<PresignedUrlResponse> issuePresignedUrls(
+      Long userId, List<String> filenames, String prefix) {
+    if (!rateLimitService.tryConsume(userId)) {
+      throw new S3Exception(S3ErrorCode.UPLOAD_RATE_LIMITED);
+    }
+    validator.validateFilenames(filenames);
+    return s3Service.generatePresignedPutUrls(bucket, prefix, filenames);
+  }
+
   /**
    * 업로드 완료된 파일 검증 후 공개 URL 반환.
    *

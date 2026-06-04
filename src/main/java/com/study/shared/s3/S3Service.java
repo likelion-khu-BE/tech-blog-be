@@ -61,6 +61,19 @@ public class S3Service {
         .toList();
   }
 
+  /** prefix 지정 버전 — 경로를 {prefix}/{UUID}.{ext} 형태로 생성. */
+  public List<PresignedUrlResponse> generatePresignedPutUrls(
+      String bucket, String prefix, List<String> filenames) {
+    return filenames.stream()
+        .map(
+            filename -> {
+              String key = generateKey(prefix, filename);
+              String presignedUrl = presignPutUrl(bucket, key, null, presignedUrlExpiration);
+              return new PresignedUrlResponse(presignedUrl, key);
+            })
+        .toList();
+  }
+
   /**
    * 단건 presigned PUT URL 생성 (Content-Type 고정).
    *
@@ -110,12 +123,17 @@ public class S3Service {
    * <p>형식: {@code images/{UUID}.{ext}}
    */
   public String generateKey(String filename) {
-    String ext = "";
+    return "images/" + UUID.randomUUID() + extractExt(filename);
+  }
+
+  /** prefix 지정 버전 — 형식: {@code {prefix}/{UUID}.{ext}} */
+  public String generateKey(String prefix, String filename) {
+    return prefix + "/" + UUID.randomUUID() + extractExt(filename);
+  }
+
+  private String extractExt(String filename) {
     int dotIndex = filename.lastIndexOf('.');
-    if (dotIndex >= 0) {
-      ext = filename.substring(dotIndex);
-    }
-    return "images/" + UUID.randomUUID() + ext;
+    return dotIndex >= 0 ? filename.substring(dotIndex) : "";
   }
 
   // ----------------------------------------------------------------

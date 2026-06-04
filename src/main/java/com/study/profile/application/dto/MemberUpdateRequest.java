@@ -8,7 +8,7 @@ public record MemberUpdateRequest(
     @NotBlank String name,
     @NotNull SessionType sessionType,
     String department,
-    String profileImageUrl,
+    String profileImageKey,
     String githubUrl,
     String displayedEmail,
     String intro,

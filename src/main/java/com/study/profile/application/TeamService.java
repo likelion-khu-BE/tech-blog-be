@@ -542,7 +542,7 @@ public class TeamService {
 
   public List<PresignedUrlResponse> issuePresignedUrls(
       TeamImagePresignedUrlRequest req, Long userId) {
-    return profileS3Client.issuePresignedUrls(userId, req.filenames());
+    return profileS3Client.issuePresignedUrls(userId, req.filenames(), "teams/temp/" + userId);
   }
 
   private List<String> resolveImageUrls(List<String> imageKeys) {
