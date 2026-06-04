@@ -7,6 +7,7 @@ import com.study.profile.application.dto.TeamDto.InviteCodeResponse;
 import com.study.profile.application.dto.TeamDto.TeamCreateRequest;
 import com.study.profile.application.dto.TeamDto.TeamCreateResponse;
 import com.study.profile.application.dto.TeamDto.TeamDetailResponse;
+import com.study.profile.application.dto.TeamDto.TeamImagePresignedUrlRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinRequest;
 import com.study.profile.application.dto.TeamDto.TeamJoinResponse;
 import com.study.profile.application.dto.TeamDto.TeamLeadTransferRequest;
@@ -16,6 +17,7 @@ import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamMemberRoleUpdateResponse;
 import com.study.profile.application.dto.TeamDto.TeamUpdateRequest;
 import com.study.profile.application.dto.TeamDto.TeamUpdateResponse;
+import com.study.shared.s3.PresignedUrlResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
@@ -141,6 +143,17 @@ public class TeamController {
       @PathVariable Long teamId, @CurrentUser CustomUserDetails user) {
     teamService.deleteTeam(teamId, user.userId());
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
+      summary = "팀 이미지 presigned URL 발급",
+      description =
+          "S3에 직접 업로드할 presigned PUT URL을 발급합니다. 반환된 key를 팀 생성/수정 요청의 imageKeys에 포함하세요.")
+  @PostMapping("/images/presigned-urls")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MEMBER')")
+  public ResponseEntity<List<PresignedUrlResponse>> issuePresignedUrls(
+      @RequestBody TeamImagePresignedUrlRequest req, @CurrentUser CustomUserDetails user) {
+    return ResponseEntity.ok(teamService.issuePresignedUrls(req, user.userId()));
   }
 
   @Operation(

@@ -5,13 +5,15 @@ import java.util.List;
 
 public class TeamDto {
 
+  public record TeamImagePresignedUrlRequest(List<String> filenames) {}
+
   public record TeamCreateRequest(
       String name,
       String description,
       String projectUrl,
       String githubUrl,
       Integer generationNumber,
-      List<String> imageUrls,
+      List<String> imageKeys,
       List<Long> techStackIds) {}
 
   public record TeamCreateResponse(Long id, String inviteCode, Instant inviteCodeExpiresAt) {}
@@ -22,7 +24,8 @@ public class TeamDto {
       String projectUrl,
       String githubUrl,
       Integer generationNumber,
-      List<String> imageUrls,
+      List<String> keepImageUrls,
+      List<String> addImageKeys,
       List<Long> techStackIds) {}
 
   public record TeamUpdateResponse(Long id, Instant updatedAt) {}
