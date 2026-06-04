@@ -52,3 +52,7 @@ jobs:
             cd /home/ubuntu
             docker compose down
             docker compose --env-file .env up -d --wait
+
+            # 배포마다 새 :latest를 pull하면 이전 이미지가 태그를 잃고 dangling으로 쌓인다.
+            # 디스크가 차기 전에 매 배포 후 정리. 사용 중인 이미지(:latest, postgres:17)는 보존된다.
+            docker image prune -f
